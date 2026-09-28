@@ -516,8 +516,20 @@
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="tsUrl" placeholder="http://127.0.0.1:8090" autocomplete="off" autocapitalize="off"></div>
       </div>
       <div class="set-row">
-        <div><div class="t">Парсер торрентов</div><div class="d">Поиск раздач по фильмам</div></div>
+        <div><div class="t">Парсер основной</div><div class="d">Ссылка на JacRed</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacUrl" placeholder="https://jac.red" autocomplete="off" autocapitalize="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">API-ключ</div><div class="d">Основной парсер</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacKey" placeholder="sa0sk83d.." autocomplete="off" autocapitalize="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Парсер запасной</div><div class="d">Если основной не отвечает</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacUrl2" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">API-ключ</div><div class="d">Запасной парсер</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacKey2" placeholder="sa0sk83d.." autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
     <div class="set-group">
@@ -631,6 +643,9 @@ const state = {
   geminiKey: LS.get('gemini_key',''),
   tsUrl: LS.get('ts_url','http://127.0.0.1:8090'),
   jacUrl: LS.get('jac_url','https://jac.red'),
+  jacKey: LS.get('jac_key',''),
+  jacUrl2: LS.get('jac_url2',''),
+  jacKey2: LS.get('jac_key2',''),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
   genre: 'all',
@@ -1469,21 +1484,40 @@ function renderTorList(){
   list.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i]));
 }
 
+function jacQueryURL(base, key, q){
+  return base.replace(/\/+$/,'') + '/api/v2.0/indexers/all/results?Query=' + encodeURIComponent(q)
+    + (key ? '&apikey=' + encodeURIComponent(key) : '');
+}
+async function jacSearch(q){
+  const parsers = [
+    {url: state.jacUrl, key: state.jacKey},
+    {url: state.jacUrl2, key: state.jacKey2},
+  ].filter(p=>p.url);
+  let lastErr = null;
+  for(const p of parsers){
+    try{
+      const r = await fetch(jacQueryURL(p.url, p.key, q));
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const j = await r.json();
+      const res = (j.Results||[]).filter(x=>x.MagnetUri);
+      if(res.length || p===parsers[parsers.length-1]) return res;
+    }catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('noresults');
+}
+
 async function findTorrents(m){
   const box = $('#torBox'); if(!box) return;
   box.innerHTML = '<div class="tor-load">Ищу раздачи…</div>';
   const q = (m.title||'') + (m.year && m.year!=='—' ? ' '+m.year : '');
   try{
-    const r = await fetch(state.jacUrl.replace(/\/+$/,'') + '/api/v2.0/indexers/all/results?Query=' + encodeURIComponent(q));
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const j = await r.json();
-    const res = (j.Results||[]).filter(x=>x.MagnetUri);
+    const res = await jacSearch(q);
     torCache = res; torSort = {key:'seeds', dir:-1};
     if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕</div>'; return; }
     box.innerHTML = torBarHTML(res.length);
     bindTorChips(box); renderTorList();
   }catch(e){
-    box.innerHTML = '<div class="tor-load">Парсер не отвечает · проверь адрес в Профиле</div>';
+    box.innerHTML = '<div class="tor-load">Парсеры не отвечают · проверь адреса в Профиле</div>';
   }
 }
 
@@ -1857,6 +1891,17 @@ $('#jacUrl').addEventListener('change', e=>{
   e.target.value = state.jacUrl; LS.set('jac_url', state.jacUrl);
   toast('Адрес парсера сохранён');
 });
+function bindKeyField(id, stKey, lsKey, label){
+  $('#'+id).value = state[stKey];
+  $('#'+id).addEventListener('change', e=>{
+    state[stKey] = e.target.value.trim();
+    LS.set(lsKey, state[stKey]);
+    toast(label+' сохранён');
+  });
+}
+bindKeyField('jacKey','jacKey','jac_key','API-ключ');
+bindKeyField('jacUrl2','jacUrl2','jac_url2','Запасной парсер');
+bindKeyField('jacKey2','jacKey2','jac_key2','API-ключ');
 $('#kpKey').addEventListener('change', e=>{
   state.kpKey = e.target.value.trim(); LS.set('kp_key', state.kpKey);
   toast(state.kpKey ? 'Kinopoisk ключ сохранён' : 'Ключ удалён');
