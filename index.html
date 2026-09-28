@@ -138,7 +138,7 @@
   .roul-sheet-actions .ai-go{margin-top:0}
   .lucky-genres{text-align:center; color:var(--muted); font-size:13px; margin-top:8px}
   .lucky-actions{display:flex; flex-direction:column; gap:10px; margin-top:16px}
-  .lucky-card{margin-top:26px; width:100%; max-width:340px; display:none}
+  .lucky-card{margin:26px auto 0; width:100%; max-width:340px; display:none}
   .lucky-card.show{display:block; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
   @keyframes pop{from{transform:scale(.85); opacity:0}}
   .lucky-poster{width:100%; aspect-ratio:2/3; border-radius:20px; overflow:hidden; position:relative; background:var(--card2)}
@@ -1181,7 +1181,7 @@ $('#resetBtn').onclick = ()=>{
 /* =================== AI =================== */
 // Логика перенесена из Lampa-плагина cinemaX_ai: очередь моделей/ключей,
 // JSON-парсинг, резолв через TMDB, пагинация через exclude + фоновая предзагрузка.
-const AI_MODELS = ['gemini-3.1-flash-lite-preview','gemini-3-flash-preview','gemini-2.5-flash-lite','gemini-2.5-flash','gemma-4-31b-it','gemma-3-27b-it','gemma-3-4b-it'];
+const AI_MODELS = ['gemini-2.5-flash-lite','gemini-2.5-flash','gemma-3-4b-it','gemini-3.1-flash-lite-preview','gemini-3-flash-preview','gemma-4-31b-it','gemma-3-27b-it'];
 const AI_LIMIT = 18;
 const AI_PRESETS = ['Эпичная фантастика','Комедия на вечер','Захватывающий триллер','Что-то доброе','Детектив с твистом','Приключения','Ужасы','Мелодрама'];
 let aiSession = null;
@@ -1204,11 +1204,15 @@ async function aiAsk(prompt){
   AI_MODELS.slice(1).forEach(m=>keys.forEach(k=>queue.push({model:m, key:k})));
   let lastErr = '';
   for(const t of queue){
+    const ctl = new AbortController();
+    const timer = setTimeout(()=>ctl.abort(), 20000); // зависшая модель — сразу следующая
     try{
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+t.model+':generateContent?key='+encodeURIComponent(t.key), {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+        body: JSON.stringify({contents:[{parts:[{text:prompt}]}]}),
+        signal: ctl.signal
       });
+      clearTimeout(timer);
       if(r.status===429 || r.status===503) continue; // лимит / сервер лежит — следующий в очереди
       const j = await r.json().catch(()=>null);
       if(!r.ok){ lastErr = (j&&j.error&&j.error.message)||('HTTP '+r.status); continue; }
@@ -1216,7 +1220,7 @@ async function aiAsk(prompt){
       const text = parts.map(p=>p.text||'').join('\n').trim();
       if(text) return text;
       lastErr = 'empty';
-    }catch(e){ lastErr = 'network'; } // обрыв сети — тоже идём дальше по очереди
+    }catch(e){ clearTimeout(timer); lastErr = (e&&e.name==='AbortError') ? 'timeout' : 'network'; } // завис / обрыв — идём дальше по очереди
   }
   throw new Error(lastErr||'fail');
 }
@@ -1262,6 +1266,7 @@ function aiErrText(e){
   if(/API key not valid|API_KEY_INVALID/i.test(m)) return 'Ключ Gemini не подошёл — проверь его в профиле';
   if(/not.?found/i.test(m)) return 'Модели Gemini недоступны для этого ключа';
   if(m==='network') return 'Нет соединения с сетью';
+  if(m==='timeout') return 'Модель долго не отвечает — попробуй ещё раз';
   return 'AI недоступен ('+m.slice(0,90)+')';
 }
 async function aiRun(){
