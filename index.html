@@ -415,27 +415,30 @@
   .pl-ui{position:absolute; inset:0; z-index:4; pointer-events:none; opacity:1; transition:opacity .25s}
   .pl-ui.hide{opacity:0}
   .pl-ui>*{pointer-events:auto}
-  .pl-topbar{position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:10px; padding:14px 14px 26px; background:linear-gradient(180deg, rgba(0,0,0,.65), transparent)}
+  .pl-topbar{position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:10px; padding:14px 14px 28px; background:linear-gradient(180deg, rgba(8,14,32,.72), transparent)}
   .pl-title{flex:1; font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 8px rgba(0,0,0,.8)}
-  .pl-icbtn{width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.16); background:rgba(10,14,24,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:800; flex:none}
+  .pl-icbtn{width:42px; height:42px; border-radius:50%; border:1px solid rgba(99,150,255,.32); background:rgba(59,140,255,.13); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:800; flex:none; box-shadow:0 4px 16px rgba(59,140,255,.16), inset 0 1px 0 rgba(255,255,255,.12)}
   .pl-icbtn:active{transform:scale(.92)}
-  .pl-icbtn svg{width:20px; height:20px; fill:#fff}
+  .pl-icbtn svg{width:20px; height:20px; fill:#cfe4ff}
+  .pl-icbtn.main{width:50px; height:50px; background:linear-gradient(135deg,#3b8cff,#7b5cff); border:none; box-shadow:0 8px 24px rgba(80,110,255,.5), inset 0 1px 0 rgba(255,255,255,.25)}
+  .pl-icbtn.main svg{width:23px; height:23px; fill:#fff}
+  .pl-icbtn.txt{color:#9cc8ff}
   .pl-center{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none}
-  .pl-bigplay{width:84px; height:84px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#4da3ff,#7c5cff); box-shadow:0 8px 32px rgba(77,163,255,.45); pointer-events:auto; transition:transform .15s, opacity .2s}
+  .pl-bigplay{width:88px; height:88px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#3b8cff,#7b5cff); box-shadow:0 10px 36px rgba(80,110,255,.55), inset 0 1px 0 rgba(255,255,255,.25); pointer-events:auto; transition:transform .15s, opacity .2s}
   .pl-bigplay:active{transform:scale(.93)}
-  .pl-bigplay svg{width:34px; height:34px; fill:#fff; margin-left:4px}
+  .pl-bigplay svg{width:36px; height:36px; fill:#fff; margin-left:4px}
   .pl-bigplay.hide{opacity:0; pointer-events:none; transform:scale(.8)}
-  .pl-bottom{position:absolute; left:0; right:0; bottom:0; padding:26px 14px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(0deg, rgba(0,0,0,.72), transparent)}
+  .pl-bottom{position:absolute; left:0; right:0; bottom:0; padding:28px 14px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(0deg, rgba(10,18,40,.78), transparent)}
   .pl-seek{position:relative; height:26px; display:flex; align-items:center; cursor:pointer; touch-action:none}
   .pl-seek::before{content:''; position:absolute; left:0; right:0; height:5px; border-radius:3px; background:rgba(255,255,255,.22)}
   .pl-buf{position:absolute; left:0; height:5px; border-radius:3px; background:rgba(255,255,255,.38); width:0}
-  .pl-fill{position:absolute; left:0; height:5px; border-radius:3px; background:linear-gradient(90deg,#4da3ff,#7c5cff); width:0}
-  .pl-knob{position:absolute; width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 1px 8px rgba(0,0,0,.6); left:0; transform:translateX(-50%)}
+  .pl-fill{position:absolute; left:0; height:5px; border-radius:3px; background:linear-gradient(90deg,#3b8cff,#7b5cff); width:0; box-shadow:0 0 12px rgba(80,130,255,.55)}
+  .pl-knob{position:absolute; width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 0 12px rgba(90,140,255,.9), 0 1px 8px rgba(0,0,0,.6); left:0; transform:translateX(-50%)}
   .pl-row{display:flex; align-items:center; gap:6px; margin-top:8px}
   .pl-time{margin-left:6px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,.85); font-variant-numeric:tabular-nums; white-space:nowrap}
   .pl-spacer{flex:1}
   .pl-err{position:absolute; inset:0; z-index:5; display:none; align-items:center; justify-content:center; text-align:center; padding:30px; color:var(--muted); font-size:14px; line-height:1.6}
-  .pl-menu{position:absolute; z-index:6; right:12px; bottom:86px; min-width:210px; max-width:78%; background:rgba(16,22,38,.96); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:8px; box-shadow:0 12px 40px rgba(0,0,0,.6); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
+  .pl-menu{position:absolute; z-index:6; right:12px; bottom:96px; min-width:210px; max-width:78%; background:rgba(14,22,42,.96); border:1px solid rgba(99,150,255,.28); border-radius:16px; padding:8px; box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 24px rgba(59,140,255,.12); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
   .pl-menu .pm-t{font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); padding:8px 12px 4px}
   .pl-menu .pm-i{padding:11px 12px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .pl-menu .pm-i:active{background:rgba(77,163,255,.15)}
@@ -629,20 +632,20 @@
         <div class="pl-topbar">
           <button class="pl-icbtn" id="plBack" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15.5 4.5 8 12l7.5 7.5 2-2L12 12l5.5-5.5z"/></svg></button>
           <div class="pl-title" id="plTitle"></div>
-          <button class="pl-icbtn" id="plPip" aria-label="Картинка в картинке"><svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h16V7zm11 2h4v6h-4z"/></svg></button>
+          <button class="pl-icbtn" id="plPip" aria-label="Картинка в картинке"><svg viewBox="0 0 24 24"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg></button>
         </div>
         <div class="pl-center"><button class="pl-bigplay" id="plBigPlay" aria-label="Смотреть"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
         <div class="pl-bottom">
           <div class="pl-seek" id="plSeek"><div class="pl-buf" id="plBuf"></div><div class="pl-fill" id="plFill"></div><div class="pl-knob" id="plKnob"></div></div>
           <div class="pl-row">
-            <button class="pl-icbtn" id="plPlay" aria-label="Пауза/играть"><svg viewBox="0 0 24 24" id="plPlayIco"><path d="M8 5v14l11-7z"/></svg></button>
-            <button class="pl-icbtn" id="plRw" aria-label="-10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V1L6.5 5.5 12 10V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/><text x="12" y="16.5" text-anchor="middle" font-size="7" font-weight="800" fill="#fff">10</text></svg></button>
-            <button class="pl-icbtn" id="plFf" aria-label="+10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V1l5.5 4.5L12 10V6a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/><text x="12" y="16.5" text-anchor="middle" font-size="7" font-weight="800" fill="#fff">10</text></svg></button>
+            <button class="pl-icbtn main" id="plPlay" aria-label="Пауза/играть"><svg viewBox="0 0 24 24" id="plPlayIco"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="pl-icbtn" id="plRw" aria-label="-10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/><text x="12.5" y="17" text-anchor="middle" font-size="7.5" font-weight="800" fill="#cfe4ff" font-family="Manrope,system-ui,sans-serif">10</text></svg></button>
+            <button class="pl-icbtn" id="plFf" aria-label="+10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V2l5 4-5 4V7a5 5 0 1 0 5 5h2a7 7 0 1 1-7-7z"/><text x="11.5" y="17" text-anchor="middle" font-size="7.5" font-weight="800" fill="#cfe4ff" font-family="Manrope,system-ui,sans-serif">10</text></svg></button>
             <div class="pl-time"><span id="plCur">0:00</span> / <span id="plDur">0:00</span></div>
             <div class="pl-spacer"></div>
-            <button class="pl-icbtn" id="plSubs" aria-label="Субтитры"><svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h16V7H4zm3 3h4v2H7zm0 3.5h7V15H7zM15 10h2v5h-2z"/></svg></button>
-            <button class="pl-icbtn" id="plRate" aria-label="Скорость">1×</button>
-            <button class="pl-icbtn" id="plFs" aria-label="Во весь экран"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM4 15h2v3h3v2H4zm13 1v3h-3v2h5v-5z"/></svg></button>
+            <button class="pl-icbtn" id="plSubs" aria-label="Субтитры"><svg viewBox="0 0 24 24"><path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7.5c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1H10c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-2.5c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1H17c.55 0 1 .45 1 1v1z"/></svg></button>
+            <button class="pl-icbtn txt" id="plRate" aria-label="Скорость">1×</button>
+            <button class="pl-icbtn" id="plFs" aria-label="Во весь экран"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
           </div>
         </div>
       </div>
