@@ -136,6 +136,9 @@
   .key-input:focus{border-color:var(--accent)}
   .key-ok{font-size:12px; font-weight:800; color:#2bd97c}
   .switch{position:relative; width:48px; height:28px; border-radius:999px; background:#2a3a55; border:none; cursor:pointer; transition:.25s; flex:0 0 auto}
+  .mini-btn{background:var(--card2); border:1px solid rgba(255,255,255,.12); color:var(--text); border-radius:10px;
+    padding:9px 12px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; flex:0 0 auto}
+  .mini-btn:active{transform:scale(.95)}
   .switch::after{content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:.25s}
   .switch.on{background:var(--accent)}
   .switch.on::after{left:23px}
@@ -367,8 +370,8 @@
         <div id="tmdbKeyWrap"><input class="key-input" id="tmdbKey" placeholder="вставить ключ" autocomplete="off"></div>
       </div>
       <div class="set-row">
-        <div><div class="t">Gemini API ключ</div><div class="d">AI-подборки (скоро)</div></div>
-        <div><input class="key-input" id="geminiKey" placeholder="вставить ключ" autocomplete="off"></div>
+        <div><div class="t">Gemini API ключ</div><div class="d">AI-подборки</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="geminiKey" placeholder="вставить ключ" autocomplete="off"><button class="mini-btn" id="geminiCheck">Проверить</button></div>
       </div>
     </div>
     <div class="set-group">
@@ -1008,6 +1011,17 @@ $('#geminiKey').addEventListener('change', e=>{
   $('#stAi').textContent = state.geminiKey ? '✓' : '–';
   toast(state.geminiKey ? 'Gemini ключ сохранён' : 'Ключ удалён');
 });
+$('#geminiCheck').onclick = async ()=>{
+  const k = $('#geminiKey').value.trim().split(',')[0];
+  if(!k){ toast('Вставь ключ сначала'); return; }
+  toast('Проверяю ключ…');
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(k));
+    const j = await r.json().catch(()=>null);
+    if(r.ok) toast('Ключ рабочий ✓');
+    else toast('Ошибка: '+((j&&j.error&&j.error.message)||('HTTP '+r.status)).slice(0,90));
+  }catch(e){ toast('Нет соединения с сетью'); }
+};
 if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
@@ -1098,6 +1112,14 @@ function aiSetGo(disabled, label){
   b.disabled = disabled;
   b.innerHTML = disabled ? '<div class="ai-spin"></div> '+label : '✨ Подобрать';
 }
+function aiErrText(e){
+  const m = (e && e.message) || '';
+  if(m==='nokey') return 'Добавь Gemini ключ в профиле';
+  if(/API key not valid|API_KEY_INVALID/i.test(m)) return 'Ключ Gemini не подошёл — проверь его в профиле';
+  if(/not.?found/i.test(m)) return 'Модели Gemini недоступны для этого ключа';
+  if(m==='network') return 'Нет соединения с сетью';
+  return 'AI недоступен ('+m.slice(0,90)+')';
+}
 async function aiRun(){
   const q = $('#aiInput').value.trim();
   if(!q){ toast('Опиши, что хочешь посмотреть'); return; }
@@ -1117,7 +1139,7 @@ async function aiRun(){
   }catch(e){
     if(aiSession!==sess) return;
     sess.loading = false; aiSetGo(false);
-    $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">'+(e.message==='nokey'?'Добавь Gemini ключ в профиле':'AI недоступен — попробуй чуть позже')+'</div>';
+    $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">'+aiErrText(e)+'</div>';
   }
 }
 function aiMoreTile(){
