@@ -1771,6 +1771,7 @@ async function playTorrent(t, m){
 }
 
 function stopPlayer(){
+  plClearStall();
   const v = $('#plVideo');
   if(v){ try{v.pause();}catch(e){} v.querySelectorAll('track').forEach(t=>t.remove()); v.removeAttribute('src'); v.load(); }
   const t = $('#plTitle'); if(t) t.textContent = '';
@@ -1782,6 +1783,7 @@ function openPlayer(url, title, subs, mv){
   pushScreen('scr-player');
   $('#plTitle').textContent = title || '';
   plSubsList = subs || []; plCurSub = -1; plMovie = mv || null;
+  plRetried = false; plClearStall(); plHideErr();
   const v = $('#plVideo');
   v.querySelectorAll('track').forEach(t=>t.remove());
   const e = $('#plErr'); e.style.display='none'; e.textContent='';
@@ -1793,6 +1795,9 @@ $('#plBack').onclick = ()=>{ stopPlayer(); goBack(); };
 
 /* ---------- свой плеер: контролы ---------- */
 let plSubsList = [], plCurSub = -1, plHideT = null, plSeeking = false;
+let plStallT = null, plRetried = false, plErrMode = null;
+function plClearStall(){ if(plStallT){ clearTimeout(plStallT); plStallT = null; } }
+function plHideErr(){ const e = $('#plErr'); if(e) e.style.display='none'; plErrMode = null; }
 const PL_RATES = [1, 1.25, 1.5, 2, 0.75];
 function plFmt(s){
   s = Math.max(0, Math.floor(s||0));
@@ -1973,11 +1978,40 @@ async function plLoadSub(i){
   v.addEventListener('pause', ()=>{ plSetPlayIcon(false); plShowUI(true); });
   v.addEventListener('ended', ()=>{ plSetPlayIcon(false); plShowUI(true); });
   v.addEventListener('error', ()=>{
+    plClearStall();
+    const code = v.error && v.error.code;
+    if(code===2 && !plRetried){
+      plRetried = true;
+      toast('Обрыв потока — переподключаюсь…');
+      setTimeout(()=>{ try{ v.load(); v.play().catch(()=>{}); }catch(e){} }, 1500);
+      return;
+    }
     const e = $('#plErr');
-    e.textContent = 'Не удалось воспроизвести 😕\nПопробуй другую раздачу';
-    e.style.display='flex';
+    const msg = code===2 ? 'Сеть оборвалась — TorrServer недоступен или поток встал'
+      : code===3 ? 'Браузер не смог декодировать видео — похоже, неподдерживаемый кодек (HEVC/AV1)'
+      : code===4 ? 'Формат не поддерживается браузером'
+      : 'Не удалось воспроизвести';
+    e.innerHTML = msg + ' 😕<br><span style="font-size:12px;opacity:.75">Попробуй другую раздачу — лучше 1080p (x264/H.264) с сидами.<br>Тапни по экрану, чтобы скрыть.</span>';
+    e.style.display='flex'; plErrMode = 'fatal';
     $('#plBigPlay').classList.remove('hide');
   });
+  const plStallWarn = ()=>{
+    plClearStall();
+    plStallT = setTimeout(()=>{
+      if(v.paused || v.readyState >= 3) return;
+      const e = $('#plErr');
+      e.innerHTML = 'Поток завис 😕<br><span style="font-size:12px;opacity:.75">Возможно, у раздачи нет сидов — попробуй другую.<br>Тапни по экрану, чтобы скрыть.</span>';
+      e.style.display='flex'; plErrMode = 'stall';
+      plShowUI(true);
+    }, 20000);
+  };
+  v.addEventListener('waiting', plStallWarn);
+  v.addEventListener('stalled', plStallWarn);
+  ['playing','progress','canplay'].forEach(ev=>v.addEventListener(ev, ()=>{
+    plClearStall();
+    if(plErrMode==='stall') plHideErr();
+  }));
+  $('#plErr').addEventListener('click', ()=>{ plHideErr(); plShowUI(true); });
 })();
 /* =================== PERSON PAGE =================== */
 async function openPerson(pid, pname, role){
