@@ -112,25 +112,16 @@
     background:conic-gradient(from 0deg,#2f6fed,#9b5cff,#4da3ff,#ff7ad9,#2f6fed);
     filter:blur(30px); opacity:.5; animation:auraSpin 7s linear infinite}
   @keyframes auraSpin{to{transform:rotate(360deg)}}
-  .d-scene{display:block; width:112px; height:112px; perspective:700px; position:relative; z-index:1; transition:transform .15s}
-  .dice-btn:active .d-scene{transform:scale(.9)}
-  .d-cube{display:block; width:100%; height:100%; position:relative; transform-style:preserve-3d; transform:rotateX(-20deg) rotateY(32deg)}
-  .d-cube.idle{animation:dIdle 7s ease-in-out infinite}
-  @keyframes dIdle{0%,100%{transform:rotateX(-20deg) rotateY(32deg)}50%{transform:rotateX(-34deg) rotateY(54deg)}}
-  .d-face{position:absolute; inset:0; border-radius:26px; background-color:#2f6fed; background-image:var(--dots); background-repeat:no-repeat;
-    border:1px solid rgba(255,255,255,.45);
-    box-shadow:inset 0 2px 10px rgba(255,255,255,.4), inset 0 -16px 30px rgba(0,25,70,.5)}
-  .d-f1{--dots:radial-gradient(circle at 50% 50%, #fff 8px, transparent 9px); transform:translateZ(56px)}
-  .d-f2{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateX(90deg) translateZ(56px)}
-  .d-f3{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 50% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateY(90deg) translateZ(56px)}
-  .d-f4{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 70%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateY(-90deg) translateZ(56px)}
-  .d-f5{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 50% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 70%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateX(-90deg) translateZ(56px)}
-  .d-f6{--dots:radial-gradient(circle at 30% 27%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 27%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 73%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 73%, #fff 8px, transparent 9px); transform:rotateY(180deg) translateZ(56px)}
+  .blob-wrap{display:block; width:190px; height:190px; position:relative; z-index:1; animation:blobFloat 5.5s ease-in-out infinite}
+  @keyframes blobFloat{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-12px) scale(1.04,.97)}}
+  #blobCanvas{display:block; width:100%; height:100%; filter:url(#goo)}
+  #blobCanvas.gulping{animation:gulp .95s cubic-bezier(.3,1.35,.4,1)}
+  @keyframes gulp{0%{transform:scale(1,1)}22%{transform:scale(.68,1.24)}45%{transform:scale(1.24,.72)}68%{transform:scale(.93,1.08)}100%{transform:scale(1,1)}}
   .d-tw{position:absolute; width:6px; height:6px; border-radius:50%; background:#fff; box-shadow:0 0 10px 2px rgba(155,92,255,.8); animation:tw 2.8s ease-in-out infinite; z-index:1}
   .d-tw.t1{top:16%; left:24%} .d-tw.t2{top:26%; right:14%; animation-delay:1s}
   .d-tw.t3{bottom:20%; left:16%; animation-delay:1.8s} .d-tw.t4{bottom:28%; right:24%; animation-delay:.5s}
   @keyframes tw{0%,100%{opacity:0; transform:scale(.4)}50%{opacity:1; transform:scale(1.2)}}
-  @media (prefers-reduced-motion: reduce){.d-cube.idle,.dice-aura,.d-tw{animation:none}}
+  @media (prefers-reduced-motion: reduce){.blob-wrap,.dice-aura,.d-tw,#blobCanvas.gulping{animation:none}}
   .dice-label{margin-top:22px; font-size:15px; font-weight:700}
   .dice-sub{margin-top:6px; font-size:13px; color:var(--muted); text-align:center; line-height:1.5}
   .roul-sec{padding:16px 20px 0}
@@ -395,11 +386,14 @@
     <div class="roul-top">
       <button class="dice-btn" id="diceBtn" aria-label="Случайный фильм">
         <span class="dice-aura"></span>
-        <span class="d-scene"><span class="d-cube idle" id="dCube"><span class="d-face d-f1"></span><span class="d-face d-f2"></span><span class="d-face d-f3"></span><span class="d-face d-f4"></span><span class="d-face d-f5"></span><span class="d-face d-f6"></span></span></span>
+        <span class="blob-wrap"><canvas id="blobCanvas" width="240" height="240"></canvas></span>
         <span class="d-tw t1"></span><span class="d-tw t2"></span><span class="d-tw t3"></span><span class="d-tw t4"></span>
       </button>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+        <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -13"/></filter>
+      </defs></svg>
       <div class="dice-label">Не знаешь, что посмотреть?</div>
-      <div class="dice-sub">Настрой фильтры и жми на кубик —<br>выдадим случайный фильм</div>
+      <div class="dice-sub">Настрой фильтры и тыкни в субстанцию —<br>выдадим случайный фильм</div>
       <div class="roul-filter-row">
         <button class="roul-filter-btn" id="roulFilterBtn">⚙️ Фильтры<span class="cnt" id="roulFilterCount" style="display:none">0</span></button>
       </div>
@@ -1105,44 +1099,75 @@ async function roulKeywords(){
     return ids.join('|');
   }catch(e){ return ''; }
 }
-const D_BASE = 'rotateX(-20deg) rotateY(32deg)';
-const D_FACES = {1:'rotateX(0deg) rotateY(0deg)',2:'rotateX(-90deg) rotateY(0deg)',3:'rotateX(0deg) rotateY(-90deg)',4:'rotateX(0deg) rotateY(90deg)',5:'rotateX(90deg) rotateY(0deg)',6:'rotateX(0deg) rotateY(180deg)'};
-let dRolling = false;
-function animateDice(){
+/* ===== Blob-субстанция рулетки: canvas-metaballs + goo-фильтр ===== */
+let blobExcite = 0;
+function animateBlob(){
   return new Promise(res=>{
-    const cube = $('#dCube');
-    if(dRolling || !cube){ res(); return; }
-    dRolling = true;
-    cube.classList.remove('idle');
-    cube.style.transition = 'none';
-    cube.style.transform = D_BASE;
-    void cube.offsetWidth;
-    cube.style.transition = 'transform .8s cubic-bezier(.35,.6,.4,1)';
-    cube.style.transform = 'rotateX(700deg) rotateY(752deg)'; // база + два оборота
-    setTimeout(()=>{
-      const v = 1+Math.floor(Math.random()*6);
-      cube.style.transition = 'transform 1s cubic-bezier(.2,.85,.3,1.12)';
-      cube.style.transform = D_FACES[v];
-      setTimeout(()=>{
-        dRolling = false; res(v);
-        setTimeout(()=>{ // плавный возврат к парению
-          cube.style.transition = 'transform 1.6s ease-in-out';
-          cube.style.transform = D_BASE;
-          setTimeout(()=>{ cube.classList.add('idle'); cube.style.transition=''; cube.style.transform=''; }, 1650);
-        }, 1400);
-      }, 1050);
-    }, 830);
+    blobExcite = 1;
+    const el = document.getElementById('blobCanvas');
+    if(el){ el.classList.remove('gulping'); void el.offsetWidth; el.classList.add('gulping'); }
+    setTimeout(res, 1000);
   });
 }
+(function(){
+  const cv = document.getElementById('blobCanvas');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = 240, H = 240, cx = 120, cy = 122;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const balls = [];
+  for(let i=0;i<7;i++) balls.push({
+    a0:(i/7)*Math.PI*2 + Math.random()*.6,
+    sp:(.25 + Math.random()*.35) * (i%2 ? -1 : 1),
+    ox:22 + Math.random()*26, oy:18 + Math.random()*22,
+    r:26 + Math.random()*18, p:Math.random()*Math.PI*2,
+    h0:195 + i*24 + Math.random()*20
+  });
+  const specs = [
+    {a0:.6, sp:.5, ox:26, oy:30, r:13, p:1.2},
+    {a0:2.8, sp:-.4, ox:34, oy:26, r:9, p:4.1}
+  ];
+  function dot(x, y, r, h, s, l, a){
+    const g = ctx.createRadialGradient(x, y, r*.1, x, y, r);
+    g.addColorStop(0, 'hsla('+h+','+s+'%,'+Math.min(100,l+12)+'%,'+a+')');
+    g.addColorStop(1, 'hsla('+h+','+s+'%,'+l+'%,'+(a*.92)+')');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, Math.max(3,r), 0, 7); ctx.fill();
+  }
+  let t = Math.random()*10, last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now-last)/1000); last = now;
+    blobExcite *= Math.pow(.3, dt);
+    if(blobExcite < .01) blobExcite = 0;
+    t += dt * (1 + blobExcite*4);
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+    const ex = blobExcite;
+    for(const b of balls){
+      const a = b.a0 + t*b.sp;
+      const x = cx + Math.cos(a)*b.ox*(1 + ex*.45*Math.sin(t*16+b.p)) + Math.sin(t*.6+b.p)*9;
+      const y = cy + Math.sin(a)*b.oy*(1 + ex*.45*Math.cos(t*15+b.p)) + Math.cos(t*.75+b.p*1.7)*11;
+      const r = b.r * (1 + .16*Math.sin(t*1.6+b.p)) * (1 + ex*.4*Math.sin(t*18+b.p));
+      dot(x, y, r, b.h0 + t*16 + ex*160, 90, 58, .95);
+    }
+    for(const s of specs){
+      const a = s.a0 + t*s.sp*(1 + ex*3);
+      dot(cx + Math.cos(a)*s.ox, cy - 18 + Math.sin(a)*s.oy, s.r*(1 + .2*Math.sin(t*3+s.p)), 0, 0, 96, .85);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    if(!reduce) requestAnimationFrame(frame);
+  }
+  frame(last);
+})();
 let spinBusy = false;
 async function spinRoulette(){
   if(spinBusy) return; spinBusy = true;
   const card = $('#luckyCard');
   card.classList.remove('show');
-  if(!state.tmdbKey){ animateDice().then(()=>{ spinDemo(); spinBusy = false; }); return; }
+  if(!state.tmdbKey){ animateBlob().then(()=>{ spinDemo(); spinBusy = false; }); return; }
   card.innerHTML = '<div class="ai-status"><div class="ai-spin"></div>Крутим рулетку…</div>';
   card.classList.add('show');
-  const diceP = animateDice();
+  const blobP = animateBlob();
   try{
     const g = new Set(roulSel.genres);
     const mood = ROUL_MOODS.find(m=>m.id===roulSel.mood);
@@ -1157,15 +1182,15 @@ async function spinRoulette(){
     const data = page===1 ? first : await tmdb(url+'&page='+page);
     let items = (data.results||[]).filter(r=>!state.watched.includes(r.id) && !roulSel.shown.has(r.id));
     if(!items.length) items = (data.results||[]).filter(r=>!roulSel.shown.has(r.id));
-    if(!items.length){ toast('Ничего не нашлось — ослабь фильтры'); card.classList.remove('show'); return; }
+    if(!items.length){ toast('Ничего не нашлось — ослабь фильтры'); card.classList.remove('show'); spinBusy = false; return; }
     const pick = norm(items[Math.floor(Math.random()*items.length)]);
     roulSel.shown.add(pick.id);
     if(roulSel.shown.size>60) roulSel.shown.clear();
     if(!state.pool.find(p=>p.id===pick.id)) state.pool.push(pick);
-    await diceP; // результат — ровно когда кубик упал
+    await blobP; // результат — когда субстанция «проглотила»
     showLucky(pick);
   }catch(e){
-    await diceP;
+    await blobP;
     card.classList.remove('show');
     toast('Не получилось крутануть');
   }
