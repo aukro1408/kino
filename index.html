@@ -106,13 +106,31 @@
 
   /* ---------- random ---------- */
   .roul-top{display:flex; flex-direction:column; align-items:center; padding:26px 24px 6px}
-  .dice-btn{width:150px; height:150px; border-radius:44px; border:none; cursor:pointer;
-    background:linear-gradient(135deg,#2f6fed,#4da3ff); color:#fff;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 18px 50px rgba(77,163,255,.4); transition:transform .15s}
-  .dice-btn:active{transform:scale(.93) rotate(-6deg)}
-  .dice-btn.rolling{animation:shake .5s}
-  @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.05)}75%{transform:rotate(14deg) scale(1.05)}}
+  .dice-btn{width:190px; height:190px; border:none; background:none; cursor:pointer; position:relative;
+    display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent}
+  .dice-aura{position:absolute; width:168px; height:168px; border-radius:50%;
+    background:conic-gradient(from 0deg,#2f6fed,#9b5cff,#4da3ff,#ff7ad9,#2f6fed);
+    filter:blur(30px); opacity:.5; animation:auraSpin 7s linear infinite}
+  @keyframes auraSpin{to{transform:rotate(360deg)}}
+  .d-scene{width:112px; height:112px; perspective:700px; position:relative; z-index:1; transition:transform .15s}
+  .dice-btn:active .d-scene{transform:scale(.9)}
+  .d-cube{width:100%; height:100%; position:relative; transform-style:preserve-3d; transform:rotateX(-20deg) rotateY(32deg)}
+  .d-cube.idle{animation:dIdle 7s ease-in-out infinite}
+  @keyframes dIdle{0%,100%{transform:rotateX(-20deg) rotateY(32deg)}50%{transform:rotateX(-34deg) rotateY(54deg)}}
+  .d-face{position:absolute; inset:0; border-radius:26px; background-color:#2f6fed; background-image:var(--dots); background-repeat:no-repeat;
+    border:1px solid rgba(255,255,255,.45);
+    box-shadow:inset 0 2px 10px rgba(255,255,255,.4), inset 0 -16px 30px rgba(0,25,70,.5)}
+  .d-f1{--dots:radial-gradient(circle at 50% 50%, #fff 8px, transparent 9px); transform:translateZ(56px)}
+  .d-f2{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateX(90deg) translateZ(56px)}
+  .d-f3{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 50% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateY(90deg) translateZ(56px)}
+  .d-f4{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 70%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateY(-90deg) translateZ(56px)}
+  .d-f5{--dots:radial-gradient(circle at 30% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 30%, #fff 8px, transparent 9px),radial-gradient(circle at 50% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 70%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 70%, #fff 8px, transparent 9px); transform:rotateX(-90deg) translateZ(56px)}
+  .d-f6{--dots:radial-gradient(circle at 30% 27%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 27%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 50%, #fff 8px, transparent 9px),radial-gradient(circle at 30% 73%, #fff 8px, transparent 9px),radial-gradient(circle at 70% 73%, #fff 8px, transparent 9px); transform:rotateY(180deg) translateZ(56px)}
+  .d-tw{position:absolute; width:6px; height:6px; border-radius:50%; background:#fff; box-shadow:0 0 10px 2px rgba(155,92,255,.8); animation:tw 2.8s ease-in-out infinite; z-index:1}
+  .d-tw.t1{top:16%; left:24%} .d-tw.t2{top:26%; right:14%; animation-delay:1s}
+  .d-tw.t3{bottom:20%; left:16%; animation-delay:1.8s} .d-tw.t4{bottom:28%; right:24%; animation-delay:.5s}
+  @keyframes tw{0%,100%{opacity:0; transform:scale(.4)}50%{opacity:1; transform:scale(1.2)}}
+  @media (prefers-reduced-motion: reduce){.d-cube.idle,.dice-aura,.d-tw{animation:none}}
   .dice-label{margin-top:22px; font-size:15px; font-weight:700}
   .dice-sub{margin-top:6px; font-size:13px; color:var(--muted); text-align:center; line-height:1.5}
   .roul-sec{padding:16px 20px 0}
@@ -137,8 +155,17 @@
   .roul-sheet-actions{display:flex; gap:10px; margin-top:20px; align-items:center}
   .roul-sheet-actions .ai-go{margin-top:0}
   .lucky-genres{text-align:center; color:var(--muted); font-size:13px; margin-top:8px}
+  .lucky-card.show .lucky-poster{animation:posterGlow 2.2s ease .1s}
+  @keyframes posterGlow{0%{box-shadow:0 0 0 rgba(77,163,255,0)}35%{box-shadow:0 0 70px rgba(77,163,255,.55)}100%{box-shadow:0 0 0 rgba(77,163,255,0)}}
+  .lucky-card.show .lucky-poster::after{content:''; position:absolute; inset:0; border-radius:20px; pointer-events:none;
+    background:linear-gradient(105deg, transparent 42%, rgba(255,255,255,.38) 50%, transparent 58%);
+    transform:translateX(-130%); animation:shine 1.2s ease .35s forwards}
+  @keyframes shine{to{transform:translateX(130%)}}
+  .lucky-spark{position:absolute; bottom:32%; width:7px; height:7px; border-radius:50%; background:#ffe9a8;
+    box-shadow:0 0 12px #ffcf5c; pointer-events:none; z-index:2; animation:sparkUp 1.5s ease-out forwards}
+  @keyframes sparkUp{0%{opacity:0; transform:translateY(0) scale(.4)}18%{opacity:1}100%{opacity:0; transform:translateY(-150px) scale(1.1)}}
   .lucky-actions{display:flex; flex-direction:column; gap:10px; margin-top:16px}
-  .lucky-card{margin:26px auto 0; width:100%; max-width:340px; display:none}
+  .lucky-card{margin:26px auto 0; width:100%; max-width:340px; display:none; position:relative}
   .lucky-card.show{display:block; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
   @keyframes pop{from{transform:scale(.85); opacity:0}}
   .lucky-poster{width:100%; aspect-ratio:2/3; border-radius:20px; overflow:hidden; position:relative; background:var(--card2)}
@@ -367,7 +394,9 @@
     <div class="header"><div class="logo">РУЛЕТКА<span>.</span></div></div>
     <div class="roul-top">
       <button class="dice-btn" id="diceBtn" aria-label="Случайный фильм">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/></svg>
+        <span class="dice-aura"></span>
+        <span class="d-scene"><span class="d-cube idle" id="dCube"><span class="d-face d-f1"></span><span class="d-face d-f2"></span><span class="d-face d-f3"></span><span class="d-face d-f4"></span><span class="d-face d-f5"></span><span class="d-face d-f6"></span></span></span>
+        <span class="d-tw t1"></span><span class="d-tw t2"></span><span class="d-tw t3"></span><span class="d-tw t4"></span>
       </button>
       <div class="dice-label">Не знаешь, что посмотреть?</div>
       <div class="dice-sub">Настрой фильтры и жми на кубик —<br>выдадим случайный фильм</div>
@@ -1076,13 +1105,44 @@ async function roulKeywords(){
     return ids.join('|');
   }catch(e){ return ''; }
 }
+const D_BASE = 'rotateX(-20deg) rotateY(32deg)';
+const D_FACES = {1:'rotateX(0deg) rotateY(0deg)',2:'rotateX(-90deg) rotateY(0deg)',3:'rotateX(0deg) rotateY(-90deg)',4:'rotateX(0deg) rotateY(90deg)',5:'rotateX(90deg) rotateY(0deg)',6:'rotateX(0deg) rotateY(180deg)'};
+let dRolling = false;
+function animateDice(){
+  return new Promise(res=>{
+    const cube = $('#dCube');
+    if(dRolling || !cube){ res(); return; }
+    dRolling = true;
+    cube.classList.remove('idle');
+    cube.style.transition = 'none';
+    cube.style.transform = D_BASE;
+    void cube.offsetWidth;
+    cube.style.transition = 'transform .8s cubic-bezier(.35,.6,.4,1)';
+    cube.style.transform = 'rotateX(700deg) rotateY(752deg)'; // база + два оборота
+    setTimeout(()=>{
+      const v = 1+Math.floor(Math.random()*6);
+      cube.style.transition = 'transform 1s cubic-bezier(.2,.85,.3,1.12)';
+      cube.style.transform = D_FACES[v];
+      setTimeout(()=>{
+        dRolling = false; res(v);
+        setTimeout(()=>{ // плавный возврат к парению
+          cube.style.transition = 'transform 1.6s ease-in-out';
+          cube.style.transform = D_BASE;
+          setTimeout(()=>{ cube.classList.add('idle'); cube.style.transition=''; cube.style.transform=''; }, 1650);
+        }, 1400);
+      }, 1050);
+    }, 830);
+  });
+}
+let spinBusy = false;
 async function spinRoulette(){
-  const btn = $('#diceBtn'), card = $('#luckyCard');
-  btn.classList.remove('rolling'); void btn.offsetWidth; btn.classList.add('rolling');
+  if(spinBusy) return; spinBusy = true;
+  const card = $('#luckyCard');
   card.classList.remove('show');
-  if(!state.tmdbKey){ spinDemo(); return; }
+  if(!state.tmdbKey){ animateDice().then(()=>{ spinDemo(); spinBusy = false; }); return; }
   card.innerHTML = '<div class="ai-status"><div class="ai-spin"></div>Крутим рулетку…</div>';
   card.classList.add('show');
+  const diceP = animateDice();
   try{
     const g = new Set(roulSel.genres);
     const mood = ROUL_MOODS.find(m=>m.id===roulSel.mood);
@@ -1102,11 +1162,14 @@ async function spinRoulette(){
     roulSel.shown.add(pick.id);
     if(roulSel.shown.size>60) roulSel.shown.clear();
     if(!state.pool.find(p=>p.id===pick.id)) state.pool.push(pick);
+    await diceP; // результат — ровно когда кубик упал
     showLucky(pick);
   }catch(e){
+    await diceP;
     card.classList.remove('show');
     toast('Не получилось крутануть');
   }
+  spinBusy = false;
 }
 function showLucky(m){
   const card = $('#luckyCard');
@@ -1122,6 +1185,15 @@ function showLucky(m){
   $('#luckyPoster').onclick = ()=>openMovie(m.id);
   $('#luckyOpen').onclick = ()=>openMovie(m.id);
   $('#luckyAgain').onclick = spinRoulette;
+  for(let i=0;i<10;i++){ // взлетающие искры при выпадении
+    const s = document.createElement('span');
+    s.className = 'lucky-spark';
+    s.style.left = (8+Math.random()*84)+'%';
+    s.style.animationDelay = (Math.random()*.5)+'s';
+    if(Math.random()<.4){ s.style.background='#bfe0ff'; s.style.boxShadow='0 0 12px #4da3ff'; }
+    card.appendChild(s);
+    setTimeout(()=>s.remove(), 2400);
+  }
 }
 function spinDemo(){
   const names = ROUL_GENRES.filter(([id])=>roulSel.genres.has(id)).map(([,n])=>n);
