@@ -439,6 +439,7 @@
     border:1px solid rgba(255,255,255,.09); background:var(--card); color:#fff;
     font:inherit; font-size:14px; font-weight:700}
   .onl-row:active{transform:scale(.98)}
+  .onl-row.off{opacity:.45}
   .onl-row .go{color:var(--muted); font-size:18px; line-height:1}
   .onl-row .pl{width:34px; height:34px; flex:0 0 auto; border-radius:50%;
     background:linear-gradient(135deg,#3b8cff,#7b5cff); display:flex; align-items:center; justify-content:center}
@@ -2023,6 +2024,17 @@ async function jacSearch(q){
 
 /* ---------- онлайн (Lumio / mitsu.tv) ---------- */
 const MITSU = 'https://beta.mitsu.tv/api';
+// белый список источников как в плагине Lumio: только они показываются, сортировка по этому порядку
+const ONL_ORDER = ['zetflix','veoveo','cdnvideohub','kinotochka','phantom','uafilm','leproduction','filmix','vkmovie','lumio_original_subs'];
+const ONL_ALIASES = {videohub:'cdnvideohub', vkvideo:'vkmovie'};
+function onlKey(s){
+  const k = String(s.balanser || (s.name||'').split(' ')[0] || '').toLowerCase();
+  return ONL_ALIASES[k] || k;
+}
+function onlDisplayName(s){
+  if(onlKey(s)==='lumio_original_subs') return 'Оригинал (+субтитры)';
+  return s.name || onlKey(s);
+}
 let onlMovie = null, onlStack = [];
 function onlParams(m){
   const q = [];
@@ -2046,7 +2058,9 @@ async function onlFind(m){
     const r = await fetch(MITSU + '/lite/events?life=false&' + onlParams(m));
     if(!r.ok) throw new Error('http');
     const arr = await r.json();
-    const srcs = (Array.isArray(arr)?arr:[]).filter(s=>s && s.show!==false && s.url);
+    const srcs = (Array.isArray(arr)?arr:[])
+      .filter(s=>s && s.url && ONL_ORDER.indexOf(onlKey(s))>=0);
+    srcs.sort((a,b)=>ONL_ORDER.indexOf(onlKey(a)) - ONL_ORDER.indexOf(onlKey(b)));
     if(!srcs.length){ box.innerHTML = '<div class="rz-empty">Источников не нашлось 😕</div>'; return; }
     onlStack = [{kind:'srcs', title:'Источники', srcs}];
     onlRenderSrcs(srcs);
@@ -2107,7 +2121,7 @@ function onlBindBack(){
 function onlRenderSrcs(srcs){
   const box = $('#onlBox'); if(!box) return;
   box.innerHTML = '<div class="onl-list">' + srcs.map((s,i)=>
-    `<button class="onl-row" data-i="${i}"><span>${escTx(s.name||('Источник '+(i+1)))}${s.balanser?`<div class="onl-sub">${escTx(s.balanser)}</div>`:''}</span><span class="go">›</span></button>`
+    `<button class="onl-row${s.show===false?' off':''}" data-i="${i}"><span>${escTx(onlDisplayName(s))}${s.show===false?'<div class="onl-sub">временно недоступен</div>':''}</span><span class="go">›</span></button>`
   ).join('') + '</div>';
   box.querySelectorAll('.onl-row').forEach(btn=>{
     btn.onclick = ()=>{
