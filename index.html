@@ -1539,7 +1539,7 @@ function torParse(title){
   if(/дубляж/i.test(s) || tok('дб')) audio = 'Дубляж';
   else if(/многоголос/i.test(s) || tok('пм')) audio = 'Многоголосый';
   else if(/любитель/i.test(s)) audio = 'Любительский';
-  const subs = /субтитры/i.test(s) || tok('ст');
+  const subs = /субтитр/i.test(s) || tok('ст');
   return {res, hdr, audio, subs};
 }
 function torScore(t){
