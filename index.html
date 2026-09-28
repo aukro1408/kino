@@ -397,6 +397,7 @@
   .tpill.res{background:rgba(77,163,255,.16); color:#8dbcff; border:1px solid rgba(77,163,255,.35)}
   .tpill.hdr{background:rgba(180,120,255,.14); color:#cfa6ff; border:1px solid rgba(180,120,255,.35)}
   .tpill.au{background:rgba(255,255,255,.07); color:var(--muted); border:1px solid rgba(255,255,255,.12)}
+  .tpill.sub{background:rgba(90,220,170,.12); color:#7fe0b2; border:1px solid rgba(90,220,170,.35)}
   .tpill.top{background:rgba(255,210,90,.15); color:#ffd25e; border:1px solid rgba(255,210,90,.45)}
   .tor-item{padding:12px 14px; background:var(--card); border-radius:14px; margin-bottom:8px; cursor:pointer;
     border:1px solid rgba(255,255,255,.06)}
@@ -1537,15 +1538,16 @@ function torParse(title){
   const tok = re => new RegExp('(?<![\\p{L}\\p{N}])'+re+'(?![\\p{L}\\p{N}])','iu').test(s);
   if(/дубляж/i.test(s) || tok('дб')) audio = 'Дубляж';
   else if(/многоголос/i.test(s) || tok('пм')) audio = 'Многоголосый';
-  else if(/субтитры/i.test(s) || tok('ст')) audio = 'Субтитры';
   else if(/любитель/i.test(s)) audio = 'Любительский';
-  return {res, hdr, audio};
+  const subs = /субтитры/i.test(s) || tok('ст');
+  return {res, hdr, audio, subs};
 }
 function torScore(t){
   const p = torParse(t.Title);
   let s = p.res===2160 ? 100 : p.res===1080 ? 70 : p.res===720 ? 40 : 10;
   if(p.hdr==='DV') s += 30; else if(p.hdr) s += 18;
   if(p.audio==='Дубляж') s += 15; else if(p.audio==='Многоголосый') s += 8;
+  if(p.subs) s += 5;
   s += Math.min(t.Seeders||0, 200) * 0.2;
   return Math.round(s);
 }
@@ -1556,6 +1558,7 @@ function torPills(t, isTop){
   if(p.res) out.push(`<span class="tpill res">${p.res}p</span>`);
   if(p.hdr) out.push(`<span class="tpill hdr">${p.hdr}</span>`);
   if(p.audio) out.push(`<span class="tpill au">${p.audio}</span>`);
+  if(p.subs) out.push('<span class="tpill sub">Субтитры</span>');
   return out.length ? `<div class="tor-pills">${out.join('')}</div>` : '';
 }
 function torSorted(){
