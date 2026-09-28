@@ -34,11 +34,18 @@
 
   /* ---------- hero ---------- */
   .hero-wrap{padding:6px 16px 0; position:relative}
-  .hero{position:relative; height:300px; border-radius:24px; overflow:hidden; background:var(--card)}
-  .hero-slide{position:absolute; inset:0; opacity:0; transition:opacity .7s ease; }
-  .hero-slide.on{opacity:1}
-  .hero-art{position:absolute; inset:0}
-  .hero-art img{width:100%;height:100%;object-fit:cover}
+  .hero{position:relative; height:300px; border-radius:24px; overflow:hidden; background:var(--card); touch-action:pan-y}
+  .hero-track{display:flex; height:100%; transition:transform .5s cubic-bezier(.22,.9,.28,1); will-change:transform}
+  .hero-track.drag{transition:none}
+  .hero-slide{position:relative; flex:0 0 100%; height:100%; overflow:hidden}
+  .hero-art{position:absolute; inset:-4%}
+  .hero-art img{width:100%;height:100%;object-fit:cover; will-change:transform}
+  .hero-slide.on .hero-art img{animation:kb 9s ease-out both}
+  @keyframes kb{from{transform:scale(1.1)}to{transform:scale(1)}}
+  .hero-slide.on .hero-kicker{animation:rise .55s .05s both}
+  .hero-slide.on .hero-title{animation:rise .55s .13s both}
+  .hero-slide.on .hero-meta{animation:rise .55s .21s both}
+  @keyframes rise{from{opacity:0; transform:translateY(16px)}}
   .hero-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,18,32,.05) 30%, rgba(11,18,32,.55) 62%, rgba(11,18,32,.96) 100%)}
   .hero-info{position:absolute; left:20px; right:20px; bottom:18px}
   .hero-kicker{font-size:11px; font-weight:700; letter-spacing:2px; color:var(--accent2); text-transform:uppercase; margin-bottom:6px}
@@ -61,11 +68,14 @@
   .row-head{display:flex; align-items:center; justify-content:space-between; padding:0 20px 10px}
   .row-head h2{font-size:17px; font-weight:800}
   .row-head a{font-size:12.5px; color:var(--accent2); font-weight:700; cursor:pointer}
-  .row{display:flex; gap:12px; overflow-x:auto; padding:2px 20px 8px; scrollbar-width:none; scroll-snap-type:x mandatory}
-  .row::-webkit-scrollbar{display:none}
-  .card{flex:0 0 128px; scroll-snap-align:start; cursor:pointer}
-  .poster{position:relative; width:128px; height:192px; border-radius:14px; overflow:hidden; background:var(--card2);
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 12px; padding:2px 16px 10px}
+  .card{cursor:pointer; min-width:0}
+  .poster{position:relative; width:100%; aspect-ratio:2/3; border-radius:14px; overflow:hidden; background:var(--card2);
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .more-tile{aspect-ratio:2/3; border-radius:14px; border:1.5px dashed rgba(140,170,210,.35); background:rgba(120,160,220,.05);
+    display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center;
+    color:var(--muted); font-weight:800; font-size:14px; cursor:pointer; transition:transform .15s}
+  .more-tile:active{transform:scale(.95)}
   .poster img{width:100%; height:100%; object-fit:cover; display:block}
   .poster .demo-art{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:10px}
   .poster .demo-art b{font-size:13px; line-height:1.25; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.55)}
@@ -247,6 +257,18 @@
     </div>
   </div>
 
+  <!-- ============ CATEGORY ============ -->
+  <div class="screen" id="scr-cat">
+    <div class="header">
+      <button class="icon-btn" id="catBack" aria-label="Назад">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="logo" id="catTitle" style="font-size:16px; letter-spacing:3px">КАТЕГОРИЯ</div>
+      <div style="width:42px"></div>
+    </div>
+    <div class="grid3" id="catGrid" style="margin-top:8px"></div>
+  </div>
+
   <!-- ============ TABBAR ============ -->
   <nav class="tabbar">
     <button class="tab on" data-tab="home">
@@ -335,6 +357,7 @@ function norm(m){
     id: m.id,
     title: m.title || m.name || 'Без названия',
     year: (m.release_date||m.first_air_date||'') .slice(0,4) || m.year || '—',
+    date: m.release_date||m.first_air_date||'',
     rating: m.vote_average!==undefined ? +m.vote_average.toFixed(1) : m.rating,
     genres: m.genre_ids ? m.genre_ids.map(g=>RU_GENRE[g]).filter(Boolean) : (m.genres||[]),
     desc: m.overview || m.desc || 'Описание скоро появится.',
@@ -359,87 +382,145 @@ async function tmdb(path){
 async function bootLive(){
   if(!state.tmdbKey) return false;
   try{
-    const [tr, now, top, gl] = await Promise.all([
+    const [tr, now, top] = await Promise.all([
       tmdb('/trending/movie/week'),
-      tmdb('/movie/now_playing&region=RU'.replace('&region','?region')),
+      tmdb('/movie/now_playing?region=RU'),
       tmdb('/movie/top_rated'),
-      tmdb('/genre/movie/list'),
     ]);
     state.live = true;
-    state.genres = gl.genres || [];
-    const T = tr.results||[], N = now.results||[], P = top.results||[];
-    state.hero = T.slice(0,3).map(norm);
-    state.rows = [
-      {title:'Сейчас в тренде', items:T.slice(0,12).map(norm)},
-      {title:'Новинки для вас', items:N.slice(0,12).map(norm)},
-      {title:'Топ по рейтингу', items:P.slice(0,12).map(norm)},
-    ];
-    state.pool = T.concat(N,P).map(norm);
+    const T=(tr.results||[]).map(norm), N=(now.results||[]).map(norm), P=(top.results||[]).map(norm);
+    const newest=[...N].sort((a,b)=>b.date.localeCompare(a.date));
+    state.hero = newest.slice(0,10);
+    state.data = { trending:T, nowPlaying:newest, topRated:[...P].sort((a,b)=>b.rating-a.rating) };
+    buildSections();
+    state.pool = T.concat(N,P);
     $('#profileSub').textContent = 'онлайн · TMDB подключён';
     return true;
   }catch(e){ state.live=false; return false; }
 }
 function bootDemo(){
   const d = DEMO.map(norm);
-  state.hero = [d[0],d[5],d[4]];
-  state.rows = [
-    {title:'Новинки для вас', items:d.filter(m=>m.year>=2018)},
-    {title:'Топ по рейтингу', items:[...d].sort((a,b)=>b.rating-a.rating).slice(0,10)},
-    {title:'Скрытые жемчужины', items:[d[11],d[3],d[9],d[1],d[6]]},
-  ];
+  const newest=[...d].sort((a,b)=>b.year-a.year);
+  state.hero = newest.slice(0,10);
+  state.data = {
+    trending: d,
+    nowPlaying: newest,
+    topRated: [...d].sort((a,b)=>b.rating-a.rating),
+  };
+  buildSections();
   state.pool = d;
+}
+function buildSections(){
+  const D = state.data;
+  const sec = (id,title,items,more)=>({id, title, items:items.slice(0,14), more});
+  state.sections = [
+    sec('trend','Сейчас в тренде', D.trending, {type:'trending', title:'Сейчас в тренде'}),
+    sec('new','Новинки для вас', D.nowPlaying, {type:'now_playing', title:'Новинки для вас'}),
+    sec('top','Топ по рейтингу', D.topRated, {type:'top_rated', title:'Топ по рейтингу'}),
+  ];
 }
 
 /* =================== RENDER =================== */
 let heroIdx = 0, heroTimer = null;
 function renderHero(){
   const h = $('#hero'); if(!state.hero || !state.hero.length) return;
-  h.innerHTML = state.hero.map((m,i)=>`
-    <div class="hero-slide ${i===0?'on':''}" data-id="${m.id}">
+  heroIdx = 0;
+  h.innerHTML = '<div class="hero-track">' + state.hero.map((m,i)=>`
+    <div class="hero-slide" data-id="${m.id}">
       <div class="hero-art">${backdropHTML(m)}</div>
       <div class="hero-shade"></div>
       <div class="hero-info">
-        <div class="hero-kicker">${i===0?'Выбор редакции':(i===1?'В тренде':'Стоит посмотреть')}</div>
+        <div class="hero-kicker">${i===0?'Выбор редакции':(i===1?'В тренде':'Новинка')}</div>
         <div class="hero-title">${m.title}</div>
         <div class="hero-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span><span>${m.genres.slice(0,2).join(' · ')}</span></div>
       </div>
-    </div>`).join('') +
+    </div>`).join('') + '</div>' +
     `<div class="hero-dots">${state.hero.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('')}</div>`;
-  h.querySelectorAll('.hero-slide').forEach(s=>s.onclick=()=>openSheet(+s.dataset.id));
-  h.querySelectorAll('.hero-dots i').forEach((d,i)=>d.onclick=e=>{e.stopPropagation(); heroGo(i);});
-  clearInterval(heroTimer);
-  heroTimer = setInterval(()=>heroGo((heroIdx+1)%state.hero.length), 6000);
+  const track = h.querySelector('.hero-track');
+  h.querySelectorAll('.hero-slide').forEach(s=>s.addEventListener('click',()=>{
+    if(h.dataset.sw==='1'){ h.dataset.sw='0'; return; }
+    openSheet(+s.dataset.id);
+  }));
+  h.querySelectorAll('.hero-dots i').forEach((d,i)=>d.onclick=e=>{e.stopPropagation(); heroGo(i); restartHero();});
+  // ручной свайп
+  let sx=0, dx=0, dragging=false, W=0;
+  h.addEventListener('touchstart',e=>{dragging=true; sx=e.touches[0].clientX; dx=0; W=h.clientWidth; track.classList.add('drag'); clearInterval(heroTimer);},{passive:true});
+  h.addEventListener('touchmove',e=>{ if(!dragging) return; dx=e.touches[0].clientX-sx; track.style.transform=`translateX(${-heroIdx*W+dx}px)`; },{passive:true});
+  h.addEventListener('touchend',()=>{ if(!dragging) return; dragging=false; track.classList.remove('drag');
+    if(Math.abs(dx)>12) h.dataset.sw='1';
+    if(dx < -W*0.18) heroIdx=Math.min(heroIdx+1, state.hero.length-1);
+    else if(dx > W*0.18) heroIdx=Math.max(heroIdx-1, 0);
+    heroGo(heroIdx); restartHero();
+  });
+  heroGo(0); restartHero();
 }
 function heroGo(i){
   heroIdx = i;
-  document.querySelectorAll('.hero-slide').forEach((s,k)=>s.classList.toggle('on', k===i));
-  document.querySelectorAll('.hero-dots i').forEach((d,k)=>d.classList.toggle('on', k===i));
+  const h = $('#hero'), track = h.querySelector('.hero-track'); if(!track) return;
+  track.style.transform = `translateX(${-i*h.clientWidth}px)`;
+  h.querySelectorAll('.hero-dots i').forEach((d,k)=>d.classList.toggle('on', k===i));
+  h.querySelectorAll('.hero-slide').forEach((s,k)=>s.classList.toggle('on', k===i));
+}
+function restartHero(){
+  clearInterval(heroTimer);
+  heroTimer = setInterval(()=>heroGo((heroIdx+1)%state.hero.length), 6000);
 }
 function renderChips(){
   $('#chips').innerHTML = GENRE_CHIPS.map(c=>
     `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
   document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderRows(); });
 }
+function moreTileHTML(){
+  return `<div class="more-tile"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Ещё</span></div>`;
+}
 async function renderRows(){
   const box = $('#rows');
-  let rows = state.rows;
-  if(state.live && state.genre!=='all'){
-    try{
-      const d = await tmdb(`/discover/movie?sort_by=popularity.desc&with_genres=${state.genre}`);
-      rows = [{title: GENRE_CHIPS.find(c=>c.id==state.genre).name + ': популярное', items:(d.results||[]).map(norm)}];
-    }catch(e){ /* keep */ }
-  } else if(!state.live && state.genre!=='all'){
+  let sections = state.sections;
+  if(state.genre!=='all'){
     const gname = GENRE_CHIPS.find(c=>c.id==state.genre).name;
-    const f = state.pool.filter(m=>m.genres.includes(gname));
-    rows = [{title:gname, items:f.length?f:state.pool}];
+    let items = [];
+    if(state.live){
+      try{
+        const d = await tmdb(`/discover/movie?sort_by=popularity.desc&with_genres=${state.genre}`);
+        items = (d.results||[]).map(norm);
+      }catch(e){}
+    } else {
+      items = state.pool.filter(m=>m.genres.includes(gname));
+    }
+    sections = [{id:'g', title:gname, items:items.slice(0,14),
+      more:{type:'genre', genreId:state.genre, title:gname}}];
   }
-  box.innerHTML = rows.map(r=>{
-    const items = visible(r.items);
-    if(!items.length) return '';
-    return `<div class="row-sec"><div class="row-head"><h2>${r.title}</h2></div>
-      <div class="row">${items.map(cardHTML).join('')}</div></div>`;
-  }).join('');
+  const shown = sections.filter(s=>visible(s.items).length);
+  box.innerHTML = shown.map(s=>`
+    <div class="row-sec"><div class="row-head"><h2>${s.title}</h2></div>
+      <div class="grid3">${visible(s.items).map(cardHTML).join('')}${moreTileHTML()}</div></div>`).join('');
   bindCards(box);
+  box.querySelectorAll('.more-tile').forEach((t,i)=>{ t.onclick=()=>openCategory(shown[i].more); });
+}
+async function openCategory(more){
+  const grid = $('#catGrid');
+  $('#catTitle').textContent = more.title.toUpperCase().slice(0,22);
+  grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('#scr-cat').classList.add('active');
+  $('#scr-cat').scrollTop = 0;
+  let items = [];
+  if(state.live){
+    try{
+      const urls = more.type==='trending' ? [1,2,3].map(p=>`/trending/movie/week?page=${p}`)
+        : more.type==='now_playing' ? [1,2,3].map(p=>`/movie/now_playing?region=RU&page=${p}`)
+        : more.type==='top_rated' ? [1,2,3].map(p=>`/movie/top_rated?page=${p}`)
+        : [1,2,3].map(p=>`/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${p}`);
+      const rs = await Promise.all(urls.map(tmdb));
+      const seen = new Set();
+      rs.forEach(r=>(r.results||[]).forEach(m=>{ if(!seen.has(m.id)){ seen.add(m.id); items.push(norm(m)); } }));
+    }catch(e){}
+  } else {
+    items = state.pool.slice(0,30);
+  }
+  items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
+  grid.innerHTML = visible(items).map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>';
+  bindCards(grid);
 }
 function cardHTML(m){
   const w = state.watched.includes(m.id) ? ' watched' : '';
@@ -493,6 +574,7 @@ $('#sheetBg').onclick = closeSheet;
 
 /* =================== TABS =================== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
+$('#catBack').onclick = ()=>goto('home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
