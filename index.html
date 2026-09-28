@@ -578,7 +578,7 @@ const FAV_LISTS = [
   {id:'later', name:'Смотреть позже', icon:()=>IC_CLOCK, iconOff:()=>IC_CLOCK, empty:'Пока пусто. Отложите фильм через звёздочку → «Смотреть позже».'},
   {id:'mark', name:'Закладки', icon:()=>IC_MARK, iconOff:()=>IC_MARK_O, empty:'Пока пусто. Сохраняйте фильмы через звёздочку → «В закладки».'},
 ];
-function favSnap(m){ return {id:m.id, title:m.title, poster:m.poster||null, year:m.year, rating:m.rating, media:m.media||'movie', art:m.art||null}; }
+function favSnap(m){ return {id:m.id, title:m.title, poster:m.poster||null, year:m.year, rating:m.rating, media:m.media||'movie', art:m.art||null, genres:m.genres||[]}; }
 function favHas(id){
   if(state.favs.like.some(x=>x.id===id)) return 'like';
   if(state.favs.later.some(x=>x.id===id)) return 'later';
@@ -625,7 +625,7 @@ function renderFavSheet(){
     favToggle(m.id, b.dataset.list, m);
     const l = FAV_LISTS.find(x=>x.id===b.dataset.list);
     const on = state.favs[b.dataset.list].some(x=>x.id===m.id);
-    renderFavSheet(); syncFavStar(m.id); renderRows(); updateStats();
+    renderFavSheet(); syncFavStar(m.id); renderRows(); updateStats(); refreshForYou();
     toast(on ? `«${m.title}» — ${l.name.toLowerCase()}` : 'Убрано из «'+l.name.toLowerCase()+'»');
   });
 }
@@ -656,6 +656,9 @@ const GENRE_CHIPS = [
   {id:878, name:'Фантастика'}, {id:53, name:'Триллер'}, {id:27, name:'Ужасы'},
 ];
 const RU_GENRE = {28:'Боевик',12:'Приключения',16:'Анимация',35:'Комедия',80:'Криминал',18:'Драма',14:'Фэнтези',27:'Ужасы',10749:'Мелодрама',878:'Фантастика',53:'Триллер',36:'История',10402:'Музыка',10759:'Боевик',10765:'Фантастика'};
+const GENRE_ID_BY_RU = {};
+Object.entries(RU_GENRE).forEach(([id,name])=>{ if(!GENRE_ID_BY_RU[name]) GENRE_ID_BY_RU[name]=id; });
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 
 /* =================== HELPERS =================== */
 const $ = s => document.querySelector(s);
@@ -818,11 +821,12 @@ async function tmdb(path){
 async function bootLive(){
   if(!state.tmdbKey) return false;
   try{
-    const [tr, now, top, tvt] = await Promise.all([
+    const [tr, now, top, tvt, fy] = await Promise.all([
       tmdb('/trending/movie/week'),
       tmdb('/movie/now_playing?region=RU'),
       tmdb('/movie/top_rated'),
       tmdb('/trending/tv/week'),
+      forYouPayload(),
     ]);
     state.live = true;
     const T=(tr.results||[]).map(norm), N=(now.results||[]).map(norm), P=(top.results||[]).map(norm), TT=((tvt.results||[]).map(r=>norm(r,'tv')));
@@ -830,7 +834,11 @@ async function bootLive(){
     state.hero = newest.slice(0,10);
     state.data = { trending:T, nowPlaying:newest, topRated:[...P].sort((a,b)=>b.rating-a.rating), tvTrend:TT };
     buildSections();
-    state.pool = T.concat(N,P,TT);
+    if(fy){
+      state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
+        more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
+    }
+    state.pool = T.concat(N,P,TT,fy?fy.items:[]);
     $('#profileSub').textContent = 'онлайн · TMDB подключён';
     return true;
   }catch(e){ state.live=false; return false; }
@@ -856,6 +864,41 @@ function buildSections(){
     sec('top','Топ по рейтингу', D.topRated, {type:'top_rated', title:'Топ по рейтингу'}),
   ];
   if(D.tvTrend && D.tvTrend.length) state.sections.push(sec('tv','Сериалы в тренде', D.tvTrend, {type:'tv_trending', title:'Сериалы в тренде'}));
+}
+
+/* Персональный ряд «Для тебя» — по жанрам из избранного (идея из Lampa Discovery) */
+function buildTaste(){
+  const weights = {};
+  [['like',5],['mark',4],['later',3]].forEach(([k,w])=>{
+    (state.favs[k]||[]).forEach(m=>{
+      (m.genres||[]).forEach(g=>{
+        const id = GENRE_ID_BY_RU[g.name||g];
+        if(id) weights[id] = (weights[id]||0)+w;
+      });
+    });
+  });
+  return Object.entries(weights).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);
+}
+async function forYouPayload(){
+  const taste = buildTaste();
+  if(!taste.length || !state.tmdbKey) return null;
+  try{
+    const d = await tmdb(`/discover/movie?with_genres=${taste.join(',')}&sort_by=vote_average.desc&vote_count.gte=100&primary_release_date.lte=${todayStr()}&page=1`);
+    const items = (d.results||[]).map(norm);
+    if(!items.length) return null;
+    return {items, genreIds: taste.join(',')};
+  }catch(e){ return null; }
+}
+async function refreshForYou(){
+  if(!state.live) return;
+  state.sections = state.sections.filter(s=>s.id!=='foryou');
+  const fy = await forYouPayload();
+  if(fy){
+    fy.items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
+    state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
+      more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
+  }
+  if(currentScreenId()==='scr-home' && state.genre==='all') renderRows();
 }
 
 /* =================== RENDER =================== */
@@ -963,6 +1006,7 @@ function catURL(more, page){
     : more.type==='now_playing' ? `/movie/now_playing?region=RU&page=${page}`
     : more.type==='top_rated' ? `/movie/top_rated?page=${page}`
     : more.type==='tv_trending' ? `/trending/tv/week?page=${page}`
+    : more.type==='foryou' ? `/discover/movie?with_genres=${more.genreIds}&sort_by=vote_average.desc&vote_count.gte=100&primary_release_date.lte=${todayStr()}&page=${page}`
     : more.type==='genre_tv' ? `/discover/tv?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`
     : `/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`;
 }
