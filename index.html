@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>blackroom — рекомендации фильмов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -27,7 +30,9 @@
   /* ---------- header ---------- */
   .header{display:flex; align-items:center; justify-content:space-between; padding:18px 20px 8px;}
   .logo{font-weight:800; font-size:22px; letter-spacing:6px;}
-  .logo.brand{letter-spacing:1px; font-size:21px;}
+  .logo.brand{letter-spacing:1px; font-size:21px; font-family:'Inter',system-ui,sans-serif; animation:logo-breathe 4s ease-in-out infinite;}
+  @keyframes logo-breathe{ from,to{ font-variation-settings:'wght' 300; } 50%{ font-variation-settings:'wght' 800; } }
+  @media (prefers-reduced-motion: reduce){ .logo.brand{animation:none;} }
   .logo span{color:var(--accent)}
   .icon-btn{width:42px;height:42px;border-radius:50%;background:var(--card);border:none;color:var(--text);
     display:flex;align-items:center;justify-content:center;cursor:pointer}
