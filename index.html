@@ -164,14 +164,16 @@
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
   .back-btn:active{transform:scale(.93)}
-  .mv-body{padding:0 16px 26px; margin-top:-58px; position:relative}
-  .mv-head{display:flex; gap:14px; align-items:flex-end}
-  .mv-poster{width:152px; flex:0 0 152px; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
-    background:var(--card); box-shadow:0 14px 34px rgba(0,0,0,.55)}
-  .mv-poster img{width:100%; height:100%; object-fit:cover}
-  .mv-poster .demo-art{width:100%; height:100%}
-  .mv-title{font-size:21px; font-weight:800; line-height:1.2; padding-bottom:6px}
-  .mv-orig{color:var(--muted); font-size:13px; font-weight:600}
+  .mv-body{padding:0 16px 26px; position:relative}
+  .mv-poster-c{width:200px; margin:-120px auto 0; aspect-ratio:2/3; border-radius:18px; overflow:hidden;
+    background:var(--card); box-shadow:0 18px 44px rgba(0,0,0,.6); position:relative; z-index:2}
+  .mv-poster-c img{width:100%; height:100%; object-fit:cover}
+  .mv-poster-c .demo-art{width:100%; height:100%}
+  .mv-title-c{text-align:center; margin-top:16px; padding:0 24px}
+  .mv-logo{max-width:280px; max-height:96px; width:auto; height:auto; object-fit:contain}
+  .mv-title-t{font-size:26px; font-weight:800; line-height:1.2}
+  .mv-orig-c{color:var(--muted); font-size:14px; font-weight:600; margin-top:8px}
+  .mv-meta-c{justify-content:center}
   .mv-meta{display:flex; align-items:center; gap:10px; margin-top:14px; font-size:13.5px; color:var(--muted); font-weight:600; flex-wrap:wrap}
   .mv-meta .rate{color:var(--star); font-weight:800; font-size:15px}
   .mv-genres{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
@@ -643,8 +645,10 @@ async function openMovie(id){
   if(!m){ box.innerHTML = '<div class="mv-load">Фильм не найден</div>'; return; }
   if(state.live){
     try{
-      const d = await tmdb(`/movie/${id}?append_to_response=credits,videos`);
+      const d = await tmdb(`/movie/${id}?append_to_response=credits,videos,images&include_image_language=ru,en,null`);
       const base = norm(d);
+      const logos = (d.images && d.images.logos) || [];
+      const logo = logos.find(l=>l.iso_639_1==='ru') || logos.find(l=>l.iso_639_1==='en') || logos[0] || null;
       const dirs = (d.credits.crew||[]).filter(c=>c.job==='Director');
       let dirBio = '';
       if(dirs[0]){
@@ -656,6 +660,7 @@ async function openMovie(id){
         cast: (d.credits.cast||[]).slice(0,14).map(c=>({id:c.id, name:c.name, character:c.character, photo:c.profile_path})),
         directors: dirs,
         trailer: trailerKey(d.videos),
+        logo: logo ? logo.file_path : null,
       };
     }catch(e){ /* остаёмся на базовых данных */ }
   } else {
@@ -673,11 +678,12 @@ function renderMovie(m){
       <button class="back-btn" id="mvBack">←</button>
     </div>
     <div class="mv-body">
-      <div class="mv-head">
-        <div class="mv-poster">${posterHTML(m)}</div>
-        <div><div class="mv-title">${m.title}</div><div class="mv-orig">${m.year}</div></div>
+      <div class="mv-poster-c">${posterHTML(m)}</div>
+      <div class="mv-title-c">
+        ${m.logo?`<img class="mv-logo" src="${IMG}w500${m.logo}" alt="">`:`<div class="mv-title-t">${m.title}</div>`}
+        <div class="mv-orig-c">${m.year}</div>
       </div>
-      <div class="mv-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
+      <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
       <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}</div>
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
