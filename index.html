@@ -105,7 +105,7 @@
   .grid .poster{width:100%; height:auto; aspect-ratio:2/3}
 
   /* ---------- random ---------- */
-  .dice-wrap{display:flex; flex-direction:column; align-items:center; padding:40px 24px}
+  .roul-top{display:flex; flex-direction:column; align-items:center; padding:26px 24px 6px}
   .dice-btn{width:150px; height:150px; border-radius:44px; border:none; cursor:pointer;
     background:linear-gradient(135deg,#2f6fed,#4da3ff); color:#fff;
     display:flex; align-items:center; justify-content:center;
@@ -115,6 +115,20 @@
   @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.05)}75%{transform:rotate(14deg) scale(1.05)}}
   .dice-label{margin-top:22px; font-size:15px; font-weight:700}
   .dice-sub{margin-top:6px; font-size:13px; color:var(--muted); text-align:center; line-height:1.5}
+  .roul-sec{padding:16px 20px 0}
+  .roul-h{font-size:12.5px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:10px}
+  .roul-chips{display:flex; flex-wrap:wrap; gap:8px}
+  .roul-chip{background:var(--card); border:1px solid rgba(255,255,255,.1); color:var(--text); border-radius:99px;
+    padding:9px 15px; font:inherit; font-size:13.5px; cursor:pointer; transition:.15s}
+  .roul-chip.on{background:linear-gradient(135deg,#2f6fed,#4da3ff); border-color:transparent; color:#fff; font-weight:700;
+    box-shadow:0 6px 18px rgba(77,163,255,.35)}
+  .roul-chip:active{transform:scale(.95)}
+  .roul-input{width:100%; box-sizing:border-box; background:var(--card); border:1px solid rgba(255,255,255,.1); border-radius:14px;
+    color:var(--text); font:inherit; font-size:15px; padding:13px 14px; outline:none}
+  .roul-input:focus{border-color:var(--accent)}
+  .roul-hint{font-size:12px; color:var(--muted); margin-top:7px}
+  .lucky-genres{text-align:center; color:var(--muted); font-size:13px; margin-top:8px}
+  .lucky-actions{display:flex; flex-direction:column; gap:10px; margin-top:16px}
   .lucky-card{margin-top:26px; width:100%; max-width:340px; display:none}
   .lucky-card.show{display:block; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
   @keyframes pop{from{transform:scale(.85); opacity:0}}
@@ -342,14 +356,27 @@
   <!-- ============ RANDOM ============ -->
   <div class="screen" id="scr-random">
     <div class="header"><div class="logo">РУЛЕТКА<span>.</span></div></div>
-    <div class="dice-wrap">
+    <div class="roul-top">
       <button class="dice-btn" id="diceBtn" aria-label="Случайный фильм">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/></svg>
       </button>
-      <div class="dice-label">Не знаешь что посмотреть?</div>
-      <div class="dice-sub">Жми на кубик — подберём случайный<br>фильм из твоих подборок</div>
-      <div class="lucky-card" id="luckyCard"></div>
+      <div class="dice-label">Не знаешь, что посмотреть?</div>
+      <div class="dice-sub">Выбери жанры и настроение,<br>жми на кубик — выдадим случайный фильм</div>
     </div>
+    <div class="roul-sec">
+      <div class="roul-h">Жанры</div>
+      <div class="roul-chips" id="roulGenres"></div>
+    </div>
+    <div class="roul-sec">
+      <div class="roul-h">Настроение</div>
+      <div class="roul-chips" id="roulMoods"></div>
+    </div>
+    <div class="roul-sec">
+      <div class="roul-h">Про что?</div>
+      <input class="roul-input" id="roulKw" placeholder="Например: космос, месть, свадьба">
+      <div class="roul-hint">Одно-два слова — подберём по тегам (нужен Gemini ключ)</div>
+    </div>
+    <div class="roul-sec"><div class="lucky-card" id="luckyCard"></div></div>
   </div>
 
   <!-- ============ PROFILE ============ -->
@@ -973,21 +1000,105 @@ async function doSearch(q){
 }
 
 /* =================== RANDOM =================== */
-$('#diceBtn').onclick = ()=>{
+const ROUL_GENRES = [[28,'Боевик'],[12,'Приключения'],[16,'Анимация'],[35,'Комедия'],[80,'Криминал'],[18,'Драма'],[10751,'Семейный'],[14,'Фэнтези'],[36,'История'],[27,'Ужасы'],[10402,'Музыка'],[9648,'Детектив'],[10749,'Мелодрама'],[878,'Фантастика'],[53,'Триллер'],[10752,'Военный'],[37,'Вестерн'],[99,'Документальный']];
+const ROUL_MOODS = [
+  {id:'epic', name:'Эпичное 🌋', genres:[12,28], vote:7},
+  {id:'fun', name:'Посмеяться 😄', genres:[35]},
+  {id:'thrill', name:'Пощекотать нервы 😱', genres:[27,53]},
+  {id:'soul', name:'Для души 💛', genres:[18]},
+  {id:'mind', name:'Поломать голову 🤯', genres:[9648,878]},
+  {id:'family', name:'Семейный вечер 🍿', genres:[10751,16]},
+  {id:'love', name:'Романтика 💕', genres:[10749]},
+  {id:'adv', name:'Приключения 🗺️', genres:[12,14]},
+];
+const roulSel = {genres:new Set(), mood:null, shown:new Set()};
+
+function renderRoulChips(){
+  $('#roulGenres').innerHTML = ROUL_GENRES.map(([id,name])=>`<button class="roul-chip${roulSel.genres.has(id)?' on':''}" data-g="${id}">${name}</button>`).join('');
+  $('#roulGenres').querySelectorAll('.roul-chip').forEach(c=>c.onclick=()=>{
+    const id = +c.dataset.g;
+    roulSel.genres.has(id) ? roulSel.genres.delete(id) : roulSel.genres.add(id);
+    c.classList.toggle('on');
+  });
+  $('#roulMoods').innerHTML = ROUL_MOODS.map(m=>`<button class="roul-chip${roulSel.mood===m.id?' on':''}" data-m="${m.id}">${m.name}</button>`).join('');
+  $('#roulMoods').querySelectorAll('.roul-chip').forEach(c=>c.onclick=()=>{
+    const id = c.dataset.m;
+    roulSel.mood = roulSel.mood===id ? null : id;
+    $('#roulMoods').querySelectorAll('.roul-chip').forEach(x=>x.classList.toggle('on', x.dataset.m===roulSel.mood));
+  });
+}
+// «Про что?»: Gemini переводит русские слова в английские keywords → TMDB /search/keyword
+async function roulKeywords(){
+  try{
+    const txt = ($('#roulKw').value||'').trim();
+    if(!txt || !state.geminiKey.trim()) return '';
+    const en = await aiAsk('Translate into 1-3 short English keywords (comma-separated, NOTHING else) for a movie tag search: "'+txt+'"');
+    const ids = [];
+    for(const w of en.split(',').map(s=>s.trim()).filter(Boolean).slice(0,3)){
+      try{
+        const d = await tmdb('/search/keyword?query='+encodeURIComponent(w));
+        if(d.results && d.results[0]) ids.push(d.results[0].id);
+      }catch(e){}
+    }
+    return ids.join('|');
+  }catch(e){ return ''; }
+}
+async function spinRoulette(){
   const btn = $('#diceBtn'), card = $('#luckyCard');
-  const pool = visible(state.pool);
-  if(!pool.length){ toast('Включи показ просмотренного в профиле'); return; }
   btn.classList.remove('rolling'); void btn.offsetWidth; btn.classList.add('rolling');
   card.classList.remove('show');
-  setTimeout(()=>{
-    const m = pool[Math.floor(Math.random()*pool.length)];
-    card.innerHTML = `<div class="lucky-poster" data-id="${m.id}">${posterHTML(m)}</div>
-      <div class="card-title" style="font-size:16px;margin-top:12px">${m.title}</div>
-      <div class="card-stars">${starsHTML(m.rating)}<span>${m.rating} · ${m.year}</span></div>`;
-    card.classList.add('show');
-    card.querySelector('.lucky-poster').onclick = ()=>openMovie(m.id);
-  }, 480);
-};
+  if(!state.tmdbKey){ spinDemo(); return; }
+  card.innerHTML = '<div class="ai-status"><div class="ai-spin"></div>Крутим рулетку…</div>';
+  card.classList.add('show');
+  try{
+    const g = new Set(roulSel.genres);
+    const mood = ROUL_MOODS.find(m=>m.id===roulSel.mood);
+    if(mood) mood.genres.forEach(id=>g.add(id));
+    const kw = await roulKeywords();
+    let url = '/discover/movie?sort_by=popularity.desc&vote_count.gte=40&vote_average.gte='+((mood&&mood.vote)||6);
+    if(g.size) url += '&with_genres='+[...g].join('|');
+    if(kw) url += '&with_keywords='+kw;
+    const first = await tmdb(url+'&page=1');
+    const pages = Math.min(first.total_pages||1, 20);
+    const page = 1 + Math.floor(Math.random()*pages);
+    const data = page===1 ? first : await tmdb(url+'&page='+page);
+    let items = (data.results||[]).filter(r=>!state.watched.includes(r.id) && !roulSel.shown.has(r.id));
+    if(!items.length) items = (data.results||[]).filter(r=>!roulSel.shown.has(r.id));
+    if(!items.length){ toast('Ничего не нашлось — ослабь фильтры'); card.classList.remove('show'); return; }
+    const pick = norm(items[Math.floor(Math.random()*items.length)]);
+    roulSel.shown.add(pick.id);
+    if(roulSel.shown.size>60) roulSel.shown.clear();
+    if(!state.pool.find(p=>p.id===pick.id)) state.pool.push(pick);
+    showLucky(pick);
+  }catch(e){
+    card.classList.remove('show');
+    toast('Не получилось крутануть');
+  }
+}
+function showLucky(m){
+  const card = $('#luckyCard');
+  card.innerHTML = `<div class="lucky-poster" id="luckyPoster">${posterHTML(m)}</div>
+    <div class="card-title" style="font-size:17px;margin-top:14px;text-align:center">${m.title}</div>
+    <div class="card-stars" style="justify-content:center">${starsHTML(m.rating)}<span>${m.rating} · ${m.year}</span></div>
+    ${m.genres.length?`<div class="lucky-genres">${m.genres.slice(0,3).join(' · ')}</div>`:''}
+    <div class="lucky-actions">
+      <button class="ai-go" id="luckyOpen">Открыть</button>
+      <button class="roul-chip" id="luckyAgain" style="width:100%;padding:13px">🎲 Крутить ещё</button>
+    </div>`;
+  card.classList.remove('show'); void card.offsetWidth; card.classList.add('show');
+  $('#luckyPoster').onclick = ()=>openMovie(m.id);
+  $('#luckyOpen').onclick = ()=>openMovie(m.id);
+  $('#luckyAgain').onclick = spinRoulette;
+}
+function spinDemo(){
+  const names = ROUL_GENRES.filter(([id])=>roulSel.genres.has(id)).map(([,n])=>n);
+  const pool = visible(state.pool).filter(m=>!names.length || m.genres.some(g=>names.includes(g)));
+  if(!pool.length){ toast('Включи показ просмотренного в профиле'); return; }
+  const m = pool[Math.floor(Math.random()*pool.length)];
+  setTimeout(()=>showLucky(m), 480);
+}
+$('#diceBtn').onclick = spinRoulette;
+renderRoulChips();
 
 /* =================== SETTINGS =================== */
 function updateStats(){
