@@ -1106,7 +1106,8 @@ async function catLoadMore(){
       else { const cg = grid.querySelector('.col-grid'); if(cg) cg.insertAdjacentHTML('beforeend', cards); }
       bindColCards(grid);
       catPage++;
-      if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
+      const gotN = (d.results||[]).length;
+      if(!gotN || gotN < 20 || catPage >= 60) catDone = true;
     } else {
       const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv';
       const d = isCol ? await cubGet(`view/${catMore.colId}?page=${catPage+1}`) : await tmdb(catURL(catMore, catPage+1));
