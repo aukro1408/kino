@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>КИНО — рекомендации фильмов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#0e1626; --card:#141e31; --card2:#182440;
+    --text:#eef2f8; --muted:#8b98ad; --accent:#4da3ff; --accent2:#7cc4ff;
+    --star:#ffc94d; --radius:18px;
+    --tabbar-h:72px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Manrope',system-ui,sans-serif; background:var(--bg); color:var(--text);
+    overflow:hidden; overscroll-behavior:none; user-select:none; -webkit-user-select:none;
+  }
+  #app{height:100dvh; display:flex; flex-direction:column; position:relative; max-width:520px; margin:0 auto;}
+  .screen{flex:1; overflow-y:auto; overflow-x:hidden; padding-bottom:calc(var(--tabbar-h) + 20px); scrollbar-width:none; display:none}
+  .screen.active{display:block}
+  .screen::-webkit-scrollbar{display:none}
+
+  /* ---------- header ---------- */
+  .header{display:flex; align-items:center; justify-content:space-between; padding:18px 20px 8px;}
+  .logo{font-weight:800; font-size:22px; letter-spacing:6px;}
+  .logo span{color:var(--accent)}
+  .icon-btn{width:42px;height:42px;border-radius:50%;background:var(--card);border:none;color:var(--text);
+    display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .icon-btn:active{transform:scale(.94)}
+
+  /* ---------- hero ---------- */
+  .hero-wrap{padding:6px 16px 0; position:relative}
+  .hero{position:relative; height:300px; border-radius:24px; overflow:hidden; background:var(--card)}
+  .hero-slide{position:absolute; inset:0; opacity:0; transition:opacity .7s ease; }
+  .hero-slide.on{opacity:1}
+  .hero-art{position:absolute; inset:0}
+  .hero-art img{width:100%;height:100%;object-fit:cover}
+  .hero-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,18,32,.05) 30%, rgba(11,18,32,.55) 62%, rgba(11,18,32,.96) 100%)}
+  .hero-info{position:absolute; left:20px; right:20px; bottom:18px}
+  .hero-kicker{font-size:11px; font-weight:700; letter-spacing:2px; color:var(--accent2); text-transform:uppercase; margin-bottom:6px}
+  .hero-title{font-size:26px; font-weight:800; line-height:1.15; text-shadow:0 2px 18px rgba(0,0,0,.6)}
+  .hero-meta{display:flex; align-items:center; gap:10px; margin-top:8px; font-size:13px; color:#cdd7e6}
+  .hero-meta .rate{color:var(--star); font-weight:800}
+  .hero-dots{position:absolute; bottom:14px; right:18px; display:flex; gap:6px; z-index:2}
+  .hero-dots i{width:22px; height:4px; border-radius:3px; background:rgba(255,255,255,.28); transition:.3s}
+  .hero-dots i.on{background:#fff; width:34px}
+
+  /* ---------- chips ---------- */
+  .chips{display:flex; gap:10px; overflow-x:auto; padding:16px 16px 4px; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto; padding:9px 18px; border-radius:999px; background:var(--card); border:1px solid rgba(255,255,255,.06);
+    font-size:13.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:.25s}
+  .chip.on{background:var(--accent); color:#06121f; border-color:var(--accent); box-shadow:0 4px 18px rgba(77,163,255,.35)}
+
+  /* ---------- rows ---------- */
+  .row-sec{margin-top:18px}
+  .row-head{display:flex; align-items:center; justify-content:space-between; padding:0 20px 10px}
+  .row-head h2{font-size:17px; font-weight:800}
+  .row-head a{font-size:12.5px; color:var(--accent2); font-weight:700; cursor:pointer}
+  .row{display:flex; gap:12px; overflow-x:auto; padding:2px 20px 8px; scrollbar-width:none; scroll-snap-type:x mandatory}
+  .row::-webkit-scrollbar{display:none}
+  .card{flex:0 0 128px; scroll-snap-align:start; cursor:pointer}
+  .poster{position:relative; width:128px; height:192px; border-radius:14px; overflow:hidden; background:var(--card2);
+    box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .poster img{width:100%; height:100%; object-fit:cover; display:block}
+  .poster .demo-art{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:10px}
+  .poster .demo-art b{font-size:13px; line-height:1.25; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.55)}
+  .poster .demo-art small{font-size:10px; color:rgba(255,255,255,.75); font-weight:600; margin-top:3px}
+  .watched-badge{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%;
+    background:rgba(20,200,120,.92); display:none; align-items:center; justify-content:center; color:#04120a}
+  .card.watched .watched-badge{display:flex}
+  .card.watched .poster{opacity:.55}
+  .card-title{font-size:12.5px; font-weight:700; margin-top:8px; line-height:1.3;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .card-stars{display:flex; align-items:center; gap:5px; margin-top:4px}
+  .card-stars svg{width:11px; height:11px}
+  .card-stars span{font-size:11px; color:var(--muted); font-weight:700}
+
+  /* ---------- search ---------- */
+  .search-box{padding:6px 16px 0}
+  .search-input{display:flex; align-items:center; gap:10px; background:var(--card); border-radius:16px; padding:14px 16px}
+  .search-input input{flex:1; background:none; border:none; outline:none; color:var(--text); font-size:15px; font-family:inherit}
+  .search-input input::placeholder{color:var(--muted)}
+  .search-hint{padding:26px 30px; text-align:center; color:var(--muted); font-size:13.5px; line-height:1.6}
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:14px 16px 0}
+  .grid .card{flex:none}
+  .grid .poster{width:100%; height:auto; aspect-ratio:2/3}
+
+  /* ---------- random ---------- */
+  .dice-wrap{display:flex; flex-direction:column; align-items:center; padding:40px 24px}
+  .dice-btn{width:150px; height:150px; border-radius:44px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#2f6fed,#4da3ff); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 18px 50px rgba(77,163,255,.4); transition:transform .15s}
+  .dice-btn:active{transform:scale(.93) rotate(-6deg)}
+  .dice-btn.rolling{animation:shake .5s}
+  @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.05)}75%{transform:rotate(14deg) scale(1.05)}}
+  .dice-label{margin-top:22px; font-size:15px; font-weight:700}
+  .dice-sub{margin-top:6px; font-size:13px; color:var(--muted); text-align:center; line-height:1.5}
+  .lucky-card{margin-top:26px; width:100%; max-width:340px; display:none}
+  .lucky-card.show{display:block; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{from{transform:scale(.85); opacity:0}}
+  .lucky-poster{width:100%; aspect-ratio:2/3; border-radius:20px; overflow:hidden; position:relative; background:var(--card2)}
+  .lucky-poster img{width:100%; height:100%; object-fit:cover}
+
+  /* ---------- profile / settings ---------- */
+  .profile-head{display:flex; align-items:center; gap:16px; padding:10px 20px 6px}
+  .avatar{width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#2f6fed,#9b5cff);
+    display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800}
+  .profile-head b{font-size:18px} .profile-head small{color:var(--muted); font-size:12.5px}
+  .set-group{margin:18px 16px 0; background:var(--card); border-radius:var(--radius); overflow:hidden}
+  .set-row{padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .set-row + .set-row{border-top:1px solid rgba(255,255,255,.06)}
+  .set-row .t{font-size:14px; font-weight:700}
+  .set-row .d{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
+  .key-input{width:150px; background:var(--bg2); border:1px solid rgba(255,255,255,.1); border-radius:10px;
+    color:var(--text); padding:9px 12px; font-size:12px; font-family:inherit; outline:none}
+  .key-input:focus{border-color:var(--accent)}
+  .key-ok{font-size:12px; font-weight:800; color:#2bd97c}
+  .switch{position:relative; width:48px; height:28px; border-radius:999px; background:#2a3a55; border:none; cursor:pointer; transition:.25s; flex:0 0 auto}
+  .switch::after{content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:.25s}
+  .switch.on{background:var(--accent)}
+  .switch.on::after{left:23px}
+  .stat-row{display:flex; gap:12px; padding:0 16px; margin-top:14px}
+  .stat{flex:1; background:var(--card); border-radius:16px; padding:16px; text-align:center}
+  .stat b{font-size:22px; display:block} .stat small{color:var(--muted); font-size:11.5px; font-weight:600}
+
+  /* ---------- tabbar ---------- */
+  .tabbar{position:absolute; left:0; right:0; bottom:0; height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    background:rgba(13,20,34,.82); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+    border-top:1px solid rgba(255,255,255,.07); display:flex; z-index:50}
+  .tab{flex:1; background:none; border:none; color:var(--muted); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px; font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit}
+  .tab svg{width:23px; height:23px}
+  .tab.on{color:var(--accent2)}
+
+  /* ---------- detail sheet ---------- */
+  .sheet-bg{position:absolute; inset:0; background:rgba(4,8,16,.6); backdrop-filter:blur(4px);
+    opacity:0; pointer-events:none; transition:.3s; z-index:90}
+  .sheet-bg.show{opacity:1; pointer-events:auto}
+  .sheet{position:absolute; left:0; right:0; bottom:0; max-height:88%; z-index:95;
+    background:#101a2e; border-radius:26px 26px 0 0; overflow-y:auto; scrollbar-width:none;
+    transform:translateY(102%); transition:transform .38s cubic-bezier(.2,.9,.3,1)}
+  .sheet::-webkit-scrollbar{display:none}
+  .sheet.show{transform:translateY(0)}
+  .sheet-grip{width:44px; height:5px; border-radius:3px; background:rgba(255,255,255,.22); margin:12px auto 0}
+  .sheet-hero{position:relative; height:230px; margin:12px 16px 0; border-radius:18px; overflow:hidden; background:var(--card2)}
+  .sheet-hero img{width:100%; height:100%; object-fit:cover}
+  .sheet-hero .shade{position:absolute; inset:0; background:linear-gradient(180deg,transparent 40%,rgba(16,26,46,.9))}
+  .sheet-body{padding:18px 22px 34px}
+  .sheet-body h2{font-size:22px; font-weight:800}
+  .sheet-meta{display:flex; align-items:center; gap:10px; margin:10px 0 4px; font-size:13px; color:var(--muted); font-weight:600; flex-wrap:wrap}
+  .sheet-meta .rate{color:var(--star); font-weight:800; font-size:15px}
+  .sheet-genres{display:flex; gap:8px; flex-wrap:wrap; margin:12px 0}
+  .sheet-genres i{font-style:normal; font-size:12px; font-weight:700; background:var(--card2); padding:7px 13px; border-radius:999px; color:#c4d2e8}
+  .sheet-desc{font-size:14px; line-height:1.65; color:#c9d4e6}
+  .sheet-actions{display:flex; gap:10px; margin-top:18px}
+  .btn{flex:1; border:none; border-radius:14px; padding:14px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit}
+  .btn.primary{background:var(--accent); color:#06121f}
+  .btn.ghost{background:var(--card2); color:var(--text)}
+  .btn:active{transform:scale(.97)}
+
+  .toast{position:absolute; left:50%; bottom:calc(var(--tabbar-h) + 26px); transform:translateX(-50%) translateY(20px);
+    background:#1c2942; border:1px solid rgba(255,255,255,.1); color:var(--text); font-size:13px; font-weight:700;
+    padding:12px 20px; border-radius:999px; opacity:0; transition:.3s; z-index:120; pointer-events:none; white-space:nowrap}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <div class="screen active" id="scr-home">
+    <div class="header">
+      <div class="logo">КИНО<span>.</span></div>
+      <button class="icon-btn" data-goto="profile" aria-label="Настройки">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+    <div class="hero-wrap"><div class="hero" id="hero"></div></div>
+    <div class="chips" id="chips"></div>
+    <div id="rows"></div>
+  </div>
+
+  <!-- ============ SEARCH ============ -->
+  <div class="screen" id="scr-search">
+    <div class="header"><div class="logo">ПОИСК<span>.</span></div></div>
+    <div class="search-box">
+      <div class="search-input">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b98ad" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="searchInput" placeholder="Фильм, жанр, настроение…" autocomplete="off">
+      </div>
+    </div>
+    <div class="search-hint" id="searchHint">Напиши название или «про что» —<br>например «космос» или «месть»</div>
+    <div class="grid" id="searchGrid"></div>
+  </div>
+
+  <!-- ============ RANDOM ============ -->
+  <div class="screen" id="scr-random">
+    <div class="header"><div class="logo">РУЛЕТКА<span>.</span></div></div>
+    <div class="dice-wrap">
+      <button class="dice-btn" id="diceBtn" aria-label="Случайный фильм">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/></svg>
+      </button>
+      <div class="dice-label">Не знаешь что посмотреть?</div>
+      <div class="dice-sub">Жми на кубик — подберём случайный<br>фильм из твоих подборок</div>
+      <div class="lucky-card" id="luckyCard"></div>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE ============ -->
+  <div class="screen" id="scr-profile">
+    <div class="header"><div class="logo">ПРОФИЛЬ<span>.</span></div></div>
+    <div class="profile-head">
+      <div class="avatar">D</div>
+      <div><b>Киноман</b><br><small id="profileSub">демо-режим · вставь ключ TMDB</small></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><b id="stWatched">0</b><small>просмотрено</small></div>
+      <div class="stat"><b id="stSaved">0</b><small>в избранном</small></div>
+      <div class="stat"><b id="stAi">–</b><small>AI-режим</small></div>
+    </div>
+    <div class="set-group">
+      <div class="set-row">
+        <div><div class="t">TMDB API ключ</div><div class="d">Живые данные: постеры, новинки, поиск</div></div>
+        <div id="tmdbKeyWrap"><input class="key-input" id="tmdbKey" placeholder="вставить ключ" autocomplete="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Gemini API ключ</div><div class="d">AI-подборки (скоро)</div></div>
+        <div><input class="key-input" id="geminiKey" placeholder="вставить ключ" autocomplete="off"></div>
+      </div>
+    </div>
+    <div class="set-group">
+      <div class="set-row">
+        <div><div class="t">Скрывать просмотренное</div><div class="d">Фильмы «уже смотрел» не попадут в ряды</div></div>
+        <button class="switch" id="hideWatched"></button>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Сбросить демо-данные</div><div class="d">Очистить списки и настройки</div></div>
+        <button class="btn ghost" id="resetBtn" style="flex:0 0 auto; padding:10px 18px">Сброс</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TABBAR ============ -->
+  <nav class="tabbar">
+    <button class="tab on" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      Главная</button>
+    <button class="tab" data-tab="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Поиск</button>
+    <button class="tab" data-tab="random">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Рулетка</button>
+    <button class="tab" data-tab="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5"/></svg>
+      Профиль</button>
+  </nav>
+
+  <!-- ============ DETAIL SHEET ============ -->
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet" id="sheet"><div class="sheet-grip"></div><div id="sheetContent"></div></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+'use strict';
+/* =================== STATE =================== */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem('kino.'+k); return v===null? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ localStorage.setItem('kino.'+k, JSON.stringify(v)); }
+};
+const state = {
+  tmdbKey: LS.get('tmdb_key',''),
+  geminiKey: LS.get('gemini_key',''),
+  watched: LS.get('watched',[]),
+  hideWatched: LS.get('hide_watched', false),
+  genre: 'all',
+  live: false,
+  genres: [],           // from TMDB
+  pool: [],             // all movies for random
+};
+const IMG = 'https://image.tmdb.org/t/p/';
+
+/* =================== DEMO DATA =================== */
+const DEMO = [
+  {id:9001, title:'Дюна: Часть вторая', year:2024, rating:8.2, genres:['Фантастика','Приключения'], art:['#c96b2c','#5b2c12'], desc:'Пол Атрейдес объединяется с фременами и встаёт на путь войны против дома Харконненов.'},
+  {id:9002, title:'Оппенгеймер', year:2023, rating:8.1, genres:['Драма','История'], art:['#e2572b','#3a1503'], desc:'История создателя атомной бомбы Роберта Оппенгеймера.'},
+  {id:9003, title:'Джон Уик 4', year:2023, rating:7.8, genres:['Боевик','Триллер'], art:['#7a1f3d','#1c0a14'], desc:'Джон Уик бросает вызов Правлению Кланов, чтобы обрести свободу.'},
+  {id:9004, title:'Всё везде и сразу', year:2022, rating:7.9, genres:['Фантастика','Комедия'], art:['#8b3fd9','#2a1040'], desc:'Прачка из прачечной спасает мультивселенную, прыгая между жизнями.'},
+  {id:9005, title:'Паразиты', year:2019, rating:8.5, genres:['Триллер','Драма'], art:['#1f6e4a','#0a2418'], desc:'Бедная семья внедряется в дом богачей. Пон Джун-хо.'},
+  {id:9006, title:'Интерстеллар', year:2014, rating:8.7, genres:['Фантастика','Драма'], art:['#1c3f7a','#060d1f'], desc:'Путешествие через червоточину ради спасения человечества. Нолан.'},
+  {id:9007, title:'Джокер', year:2019, rating:8.2, genres:['Драма','Криминал'], art:['#5b2a86','#150a24'], desc:'История становления клоуна-принца Готэма.'},
+  {id:9008, title:'Начало', year:2010, rating:8.4, genres:['Фантастика','Боевик'], art:['#2b6cb0','#0a1a33'], desc:'Вор, крадущий секреты из снов, получает последнее задание. Нолан.'},
+  {id:9009, title:'1+1 / Неприкасаемые', year:2011, rating:8.5, genres:['Комедия','Драма'], art:['#2f9e8f','#0c2b27'], desc:'Аристократ в инвалидном кресле нанимает помощника из предместья.'},
+  {id:9010, title:'Зелёная книга', year:2018, rating:8.2, genres:['Драма','Комедия'], art:['#b8862f','#3a2708'], desc:'Турне чернокожего пианиста по югу США 60-х.'},
+  {id:9011, title:'Дэдпул', year:2016, rating:7.6, genres:['Боевик','Комедия'], art:['#a32733','#2b0d10'], desc:'Болтливый наёмник с ускоренной регенерацией.'},
+  {id:9012, title:'Тихое место', year:2018, rating:7.5, genres:['Ужасы','Триллер'], art:['#3d4a5c','#0d1117'], desc:'Семья выживает в мире, где звук означает смерть.'},
+];
+const GENRE_CHIPS = [
+  {id:'all', name:'Все'},
+  {id:28, name:'Боевик'}, {id:18, name:'Драма'}, {id:35, name:'Комедия'},
+  {id:878, name:'Фантастика'}, {id:53, name:'Триллер'}, {id:27, name:'Ужасы'},
+];
+const RU_GENRE = {28:'Боевик',12:'Приключения',16:'Анимация',35:'Комедия',80:'Криминал',18:'Драма',14:'Фэнтези',27:'Ужасы',10749:'Мелодрама',878:'Фантастика',53:'Триллер',36:'История',10402:'Музыка'};
+
+/* =================== HELPERS =================== */
+const $ = s => document.querySelector(s);
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function starsHTML(r){
+  const n = Math.round(r/2); let s='';
+  for(let i=0;i<5;i++) s += `<svg viewBox="0 0 24 24" fill="${i<n?'#ffc94d':'rgba(255,255,255,.18)'}"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>`;
+  return s;
+}
+function posterHTML(m, big){
+  if(m.poster) return `<img src="${IMG}w500${m.poster}" alt="" loading="lazy">`;
+  return `<div class="demo-art" style="background:linear-gradient(150deg,${m.art[0]},${m.art[1]})"><b>${m.title}</b><small>${m.year}</small></div>`;
+}
+function backdropHTML(m){
+  if(m.backdrop) return `<img src="${IMG}w1280${m.backdrop}" alt="">`;
+  return `<div class="demo-art" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]});position:absolute;inset:0"></div>`;
+}
+function norm(m){
+  // unify TMDB / demo shape
+  return {
+    id: m.id,
+    title: m.title || m.name || 'Без названия',
+    year: (m.release_date||m.first_air_date||'') .slice(0,4) || m.year || '—',
+    rating: m.vote_average!==undefined ? +m.vote_average.toFixed(1) : m.rating,
+    genres: m.genre_ids ? m.genre_ids.map(g=>RU_GENRE[g]).filter(Boolean) : (m.genres||[]),
+    desc: m.overview || m.desc || 'Описание скоро появится.',
+    poster: m.poster_path || null,
+    backdrop: m.backdrop_path || null,
+    art: m.art || ['#2f6fed','#101a33'],
+    media: m.media_type || 'movie',
+  };
+}
+function visible(list){
+  if(!state.hideWatched) return list;
+  return list.filter(m=>state.watched.indexOf(m.id)===-1);
+}
+function byId(id){ return state.pool.concat(DEMO.map(norm)).find(m=>m.id==id); }
+
+/* =================== TMDB =================== */
+async function tmdb(path){
+  const r = await fetch(`https://api.themoviedb.org/3${path}${path.includes('?')?'&':'?'}api_key=${state.tmdbKey}&language=ru-RU`);
+  if(!r.ok) throw new Error('tmdb '+r.status);
+  return r.json();
+}
+async function bootLive(){
+  if(!state.tmdbKey) return false;
+  try{
+    const [tr, now, top, gl] = await Promise.all([
+      tmdb('/trending/movie/week'),
+      tmdb('/movie/now_playing&region=RU'.replace('&region','?region')),
+      tmdb('/movie/top_rated'),
+      tmdb('/genre/movie/list'),
+    ]);
+    state.live = true;
+    state.genres = gl.genres || [];
+    const T = tr.results||[], N = now.results||[], P = top.results||[];
+    state.hero = T.slice(0,3).map(norm);
+    state.rows = [
+      {title:'Сейчас в тренде', items:T.slice(0,12).map(norm)},
+      {title:'Новинки для вас', items:N.slice(0,12).map(norm)},
+      {title:'Топ по рейтингу', items:P.slice(0,12).map(norm)},
+    ];
+    state.pool = T.concat(N,P).map(norm);
+    $('#profileSub').textContent = 'онлайн · TMDB подключён';
+    return true;
+  }catch(e){ state.live=false; return false; }
+}
+function bootDemo(){
+  const d = DEMO.map(norm);
+  state.hero = [d[0],d[5],d[4]];
+  state.rows = [
+    {title:'Новинки для вас', items:d.filter(m=>m.year>=2018)},
+    {title:'Топ по рейтингу', items:[...d].sort((a,b)=>b.rating-a.rating).slice(0,10)},
+    {title:'Скрытые жемчужины', items:[d[11],d[3],d[9],d[1],d[6]]},
+  ];
+  state.pool = d;
+}
+
+/* =================== RENDER =================== */
+let heroIdx = 0, heroTimer = null;
+function renderHero(){
+  const h = $('#hero'); if(!state.hero || !state.hero.length) return;
+  h.innerHTML = state.hero.map((m,i)=>`
+    <div class="hero-slide ${i===0?'on':''}" data-id="${m.id}">
+      <div class="hero-art">${backdropHTML(m)}</div>
+      <div class="hero-shade"></div>
+      <div class="hero-info">
+        <div class="hero-kicker">${i===0?'Выбор редакции':(i===1?'В тренде':'Стоит посмотреть')}</div>
+        <div class="hero-title">${m.title}</div>
+        <div class="hero-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span><span>${m.genres.slice(0,2).join(' · ')}</span></div>
+      </div>
+    </div>`).join('') +
+    `<div class="hero-dots">${state.hero.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('')}</div>`;
+  h.querySelectorAll('.hero-slide').forEach(s=>s.onclick=()=>openSheet(+s.dataset.id));
+  h.querySelectorAll('.hero-dots i').forEach((d,i)=>d.onclick=e=>{e.stopPropagation(); heroGo(i);});
+  clearInterval(heroTimer);
+  heroTimer = setInterval(()=>heroGo((heroIdx+1)%state.hero.length), 6000);
+}
+function heroGo(i){
+  heroIdx = i;
+  document.querySelectorAll('.hero-slide').forEach((s,k)=>s.classList.toggle('on', k===i));
+  document.querySelectorAll('.hero-dots i').forEach((d,k)=>d.classList.toggle('on', k===i));
+}
+function renderChips(){
+  $('#chips').innerHTML = GENRE_CHIPS.map(c=>
+    `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderRows(); });
+}
+async function renderRows(){
+  const box = $('#rows');
+  let rows = state.rows;
+  if(state.live && state.genre!=='all'){
+    try{
+      const d = await tmdb(`/discover/movie?sort_by=popularity.desc&with_genres=${state.genre}`);
+      rows = [{title: GENRE_CHIPS.find(c=>c.id==state.genre).name + ': популярное', items:(d.results||[]).map(norm)}];
+    }catch(e){ /* keep */ }
+  } else if(!state.live && state.genre!=='all'){
+    const gname = GENRE_CHIPS.find(c=>c.id==state.genre).name;
+    const f = state.pool.filter(m=>m.genres.includes(gname));
+    rows = [{title:gname, items:f.length?f:state.pool}];
+  }
+  box.innerHTML = rows.map(r=>{
+    const items = visible(r.items);
+    if(!items.length) return '';
+    return `<div class="row-sec"><div class="row-head"><h2>${r.title}</h2></div>
+      <div class="row">${items.map(cardHTML).join('')}</div></div>`;
+  }).join('');
+  bindCards(box);
+}
+function cardHTML(m){
+  const w = state.watched.includes(m.id) ? ' watched' : '';
+  return `<div class="card${w}" data-id="${m.id}">
+    <div class="poster">${posterHTML(m)}
+      <div class="watched-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6"/></svg></div>
+    </div>
+    <div class="card-title">${m.title}</div>
+    <div class="card-stars">${starsHTML(m.rating)}<span>${m.rating}</span></div>
+  </div>`;
+}
+function bindCards(root){
+  root.querySelectorAll('.card').forEach(c=>c.onclick=()=>openSheet(+c.dataset.id));
+}
+
+/* =================== SHEET =================== */
+function openSheet(id){
+  const m = byId(id); if(!m) return;
+  const w = state.watched.includes(m.id);
+  $('#sheetContent').innerHTML = `
+    <div class="sheet-hero">${backdropHTML(m)}<div class="shade"></div></div>
+    <div class="sheet-body">
+      <h2>${m.title}</h2>
+      <div class="sheet-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span><span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
+      <div class="sheet-genres">${m.genres.map(g=>`<i>${g}</i>`).join('')}</div>
+      <p class="sheet-desc">${m.desc}</p>
+      <div class="sheet-actions">
+        <button class="btn primary" id="shTrailer">Трейлер</button>
+        <button class="btn ghost" id="shWatched">${w?'✓ Смотрено':'Уже смотрел'}</button>
+      </div>
+    </div>`;
+  $('#sheetBg').classList.add('show'); $('#sheet').classList.add('show');
+  $('#shWatched').onclick = ()=>{
+    const i = state.watched.indexOf(m.id);
+    if(i===-1){ state.watched.push(m.id); toast('Отмечено как просмотренное'); }
+    else { state.watched.splice(i,1); toast('Снята отметка'); }
+    LS.set('watched', state.watched); updateStats(); openSheet(id); renderRows();
+  };
+  $('#shTrailer').onclick = async ()=>{
+    if(!state.live){ toast('Трейлер доступен с ключом TMDB'); return; }
+    try{
+      const v = await tmdb(`/${m.media==='tv'?'tv':'movie'}/${m.id}/videos`);
+      const yt = (v.results||[]).find(x=>x.site==='YouTube' && /trailer/i.test(x.type)) || (v.results||[]).find(x=>x.site==='YouTube');
+      if(yt) window.open('https://www.youtube.com/watch?v='+yt.key, '_blank');
+      else toast('Трейлер не найден');
+    }catch(e){ toast('Не удалось загрузить'); }
+  };
+}
+function closeSheet(){ $('#sheetBg').classList.remove('show'); $('#sheet').classList.remove('show'); }
+$('#sheetBg').onclick = closeSheet;
+
+/* =================== TABS =================== */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
+document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
+function goto(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id==='scr-'+name));
+  $('#scr-'+name).scrollTop = 0;
+}
+
+/* =================== SEARCH =================== */
+let searchT = null;
+$('#searchInput').addEventListener('input', e=>{
+  clearTimeout(searchT);
+  searchT = setTimeout(()=>doSearch(e.target.value.trim()), 450);
+});
+async function doSearch(q){
+  const grid = $('#searchGrid'), hint = $('#searchHint');
+  if(!q){ grid.innerHTML=''; hint.style.display='block'; return; }
+  hint.style.display='none';
+  if(state.live){
+    try{
+      const d = await tmdb('/search/movie?query='+encodeURIComponent(q));
+      const items = (d.results||[]).map(norm);
+      grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>';
+      bindCards(grid); return;
+    }catch(e){}
+  }
+  const ql = q.toLowerCase();
+  const items = state.pool.filter(m=>m.title.toLowerCase().includes(ql) || m.genres.join(' ').toLowerCase().includes(ql) || m.desc.toLowerCase().includes(ql));
+  grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено (демо-режим)</div>';
+  bindCards(grid);
+}
+
+/* =================== RANDOM =================== */
+$('#diceBtn').onclick = ()=>{
+  const btn = $('#diceBtn'), card = $('#luckyCard');
+  const pool = visible(state.pool);
+  if(!pool.length){ toast('Включи показ просмотренного в профиле'); return; }
+  btn.classList.remove('rolling'); void btn.offsetWidth; btn.classList.add('rolling');
+  card.classList.remove('show');
+  setTimeout(()=>{
+    const m = pool[Math.floor(Math.random()*pool.length)];
+    card.innerHTML = `<div class="lucky-poster" data-id="${m.id}">${posterHTML(m)}</div>
+      <div class="card-title" style="font-size:16px;margin-top:12px">${m.title}</div>
+      <div class="card-stars">${starsHTML(m.rating)}<span>${m.rating} · ${m.year}</span></div>`;
+    card.classList.add('show');
+    card.querySelector('.lucky-poster').onclick = ()=>openSheet(m.id);
+  }, 480);
+};
+
+/* =================== SETTINGS =================== */
+function updateStats(){
+  $('#stWatched').textContent = state.watched.length;
+}
+$('#tmdbKey').value = state.tmdbKey;
+$('#geminiKey').value = state.geminiKey;
+$('#tmdbKey').addEventListener('change', async e=>{
+  state.tmdbKey = e.target.value.trim(); LS.set('tmdb_key', state.tmdbKey);
+  if(state.tmdbKey){
+    toast('Проверяю ключ…');
+    const ok = await bootLive();
+    if(ok){ renderHero(); renderRows(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
+    else { toast('Ключ не подошёл'); }
+  } else { state.live=false; bootDemo(); renderHero(); renderRows(); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
+});
+$('#geminiKey').addEventListener('change', e=>{
+  state.geminiKey = e.target.value.trim(); LS.set('gemini_key', state.geminiKey);
+  $('#stAi').textContent = state.geminiKey ? '✓' : '–';
+  toast(state.geminiKey ? 'Gemini ключ сохранён' : 'Ключ удалён');
+});
+if(state.geminiKey) $('#stAi').textContent = '✓';
+const hw = $('#hideWatched');
+function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
+hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderRows(); };
+paintHw();
+$('#resetBtn').onclick = ()=>{
+  if(confirm('Сбросить все данные приложения?')){
+    Object.keys(localStorage).filter(k=>k.startsWith('kino.')).forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  }
+};
+
+/* =================== BOOT =================== */
+(async function(){
+  bootDemo();
+  renderHero(); renderChips(); renderRows(); updateStats();
+  if(state.tmdbKey){
+    const ok = await bootLive();
+    if(ok){ renderHero(); renderRows(); }
+  }
+})();
+</script>
+</body>
+</html>
