@@ -279,7 +279,7 @@
   /* ---------- movie page ---------- */
   .mv-load{padding:90px 20px; text-align:center; color:var(--muted); font-weight:700}
   .mv-backdrop{position:relative; height:240px; overflow:hidden; background:var(--card2)}
-  .mv-backdrop img{width:100%; height:100%; object-fit:cover; filter:blur(10px) saturate(1.15); transform:scale(1.12)}
+  .mv-backdrop img{width:100%; height:100%; object-fit:cover; filter:blur(4px) saturate(1.15); transform:scale(1.12)}
   .mv-shade{position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,18,32,.12) 30%,var(--bg) 100%)}
   .back-btn{position:absolute; top:14px; left:14px; width:42px; height:42px; border-radius:50%;
     background:rgba(10,16,28,.55); border:1px solid rgba(255,255,255,.16); color:#fff; font-size:19px;
@@ -802,17 +802,24 @@ async function renderRows(){
   let sections = state.sections;
   if(state.genre!=='all'){
     const gname = GENRE_CHIPS.find(c=>c.id==state.genre).name;
-    let items = [];
+    let items = [], tvItems = [];
     if(state.live){
       try{
-        const d = await tmdb(`/discover/movie?sort_by=popularity.desc&with_genres=${state.genre}`);
-        items = (d.results||[]).map(norm);
+        const [dm, dtv] = await Promise.all([
+          tmdb(`/discover/movie?sort_by=popularity.desc&with_genres=${state.genre}`),
+          tmdb(`/discover/tv?sort_by=popularity.desc&with_genres=${state.genre}`),
+        ]);
+        items = (dm.results||[]).map(norm);
+        tvItems = (dtv.results||[]).map(r=>norm(r,'tv'));
+        items.concat(tvItems).forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
       }catch(e){}
     } else {
       items = state.pool.filter(m=>m.genres.includes(gname));
     }
     sections = [{id:'g', title:gname, items:items.slice(0,14),
-      more:{type:'genre', genreId:state.genre, title:gname}}];
+      more:{type:'genre', genreId:state.genre, title:gname}},
+      {id:'gtv', title:gname+' · сериалы', items:tvItems.slice(0,14),
+      more:{type:'genre_tv', genreId:state.genre, title:gname+' · сериалы'}}];
   }
   const shown = sections.filter(s=>visible(s.items).length);
   box.innerHTML = shown.map(s=>`
@@ -835,10 +842,11 @@ async function openCategory(more){
         : more.type==='now_playing' ? [1,2,3].map(p=>`/movie/now_playing?region=RU&page=${p}`)
         : more.type==='top_rated' ? [1,2,3].map(p=>`/movie/top_rated?page=${p}`)
         : more.type==='tv_trending' ? [1,2,3].map(p=>`/trending/tv/week?page=${p}`)
+        : more.type==='genre_tv' ? [1,2,3].map(p=>`/discover/tv?sort_by=popularity.desc&with_genres=${more.genreId}&page=${p}`)
         : [1,2,3].map(p=>`/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${p}`);
       const rs = await Promise.all(urls.map(tmdb));
       const seen = new Set();
-      const tvMode = more.type==='tv_trending';
+      const tvMode = more.type==='tv_trending' || more.type==='genre_tv';
       rs.forEach(r=>(r.results||[]).forEach(m=>{ if(!seen.has(m.id)){ seen.add(m.id); items.push(norm(m, tvMode?'tv':undefined)); } }));
     }catch(e){}
   } else {
