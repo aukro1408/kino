@@ -392,6 +392,12 @@
   .tor-chip{padding:8px 13px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
     background:var(--card); color:var(--muted); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer}
   .tor-chip.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
+  .tor-pills{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px}
+  .tpill{display:inline-block; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:800; letter-spacing:.3px}
+  .tpill.res{background:rgba(77,163,255,.16); color:#8dbcff; border:1px solid rgba(77,163,255,.35)}
+  .tpill.hdr{background:rgba(180,120,255,.14); color:#cfa6ff; border:1px solid rgba(180,120,255,.35)}
+  .tpill.au{background:rgba(255,255,255,.07); color:var(--muted); border:1px solid rgba(255,255,255,.12)}
+  .tpill.top{background:rgba(255,210,90,.15); color:#ffd25e; border:1px solid rgba(255,210,90,.45)}
   .tor-item{padding:12px 14px; background:var(--card); border-radius:14px; margin-bottom:8px; cursor:pointer;
     border:1px solid rgba(255,255,255,.06)}
   .tor-item:active{transform:scale(.98); border-color:rgba(77,163,255,.4)}
@@ -1439,7 +1445,7 @@ function fmtSize(b){ if(!b) return '—'; const g=b/1073741824; if(g>=1) return 
 function isVideo(p){ p=(p||'').toLowerCase(); return VID_EXT.some(e=>p.endsWith(e)); }
 function shortName(p){ p=p||''; const i=Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\')); return i>=0?p.slice(i+1):p; }
 let torCache = [];
-let torSort = {key:'seeds', dir:-1};
+let torSort = {key:'top', dir:-1};
 function torQuality(t){
   const s = (t||'').toLowerCase();
   if(/2160p|\b4k\b|uhd/.test(s)) return 4;
@@ -1448,10 +1454,48 @@ function torQuality(t){
   if(/hdtv|dvd|bdrip|web-?dl|blu-?ray/.test(s)) return 1;
   return 0;
 }
+/* разбор названия раздачи: разрешение, HDR, озвучка (идея из EasyTorrent) */
+function torParse(title){
+  const s = title||'';
+  const sl = s.toLowerCase();
+  let res = 0;
+  if(/2160p|\b4k\b|uhd/.test(sl)) res = 2160;
+  else if(/1080p|\b1080i\b/.test(sl)) res = 1080;
+  else if(/720p/.test(sl)) res = 720;
+  let hdr = null;
+  if(/dolby.?vision|\bdv\b|dovi/.test(sl)) hdr = 'DV';
+  else if(/hdr10\+/.test(sl)) hdr = 'HDR10+';
+  else if(/(?<![\p{L}\p{N}])hdr(?![\p{L}\p{N}])/iu.test(s)) hdr = 'HDR10';
+  let audio = null;
+  const tok = re => new RegExp('(?<![\\p{L}\\p{N}])'+re+'(?![\\p{L}\\p{N}])','iu').test(s);
+  if(/дубляж/i.test(s) || tok('дб')) audio = 'Дубляж';
+  else if(/многоголос/i.test(s) || tok('пм')) audio = 'Многоголосый';
+  else if(/субтитры/i.test(s) || tok('ст')) audio = 'Субтитры';
+  else if(/любитель/i.test(s)) audio = 'Любительский';
+  return {res, hdr, audio};
+}
+function torScore(t){
+  const p = torParse(t.Title);
+  let s = p.res===2160 ? 100 : p.res===1080 ? 70 : p.res===720 ? 40 : 10;
+  if(p.hdr==='DV') s += 30; else if(p.hdr) s += 18;
+  if(p.audio==='Дубляж') s += 15; else if(p.audio==='Многоголосый') s += 8;
+  s += Math.min(t.Seeders||0, 200) * 0.2;
+  return Math.round(s);
+}
+function torPills(t, isTop){
+  const p = torParse(t.Title);
+  const out = [];
+  if(isTop) out.push('<span class="tpill top">★ Рекомендую</span>');
+  if(p.res) out.push(`<span class="tpill res">${p.res}p</span>`);
+  if(p.hdr) out.push(`<span class="tpill hdr">${p.hdr}</span>`);
+  if(p.audio) out.push(`<span class="tpill au">${p.audio}</span>`);
+  return out.length ? `<div class="tor-pills">${out.join('')}</div>` : '';
+}
 function torSorted(){
   const arr = torCache.slice();
   if(torSort.key==='size') arr.sort((a,b)=> torSort.dir===-1 ? (b.Size||0)-(a.Size||0) : (a.Size||0)-(b.Size||0));
   else if(torSort.key==='quality') arr.sort((a,b)=> (torQuality(b.Title)-torQuality(a.Title)) || ((b.Seeders||0)-(a.Seeders||0)));
+  else if(torSort.key==='top') arr.sort((a,b)=> torScore(b)-torScore(a));
   else arr.sort((a,b)=> (b.Seeders||0)-(a.Seeders||0));
   return arr;
 }
@@ -1461,7 +1505,7 @@ function torBarHTML(n){
     const arrow = (k==='size' && torSort.key==='size') ? (torSort.dir===-1 ? ' ↓' : ' ↑') : '';
     return `<button class="tor-chip${on}" data-s="${k}">${label}${arrow}</button>`;
   };
-  return `<div class="tor-bar"><span class="tor-count">${n} ${plural(n,'раздача','раздачи','раздач')}</span><div class="tor-chips">${c('seeds','Сиды')}${c('quality','Качество')}${c('size','Размер')}</div></div><div id="torList"></div>`;
+  return `<div class="tor-bar"><span class="tor-count">${n} ${plural(n,'раздача','раздачи','раздач')}</span><div class="tor-chips">${c('top','Топ')}${c('seeds','Сиды')}${c('quality','Качество')}${c('size','Размер')}</div></div><div id="torList"></div>`;
 }
 function bindTorChips(box){
   box.querySelectorAll('.tor-chip').forEach(el=>el.onclick=()=>{
@@ -1474,10 +1518,16 @@ function bindTorChips(box){
 }
 function renderTorList(){
   const list = $('#torList'); if(!list) return;
-  list.innerHTML = torSorted().map(t=>{
+  const arr = torSorted();
+  let topIdx = -1, topScore = -1;
+  if(arr.length){
+    arr.forEach(t=>{ const s = torScore(t); if(s>topScore){ topScore = s; topIdx = torCache.indexOf(t); } });
+  }
+  list.innerHTML = arr.map(t=>{
     const i = torCache.indexOf(t);
     return `<div class="tor-item" data-i="${i}">
       <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
+      ${torPills(t, i===topIdx)}
       <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
     </div>`;
   }).join('');
@@ -1512,7 +1562,7 @@ async function findTorrents(m){
   const q = (m.title||'') + (m.year && m.year!=='—' ? ' '+m.year : '');
   try{
     const res = await jacSearch(q);
-    torCache = res; torSort = {key:'seeds', dir:-1};
+    torCache = res; torSort = {key:'top', dir:-1};
     if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕</div>'; return; }
     box.innerHTML = torBarHTML(res.length);
     bindTorChips(box); renderTorList();
