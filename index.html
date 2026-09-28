@@ -33,8 +33,8 @@
   .icon-btn:active{transform:scale(.94)}
 
   /* ---------- hero ---------- */
-  .hero-wrap{padding:6px 16px 0; position:relative}
-  .hero{position:relative; height:300px; border-radius:24px; overflow:hidden; background:var(--card); touch-action:pan-y; z-index:1}
+  .hero-wrap{padding:0; position:relative}
+  .hero{position:relative; height:320px; border-radius:0; overflow:hidden; background:var(--card); touch-action:pan-y; z-index:1}
   .hero-track{display:flex; height:100%; transition:transform .5s cubic-bezier(.22,.9,.28,1); will-change:transform}
   .hero-track.drag{transition:none}
   .hero-slide{position:relative; flex:0 0 100%; height:100%; overflow:hidden}
@@ -55,9 +55,6 @@
   .hero-dots{position:absolute; bottom:14px; right:18px; display:flex; gap:6px; z-index:2}
   .hero-dots i{width:22px; height:4px; border-radius:3px; background:rgba(255,255,255,.28); transition:.3s}
   .hero-dots i.on{background:#fff; width:34px}
-  .hero-ambient{position:absolute; top:-16px; left:0; right:0; height:370px; z-index:0; pointer-events:none; opacity:.55}
-  .hero-ambient div{position:absolute; inset:0; opacity:0; transition:opacity .9s ease}
-  .hero-ambient div.on{opacity:1}
 
   /* ---------- chips ---------- */
   .chips{display:flex; gap:10px; overflow-x:auto; padding:16px 16px 4px; scrollbar-width:none}
@@ -156,30 +153,65 @@
   .tab svg{width:23px; height:23px}
   .tab.on{color:var(--accent2)}
 
-  /* ---------- detail sheet ---------- */
-  .sheet-bg{position:absolute; inset:0; background:rgba(4,8,16,.6); backdrop-filter:blur(4px);
-    opacity:0; pointer-events:none; transition:.3s; z-index:90}
-  .sheet-bg.show{opacity:1; pointer-events:auto}
-  .sheet{position:absolute; left:0; right:0; bottom:0; max-height:88%; z-index:95;
-    background:#101a2e; border-radius:26px 26px 0 0; overflow-y:auto; scrollbar-width:none;
-    transform:translateY(102%); transition:transform .38s cubic-bezier(.2,.9,.3,1)}
-  .sheet::-webkit-scrollbar{display:none}
-  .sheet.show{transform:translateY(0)}
-  .sheet-grip{width:44px; height:5px; border-radius:3px; background:rgba(255,255,255,.22); margin:12px auto 0}
-  .sheet-hero{position:relative; height:230px; margin:12px 16px 0; border-radius:18px; overflow:hidden; background:var(--card2)}
-  .sheet-hero img{width:100%; height:100%; object-fit:cover}
-  .sheet-hero .shade{position:absolute; inset:0; background:linear-gradient(180deg,transparent 40%,rgba(16,26,46,.9))}
-  .sheet-body{padding:18px 22px 34px}
-  .sheet-body h2{font-size:22px; font-weight:800}
-  .sheet-meta{display:flex; align-items:center; gap:10px; margin:10px 0 4px; font-size:13px; color:var(--muted); font-weight:600; flex-wrap:wrap}
-  .sheet-meta .rate{color:var(--star); font-weight:800; font-size:15px}
-  .sheet-genres{display:flex; gap:8px; flex-wrap:wrap; margin:12px 0}
-  .sheet-genres i{font-style:normal; font-size:12px; font-weight:700; background:var(--card2); padding:7px 13px; border-radius:999px; color:#c4d2e8}
-  .sheet-desc{font-size:14px; line-height:1.65; color:#c9d4e6}
-  .sheet-actions{display:flex; gap:10px; margin-top:18px}
-  .btn{flex:1; border:none; border-radius:14px; padding:14px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit}
-  .btn.primary{background:var(--accent); color:#06121f}
-  .btn.ghost{background:var(--card2); color:var(--text)}
+  /* ---------- movie page ---------- */
+  .mv-load{padding:90px 20px; text-align:center; color:var(--muted); font-weight:700}
+  .mv-backdrop{position:relative; height:240px; overflow:hidden; background:var(--card2)}
+  .mv-backdrop img{width:100%; height:100%; object-fit:cover}
+  .mv-shade{position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,18,32,.12) 30%,var(--bg) 100%)}
+  .back-btn{position:absolute; top:14px; left:14px; width:42px; height:42px; border-radius:50%;
+    background:rgba(10,16,28,.55); border:1px solid rgba(255,255,255,.16); color:#fff; font-size:19px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+  .back-btn:active{transform:scale(.93)}
+  .mv-body{padding:0 16px 26px; margin-top:-58px; position:relative}
+  .mv-head{display:flex; gap:14px; align-items:flex-end}
+  .mv-poster{width:112px; flex:0 0 112px; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
+    background:var(--card); box-shadow:0 14px 34px rgba(0,0,0,.55)}
+  .mv-poster img{width:100%; height:100%; object-fit:cover}
+  .mv-poster .demo-art{width:100%; height:100%}
+  .mv-title{font-size:21px; font-weight:800; line-height:1.2; padding-bottom:6px}
+  .mv-orig{color:var(--muted); font-size:13px; font-weight:600}
+  .mv-meta{display:flex; align-items:center; gap:10px; margin-top:14px; font-size:13.5px; color:var(--muted); font-weight:600; flex-wrap:wrap}
+  .mv-meta .rate{color:var(--star); font-weight:800; font-size:15px}
+  .mv-genres{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+  .mv-genres i{font-style:normal; font-size:12px; font-weight:700; padding:7px 13px; border-radius:999px;
+    background:rgba(120,160,220,.13); color:#c4d2e8}
+  .mv-sec{margin-top:22px}
+  .mv-sec h3{font-size:15px; font-weight:800; margin-bottom:10px; letter-spacing:.3px}
+  .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
+  .mv-trailer{position:relative; border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:var(--card); cursor:pointer}
+  .mv-trailer img{width:100%; height:100%; object-fit:cover}
+  .mv-play{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(5,10,20,.25)}
+  .mv-play span{width:62px; height:62px; border-radius:50%; background:rgba(77,163,255,.94);
+    display:flex; align-items:center; justify-content:center; box-shadow:0 8px 26px rgba(77,163,255,.45)}
+  .mv-play svg{width:24px; height:24px; fill:#fff; margin-left:3px}
+  .mv-trailer iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+  .crew-line{display:flex; flex-wrap:wrap; gap:8px}
+  .crew-line button{background:rgba(120,160,220,.13); border:none; color:var(--text); font:inherit;
+    font-size:13.5px; font-weight:700; padding:10px 16px; border-radius:999px; cursor:pointer}
+  .crew-line button:active{transform:scale(.96)}
+  .cast-row{display:flex; gap:12px; overflow-x:auto; padding:2px 0 8px; scrollbar-width:none}
+  .cast-row::-webkit-scrollbar{display:none}
+  .cast{flex:0 0 76px; text-align:center; cursor:pointer}
+  .cast .ph{width:76px; height:76px; border-radius:50%; overflow:hidden; background:var(--card2);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:21px; color:var(--accent2)}
+  .cast .ph img{width:100%; height:100%; object-fit:cover}
+  .cast b{display:block; font-size:11.5px; margin-top:7px; line-height:1.3; font-weight:700}
+  .cast small{color:var(--muted); font-size:10.5px; display:block; margin-top:3px; line-height:1.3}
+  .mv-watched{width:100%; margin-top:24px; padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,.13);
+    background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
+  .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
+  /* ---------- person page ---------- */
+  .ps-top{position:relative; padding:58px 16px 0; display:flex; flex-direction:column; align-items:center; text-align:center}
+  .ps-photo{width:112px; height:112px; border-radius:50%; overflow:hidden; background:var(--card2);
+    display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:800; color:var(--accent2);
+    box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .ps-photo img{width:100%; height:100%; object-fit:cover}
+  .ps-name{font-size:21px; font-weight:800; margin-top:12px}
+  .ps-role{color:var(--muted); font-size:13px; font-weight:700; margin-top:5px}
+  .ps-bio{color:#c4cede; font-size:13.5px; line-height:1.6; margin-top:14px; display:-webkit-box;
+    -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden}
+  .ps-grid{padding:0 16px 26px}
   .btn:active{transform:scale(.97)}
 
   .toast{position:absolute; left:50%; bottom:calc(var(--tabbar-h) + 26px); transform:translateX(-50%) translateY(20px);
@@ -199,10 +231,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
-    <div class="hero-wrap">
-      <div class="hero-ambient" id="heroAmbient"><div></div><div></div></div>
-      <div class="hero" id="hero"></div>
-    </div>
+    <div class="hero-wrap"><div class="hero" id="hero"></div></div>
     <div class="chips" id="chips"></div>
     <div id="rows"></div>
   </div>
@@ -296,8 +325,8 @@
   </nav>
 
   <!-- ============ DETAIL SHEET ============ -->
-  <div class="sheet-bg" id="sheetBg"></div>
-  <div class="sheet" id="sheet"><div class="sheet-grip"></div><div id="sheetContent"></div></div>
+  <div class="screen" id="scr-movie"></div>
+  <div class="screen" id="scr-person"></div>
   <div class="toast" id="toast"></div>
 </div>
 
@@ -449,7 +478,7 @@ function renderHero(){
   const track = h.querySelector('.hero-track');
   h.querySelectorAll('.hero-slide').forEach(s=>s.addEventListener('click',()=>{
     if(h.dataset.sw==='1'){ h.dataset.sw='0'; return; }
-    openSheet(+s.dataset.id);
+    openMovie(+s.dataset.id);
   }));
   h.querySelectorAll('.hero-dots i').forEach((d,i)=>d.onclick=e=>{e.stopPropagation(); heroGo(i); restartHero();});
   if(!h.dataset.swipe){ h.dataset.swipe='1'; initHeroSwipe(h); }
@@ -461,45 +490,6 @@ function heroGo(i){
   track.style.transform = `translateX(${-i*100}%)`;
   h.querySelectorAll('.hero-dots i').forEach((d,k)=>d.classList.toggle('on', k===i));
   h.querySelectorAll('.hero-slide').forEach((s,k)=>s.classList.toggle('on', k===i));
-  setAmbient(state.hero[i]);
-}
-let ambToken = 0;
-const colorCache = {};
-function sampleColor(m, cb){
-  if(!m.backdrop || !m.backdrop.startsWith || !m.backdrop.startsWith('/')){ cb(null); return; }
-  if(colorCache[m.id]){ cb(colorCache[m.id]); return; }
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = ()=>{
-    try{
-      const c = document.createElement('canvas'); c.width = c.height = 8;
-      const x = c.getContext('2d');
-      x.drawImage(img, 0, 0, 8, 8);
-      const d = x.getImageData(0, 0, 8, 8).data;
-      let r=0, g=0, b=0, n=0;
-      for(let i=0; i<d.length; i+=16){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
-      const col = `rgb(${Math.round(r/n)},${Math.round(g/n)},${Math.round(b/n)})`;
-      colorCache[m.id] = col; cb(col);
-    }catch(e){ cb(null); }
-  };
-  img.onerror = ()=>cb(null);
-  img.src = IMG + 'w92' + m.backdrop;
-}
-function setAmbient(m){
-  const amb = $('#heroAmbient'); if(!amb || !m) return;
-  const my = ++ambToken;
-  const paint = (col)=>{
-    if(my !== ambToken) return;
-    const divs = amb.querySelectorAll('div');
-    const cur = amb.querySelector('div.on');
-    const next = (cur===divs[0]) ? divs[1] : divs[0];
-    const glow = col || 'rgb(90,140,255)';
-    next.style.background = `radial-gradient(130% 110% at 50% 0%, ${glow} 0%, transparent 70%)`;
-    divs.forEach(d=>d.classList.remove('on'));
-    next.classList.add('on');
-  };
-  if(m.backdrop) sampleColor(m, paint);
-  else paint(m.art ? m.art[0] : null);
 }
 function restartHero(){
   clearInterval(heroTimer);
@@ -597,55 +587,154 @@ function cardHTML(m){
   </div>`;
 }
 function bindCards(root){
-  root.querySelectorAll('.card').forEach(c=>c.onclick=()=>openSheet(+c.dataset.id));
+  root.querySelectorAll('.card').forEach(c=>c.onclick=()=>openMovie(+c.dataset.id));
 }
 
-/* =================== SHEET =================== */
-function openSheet(id){
-  const m = byId(id); if(!m) return;
+/* =================== NAV =================== */
+let navStack = [];
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', 'scr-'+t.dataset.tab===id));
+  const sc = document.getElementById(id); if(sc) sc.scrollTop = 0;
+}
+function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
+function pushScreen(id){ navStack.push(currentScreenId()); showScreen(id); }
+function goBack(){ const p=navStack.pop(); if(p) showScreen(p); else goto('home'); }
+
+/* =================== MOVIE PAGE =================== */
+const DEMO_ACTORS = ['Алексей Воронов','Мария Соколова','Дмитрий Кравцов','Анна Лебедева','Игорь Савельев','Ольга Миронова','Сергей Тарасов','Елена Громова','Николай Фролов','Дарья Климова','Павел Агеев','Ирина Белова','Андрей Зимин','Светлана Орлова'];
+const DEMO_DIRECTORS = ['Тимур Беков','Оксана Ветрова','Григорий Ланской','Вера Сомова','Константин Рябов'];
+function demoCast(id){
+  const out = [];
+  for(let k=0;k<6;k++){
+    const ai = (id*7 + k*3) % DEMO_ACTORS.length;
+    out.push({id:'da'+ai, name:DEMO_ACTORS[ai], character:'Роль '+(k+1), photo:null});
+  }
+  return out;
+}
+function demoDirector(id){
+  const di = id % DEMO_DIRECTORS.length;
+  return {id:'dd'+di, name:DEMO_DIRECTORS[di], job:'Director'};
+}
+function initials(name){
+  const p = (name||'').trim().split(/\s+/);
+  return (((p[0]||'')[0]||'') + ((p[1]||'')[0]||'')).toUpperCase();
+}
+function escAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+function trailerKey(videos){
+  const r = (videos && videos.results) || [];
+  const t = r.find(x=>x.site==='YouTube' && /trailer/i.test(x.type||'')) || r.find(x=>x.site==='YouTube');
+  return t ? t.key : null;
+}
+async function openMovie(id){
+  pushScreen('scr-movie');
+  const box = $('#scr-movie');
+  box.innerHTML = '<div class="mv-load">Загружаю…</div>';
+  let m = byId(id);
+  if(!m){ box.innerHTML = '<div class="mv-load">Фильм не найден</div>'; return; }
+  if(state.live){
+    try{
+      const d = await tmdb(`/movie/${id}?append_to_response=credits,videos`);
+      const base = norm(d);
+      m = {...base,
+        runtime: d.runtime || null,
+        cast: (d.credits.cast||[]).slice(0,14).map(c=>({id:c.id, name:c.name, character:c.character, photo:c.profile_path})),
+        directors: (d.credits.crew||[]).filter(c=>c.job==='Director'),
+        trailer: trailerKey(d.videos),
+      };
+    }catch(e){ /* остаёмся на базовых данных */ }
+  } else {
+    m = {...m, runtime: 95 + (m.id*37)%70, cast: demoCast(m.id), directors:[demoDirector(m.id)], trailer:null};
+  }
+  if(currentScreenId()!=='scr-movie') return;
+  renderMovie(m);
+}
+function renderMovie(m){
+  const box = $('#scr-movie');
   const w = state.watched.includes(m.id);
-  $('#sheetContent').innerHTML = `
-    <div class="sheet-hero">${backdropHTML(m)}<div class="shade"></div></div>
-    <div class="sheet-body">
-      <h2>${m.title}</h2>
-      <div class="sheet-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span><span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
-      <div class="sheet-genres">${m.genres.map(g=>`<i>${g}</i>`).join('')}</div>
-      <p class="sheet-desc">${m.desc}</p>
-      <div class="sheet-actions">
-        <button class="btn primary" id="shTrailer">Трейлер</button>
-        <button class="btn ghost" id="shWatched">${w?'✓ Смотрено':'Уже смотрел'}</button>
+  const dirs = m.directors || [];
+  box.innerHTML = `
+    <div class="mv-backdrop">${backdropHTML(m)}<div class="mv-shade"></div>
+      <button class="back-btn" id="mvBack">←</button>
+    </div>
+    <div class="mv-body">
+      <div class="mv-head">
+        <div class="mv-poster">${posterHTML(m)}</div>
+        <div><div class="mv-title">${m.title}</div><div class="mv-orig">${m.year}</div></div>
       </div>
+      <div class="mv-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
+      <div class="mv-genres">${m.genres.map(g=>`<i>${g}</i>`).join('')}</div>
+      ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
+        <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
+        <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
+      </div></div>`:''}
+      <div class="mv-sec"><h3>О фильме</h3><p class="mv-desc">${m.desc}</p></div>
+      ${dirs.length?`<div class="mv-sec"><h3>Режиссёр</h3><div class="crew-line">${dirs.map(d=>`<button data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">${d.name}</button>`).join('')}</div></div>`:''}
+      ${m.cast&&m.cast.length?`<div class="mv-sec"><h3>В ролях</h3><div class="cast-row">${m.cast.map(c=>`
+        <div class="cast" data-pid="${c.id}" data-pname="${escAttr(c.name)}" data-role="actor">
+          <div class="ph">${c.photo?`<img src="${IMG}w185${c.photo}" alt="" loading="lazy">`:initials(c.name)}</div>
+          <b>${c.name}</b><small>${c.character||''}</small>
+        </div>`).join('')}</div></div>`:''}
+      <button class="mv-watched ${w?'on':''}" id="mvWatched">${w?'✓ Уже смотрел':'Отметить «Уже смотрел»'}</button>
     </div>`;
-  $('#sheetBg').classList.add('show'); $('#sheet').classList.add('show');
-  $('#shWatched').onclick = ()=>{
+  $('#mvBack').onclick = goBack;
+  $('#mvWatched').onclick = ()=>{
     const i = state.watched.indexOf(m.id);
     if(i===-1){ state.watched.push(m.id); toast('Отмечено как просмотренное'); }
     else { state.watched.splice(i,1); toast('Снята отметка'); }
-    LS.set('watched', state.watched); updateStats(); openSheet(id); renderRows();
+    LS.set('watched', state.watched); updateStats(); renderMovie(m); renderRows();
   };
-  $('#shTrailer').onclick = async ()=>{
-    if(!state.live){ toast('Трейлер доступен с ключом TMDB'); return; }
-    try{
-      const v = await tmdb(`/${m.media==='tv'?'tv':'movie'}/${m.id}/videos`);
-      const yt = (v.results||[]).find(x=>x.site==='YouTube' && /trailer/i.test(x.type)) || (v.results||[]).find(x=>x.site==='YouTube');
-      if(yt) window.open('https://www.youtube.com/watch?v='+yt.key, '_blank');
-      else toast('Трейлер не найден');
-    }catch(e){ toast('Не удалось загрузить'); }
-  };
+  const tr = $('#mvTrailer');
+  if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
+  box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
 }
-function closeSheet(){ $('#sheetBg').classList.remove('show'); $('#sheet').classList.remove('show'); }
-$('#sheetBg').onclick = closeSheet;
+/* =================== PERSON PAGE =================== */
+async function openPerson(pid, pname, role){
+  pushScreen('scr-person');
+  const box = $('#scr-person');
+  box.innerHTML = `<div class="ps-top"><button class="back-btn" id="psBack">←</button><div class="mv-load">Загружаю…</div></div>`;
+  let movies=[], photo=null, name=pname, bio='';
+  if(state.live && /^\d+$/.test(String(pid))){
+    try{
+      const [p, mc] = await Promise.all([ tmdb(`/person/${pid}`), tmdb(`/person/${pid}/movie_credits`) ]);
+      name = p.name; photo = p.profile_path; bio = p.biography || '';
+      let list = role==='director' ? (mc.crew||[]).filter(x=>x.job==='Director') : (mc.cast||[]);
+      const seen = new Set();
+      movies = list.filter(x=>x.poster_path && !seen.has(x.id) && seen.add(x.id))
+        .sort((a,b)=>(b.vote_count||0)-(a.vote_count||0)).slice(0,30).map(norm);
+    }catch(e){}
+  } else {
+    movies = state.pool.filter(x=>{
+      if(role==='director') return demoDirector(x.id).name===pname;
+      return demoCast(x.id).some(a=>a.name===pname);
+    });
+  }
+  if(currentScreenId()!=='scr-person') return;
+  box.innerHTML = `
+    <div class="ps-top">
+      <button class="back-btn" id="psBack">←</button>
+      <div class="ps-photo">${photo?`<img src="${IMG}w185${photo}" alt="" loading="lazy">`:initials(name)}</div>
+      <div class="ps-name">${name}</div>
+      <div class="ps-role">${role==='director'?'Режиссёр':'Актёр'}</div>
+      ${bio?`<div class="ps-bio">${bio}</div>`:''}
+    </div>
+    <div class="ps-grid">
+      <div class="mv-sec"><h3>Фильмы${movies.length?` · ${movies.length}`:''}</h3></div>
+      <div class="grid3">${movies.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>'}</div>
+    </div>`;
+  $('#psBack').onclick = goBack;
+  bindCards(box);
+}
 
 /* =================== TABS =================== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
 $('#catBack').onclick = ()=>goto('home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
-  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id==='scr-'+name));
-  const sc = $('#scr-'+name);
-  sc.scrollTop = 0;
+  navStack = [];
+  showScreen('scr-'+name);
   if(name==='home'){
+    const sc = $('#scr-home');
     sc.querySelectorAll('.hrow').forEach(r=>{ r.scrollLeft = 0; });
     const chips = $('#chips'); if(chips) chips.scrollLeft = 0;
   }
@@ -688,7 +777,7 @@ $('#diceBtn').onclick = ()=>{
       <div class="card-title" style="font-size:16px;margin-top:12px">${m.title}</div>
       <div class="card-stars">${starsHTML(m.rating)}<span>${m.rating} · ${m.year}</span></div>`;
     card.classList.add('show');
-    card.querySelector('.lucky-poster').onclick = ()=>openSheet(m.id);
+    card.querySelector('.lucky-poster').onclick = ()=>openMovie(m.id);
   }, 480);
 };
 
