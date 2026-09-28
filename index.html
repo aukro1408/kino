@@ -454,6 +454,8 @@
   .pl-menu .pm-i:active{background:rgba(77,163,255,.15)}
   .pl-menu .pm-i.on{color:var(--accent2)}
   .pl-menu .pm-i.on::after{content:' ✓'; color:var(--accent2)}
+  .pl-menu .pm-i.net{color:#8dbcff; border-top:1px solid rgba(99,150,255,.2); margin-top:4px}
+  .pl-menu{max-height:62dvh; overflow-y:auto; scrollbar-width:none}
   /* ---------- person page ---------- */
   .ps-top{position:relative; padding:58px 16px 0; display:flex; flex-direction:column; align-items:center; text-align:center}
   .ps-photo{width:112px; height:112px; border-radius:50%; overflow:hidden; background:var(--card2);
@@ -555,6 +557,10 @@
       <div class="set-row">
         <div><div class="t">Kinopoisk API ключ</div><div class="d">Рейтинг Кинопоиска на странице фильма · ключ с kinopoiskapiunofficial.tech</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="kpKey" placeholder="вставить ключ" autocomplete="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">SubDL API ключ</div><div class="d">Субтитры из сети в плеере · бесплатный ключ на subdl.com</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="subdlKey" placeholder="вставить ключ" autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
     <div class="set-group">
@@ -715,6 +721,7 @@ const state = {
   jacKey: LS.get('jac_key',''),
   jacUrl2: LS.get('jac_url2',''),
   jacKey2: LS.get('jac_key2',''),
+  subdlKey: LS.get('subdl_key',''),
   torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
@@ -1743,17 +1750,22 @@ async function playTorrent(t, m){
       await new Promise(r=>setTimeout(r,1500));
     }
   }catch(e){ /* ниже — прямой фолбэк */ }
-  if(files && files.length===1){ openPlayer(tsStreamURL(ts, hash, files[0].id, t.Title), t.Title, subs); return; }
+  if(files && files.length===1){ plSE = parseSE(t.Title); openPlayer(tsStreamURL(ts, hash, files[0].id, t.Title), t.Title, subs, m); return; }
   if(files && files.length>1){
     torSubsCache = subs;
     const sorted = files.slice().sort((a,b)=>b.size-a.size);
     box.innerHTML = '<div class="tor-load" style="text-align:left;padding:2px 2px 10px">Выбери файл · '+sorted.length+'</div>' +
       sorted.map(f=>'<div class="tor-item" data-f="'+f.id+'"><div class="tor-t">'+escTx(shortName(f.path))+'</div><div class="tor-m"><span>'+fmtSize(f.size)+'</span></div></div>').join('');
-    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>openPlayer(tsStreamURL(ts, hash, el.dataset.f, t.Title), t.Title, torSubsCache));
+    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>{
+      const f = sorted.find(x=>String(x.id)===el.dataset.f);
+      plSE = parseSE((f&&f.path)||t.Title);
+      openPlayer(tsStreamURL(ts, hash, el.dataset.f, t.Title), t.Title, torSubsCache, m);
+    });
     return;
   }
   // Фолбэк без чтения API: стрим первого файла напрямую по magnet
-  openPlayer(tsStreamURL(ts, t.MagnetUri, 1, t.Title), t.Title, []);
+  plSE = parseSE(t.Title);
+  openPlayer(tsStreamURL(ts, t.MagnetUri, 1, t.Title), t.Title, [], m);
 }
 
 function stopPlayer(){
@@ -1764,10 +1776,10 @@ function stopPlayer(){
   const m = $('#plMenu'); if(m) m.style.display='none';
   plSubsList = []; plCurSub = -1; plSetPlayIcon(false);
 }
-function openPlayer(url, title, subs){
+function openPlayer(url, title, subs, mv){
   pushScreen('scr-player');
   $('#plTitle').textContent = title || '';
-  plSubsList = subs || []; plCurSub = -1;
+  plSubsList = subs || []; plCurSub = -1; plMovie = mv || null;
   const v = $('#plVideo');
   v.querySelectorAll('track').forEach(t=>t.remove());
   const e = $('#plErr'); e.style.display='none'; e.textContent='';
@@ -1844,18 +1856,85 @@ function plUpdSeek(){
   $('#plCur').textContent = plFmt(v.currentTime);
   $('#plDur').textContent = plFmt(v.duration);
 }
+let plMovie = null, plSE = null;
+function parseSE(str){
+  const a = /s(\d{1,2})e(\d{1,2})/i.exec(str||'');
+  if(a) return {s:+a[1], e:+a[2]};
+  const b = /\b(\d{1,2})x(\d{1,2})\b/.exec(str||'');
+  if(b) return {s:+b[1], e:+b[2]};
+  return null;
+}
 $('#plSubs').onclick = e=>{
   e.stopPropagation();
   const m = $('#plMenu');
   if(m.style.display!=='none'){ m.style.display='none'; return; }
-  if(!plSubsList.length){ toast('В раздаче нет субтитров'); return; }
-  m.innerHTML = '<div class="pm-t">Субтитры</div>' +
-    `<div class="pm-i ${plCurSub===-1?'on':''}" data-s="-1">Выключены</div>` +
-    plSubsList.map((s,i)=>`<div class="pm-i ${plCurSub===i?'on':''}" data-s="${i}">${escTx(s.name)}</div>`).join('');
+  plRenderSubMenu();
   m.style.display='block';
-  m.querySelectorAll('.pm-i').forEach(el=>el.onclick = ev=>{ ev.stopPropagation(); m.style.display='none'; plLoadSub(+el.dataset.s); });
   plShowUI();
 };
+function plRenderSubMenu(){
+  const m = $('#plMenu');
+  m.innerHTML = '<div class="pm-t">Субтитры</div>' +
+    `<div class="pm-i ${plCurSub===-1?'on':''}" data-s="-1">Выключены</div>` +
+    plSubsList.map((s,i)=>`<div class="pm-i ${plCurSub===i?'on':''}" data-s="${i}">${escTx(s.name)}</div>`).join('') +
+    '<div class="pm-i net" data-s="net">🔍 Найти в сети…</div>';
+  m.querySelectorAll('.pm-i').forEach(el=>el.onclick = ev=>{
+    ev.stopPropagation();
+    if(el.dataset.s==='net'){ plSearchSubs(); return; }
+    m.style.display='none'; plLoadSub(+el.dataset.s);
+  });
+}
+async function plSearchSubs(){
+  const m = $('#plMenu');
+  if(!state.subdlKey){ toast('Вставь ключ SubDL в Профиле'); return; }
+  const mv = plMovie;
+  if(!mv || !/^\d+$/.test(String(mv.id||'').replace(/^\D+/,'')) && !mv.orig && !mv.title){ toast('Нет данных о фильме'); return; }
+  m.innerHTML = '<div class="pm-t">Субтитры · SubDL</div><div class="pm-i">⏳ Ищу…</div>';
+  try{
+    const p = new URLSearchParams({api_key: state.subdlKey, languages:'RU', unpack:'1', type: mv.media==='tv' ? 'tv' : 'movie'});
+    const tid = String(mv.id||'').replace(/^\D+/,'');
+    if(/^\d+$/.test(tid)) p.set('tmdb_id', tid);
+    else p.set('film_name', mv.orig || mv.title);
+    if(mv.media==='tv' && plSE){ p.set('season', plSE.s); p.set('episode', plSE.e); }
+    const r = await fetch('https://api.subdl.com/api/v1/subtitles?'+p.toString());
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const list = (j.subtitles||[]).filter(s=>{
+      const fs = s.unpack_files||[];
+      return fs.some(f=>/srt/i.test(f.format||'') || /\.srt$/i.test(f.name||'') || /vtt/i.test(f.format||'') || /\.vtt$/i.test(f.name||''));
+    });
+    if(!list.length){ m.innerHTML = '<div class="pm-t">Субтитры · SubDL</div><div class="pm-i">Ничего не нашлось 😕</div>'; return; }
+    m.innerHTML = '<div class="pm-t">Субтитры · SubDL</div>' + list.slice(0,25).map((s,i)=>{
+      const ep = (s.season && s.episode) ? `S${s.season}E${s.episode} · ` : '';
+      const hi = s.hi ? ' · SDH' : '';
+      return `<div class="pm-i dl" data-i="${i}">${ep}${escTx(s.release_name || s.name || 'Субтитры')}${hi}</div>`;
+    }).join('');
+    m.querySelectorAll('.pm-i.dl').forEach(el=>el.onclick = ev=>{ ev.stopPropagation(); plDownloadSub(list[+el.dataset.i]); });
+  }catch(e){ m.innerHTML = '<div class="pm-t">Субтитры · SubDL</div><div class="pm-i">Ошибка поиска</div>'; }
+}
+async function plDownloadSub(s){
+  const m = $('#plMenu'); m.style.display='none';
+  toast('Качаю субтитры…');
+  try{
+    const fs = s.unpack_files||[];
+    const pick = fs.find(f=>/srt/i.test(f.format||'') || /\.srt$/i.test(f.name||'')) || fs[0];
+    if(!pick || !pick.url) throw 0;
+    let url = pick.url;
+    if(url.startsWith('/')) url = 'https://dl.subdl.com'+url;
+    const r = await fetch(url);
+    if(!r.ok) throw 0;
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    if(bytes[0]===0x50 && bytes[1]===0x4B) throw 'zip';
+    let txt = new TextDecoder('utf-8').decode(bytes);
+    if(txt.includes('�')) txt = new TextDecoder('windows-1251').decode(bytes);
+    if(txt.charCodeAt(0)===0xFEFF) txt = txt.slice(1);
+    const isSrt = /\.srt$/i.test(pick.name||'');
+    const blobUrl = URL.createObjectURL(new Blob([isSrt ? srtToVtt(txt) : txt], {type:'text/vtt'}));
+    const name = (pick.name||'subdl.srt').replace(/\.srt$/i,'.vtt');
+    plSubsList.push({name, url: blobUrl});
+    plLoadSub(plSubsList.length-1);
+  }catch(e){ toast(e==='zip' ? 'Это архив — выбери другие субтитры' : 'Не удалось скачать субтитры'); }
+}
 function srtToVtt(srt){
   return 'WEBVTT\n\n' + srt.replace(/\r\n?/g,'\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g,'$1.$2');
 }
@@ -2196,6 +2275,7 @@ function updateStats(){
 $('#tmdbKey').value = state.tmdbKey;
 $('#geminiKey').value = state.geminiKey;
 $('#kpKey').value = state.kpKey;
+$('#subdlKey').value = state.subdlKey;
 $('#tsUrl').value = state.tsUrl;
 $('#jacUrl').value = state.jacUrl;
 $('#tsUrl').addEventListener('change', e=>{
@@ -2236,6 +2316,10 @@ $('#geminiKey').addEventListener('change', e=>{
   state.geminiKey = e.target.value.trim(); LS.set('gemini_key', state.geminiKey);
   $('#stAi').textContent = state.geminiKey ? '✓' : '–';
   toast(state.geminiKey ? 'Gemini ключ сохранён' : 'Ключ удалён');
+});
+$('#subdlKey').addEventListener('change', e=>{
+  state.subdlKey = e.target.value.trim(); LS.set('subdl_key', state.subdlKey);
+  toast(state.subdlKey ? 'SubDL ключ сохранён' : 'Ключ удалён');
 });
 $('#geminiCheck').onclick = async ()=>{
   const k = $('#geminiKey').value.trim().split(',')[0];
