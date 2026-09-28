@@ -166,7 +166,7 @@
   .back-btn:active{transform:scale(.93)}
   .mv-body{padding:0 16px 26px; margin-top:-58px; position:relative}
   .mv-head{display:flex; gap:14px; align-items:flex-end}
-  .mv-poster{width:112px; flex:0 0 112px; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
+  .mv-poster{width:152px; flex:0 0 152px; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
     background:var(--card); box-shadow:0 14px 34px rgba(0,0,0,.55)}
   .mv-poster img{width:100%; height:100%; object-fit:cover}
   .mv-poster .demo-art{width:100%; height:100%}
@@ -187,6 +187,13 @@
     display:flex; align-items:center; justify-content:center; box-shadow:0 8px 26px rgba(77,163,255,.45)}
   .mv-play svg{width:24px; height:24px; fill:#fff; margin-left:3px}
   .mv-trailer iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+  .dir-card{display:flex; gap:14px; align-items:flex-start; cursor:pointer; margin-bottom:12px}
+  .dir-card .ph{width:92px; height:122px; border-radius:14px; overflow:hidden; background:var(--card2);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:26px; color:var(--accent2); flex:0 0 auto}
+  .dir-card .ph img{width:100%; height:100%; object-fit:cover}
+  .dir-card b{font-size:16px; font-weight:800}
+  .dir-bio{font-size:13px; color:var(--muted); line-height:1.55; margin-top:6px;
+    display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden}
   .crew-line{display:flex; flex-wrap:wrap; gap:8px}
   .crew-line button{background:rgba(120,160,220,.13); border:none; color:var(--text); font:inherit;
     font-size:13.5px; font-weight:700; padding:10px 16px; border-radius:999px; cursor:pointer}
@@ -615,7 +622,8 @@ function demoCast(id){
 }
 function demoDirector(id){
   const di = id % DEMO_DIRECTORS.length;
-  return {id:'dd'+di, name:DEMO_DIRECTORS[di], job:'Director'};
+  return {id:'dd'+di, name:DEMO_DIRECTORS[di], job:'Director',
+    bio:'Демо-режим: биография и фото появятся после ввода TMDB-ключа в Профиле.'};
 }
 function initials(name){
   const p = (name||'').trim().split(/\s+/);
@@ -637,10 +645,16 @@ async function openMovie(id){
     try{
       const d = await tmdb(`/movie/${id}?append_to_response=credits,videos`);
       const base = norm(d);
+      const dirs = (d.credits.crew||[]).filter(c=>c.job==='Director');
+      let dirBio = '';
+      if(dirs[0]){
+        try{ const p = await tmdb(`/person/${dirs[0].id}?language=ru-RU`); dirBio = p.biography || ''; }catch(e){}
+        if(dirs[0]) dirs[0].bio = dirBio;
+      }
       m = {...base,
         runtime: d.runtime || null,
         cast: (d.credits.cast||[]).slice(0,14).map(c=>({id:c.id, name:c.name, character:c.character, photo:c.profile_path})),
-        directors: (d.credits.crew||[]).filter(c=>c.job==='Director'),
+        directors: dirs,
         trailer: trailerKey(d.videos),
       };
     }catch(e){ /* остаёмся на базовых данных */ }
@@ -664,13 +678,17 @@ function renderMovie(m){
         <div><div class="mv-title">${m.title}</div><div class="mv-orig">${m.year}</div></div>
       </div>
       <div class="mv-meta"><span class="rate">★ ${m.rating}</span><span>${m.year}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
-      <div class="mv-genres">${m.genres.map(g=>`<i>${g}</i>`).join('')}</div>
+      <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}</div>
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
       <div class="mv-sec"><h3>О фильме</h3><p class="mv-desc">${m.desc}</p></div>
-      ${dirs.length?`<div class="mv-sec"><h3>Режиссёр</h3><div class="crew-line">${dirs.map(d=>`<button data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">${d.name}</button>`).join('')}</div></div>`:''}
+      ${dirs.length?`<div class="mv-sec"><h3>Режиссёр</h3>${dirs.slice(0,2).map(d=>`
+        <div class="dir-card" data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">
+          <div class="ph">${d.profile_path?`<img src="${IMG}w185${d.profile_path}" alt="" loading="lazy">`:initials(d.name)}</div>
+          <div style="min-width:0"><b>${d.name}</b>${d.bio?`<p class="dir-bio">${d.bio}</p>`:''}</div>
+        </div>`).join('')}</div>`:''}
       ${m.cast&&m.cast.length?`<div class="mv-sec"><h3>В ролях</h3><div class="cast-row">${m.cast.map(c=>`
         <div class="cast" data-pid="${c.id}" data-pname="${escAttr(c.name)}" data-role="actor">
           <div class="ph">${c.photo?`<img src="${IMG}w185${c.photo}" alt="" loading="lazy">`:initials(c.name)}</div>
