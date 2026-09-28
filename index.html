@@ -379,9 +379,19 @@
     background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
   .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
   /* ---------- torrents ---------- */
-  .tor-find{width:100%; padding:14px; border-radius:16px; border:1px dashed rgba(77,163,255,.5);
-    background:rgba(77,163,255,.08); color:var(--accent2); font:inherit; font-size:14.5px; font-weight:800; cursor:pointer}
+  .tor-find{width:100%; padding:16px; border-radius:18px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#3b8cff,#7b5cff); color:#fff;
+    font:inherit; font-size:15px; font-weight:800; letter-spacing:.3px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    box-shadow:0 10px 28px rgba(90,110,255,.38), inset 0 1px 0 rgba(255,255,255,.25)}
   .tor-find:active{transform:scale(.98)}
+  .tor-find svg{width:19px; height:19px; flex:0 0 auto}
+  .tor-bar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 2px 12px}
+  .tor-count{font-size:12.5px; color:var(--muted); font-weight:700; white-space:nowrap}
+  .tor-chips{display:flex; gap:6px}
+  .tor-chip{padding:8px 13px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
+    background:var(--card); color:var(--muted); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer}
+  .tor-chip.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
   .tor-item{padding:12px 14px; background:var(--card); border-radius:14px; margin-bottom:8px; cursor:pointer;
     border:1px solid rgba(255,255,255,.06)}
   .tor-item:active{transform:scale(.98); border-color:rgba(77,163,255,.4)}
@@ -1376,7 +1386,7 @@ function renderMovie(m){
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
-      <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind">🔍 Найти раздачи</button></div></div>
+      <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div></div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
       ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
@@ -1414,6 +1424,50 @@ function fmtSize(b){ if(!b) return '—'; const g=b/1073741824; if(g>=1) return 
 function isVideo(p){ p=(p||'').toLowerCase(); return VID_EXT.some(e=>p.endsWith(e)); }
 function shortName(p){ p=p||''; const i=Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\')); return i>=0?p.slice(i+1):p; }
 let torCache = [];
+let torSort = {key:'seeds', dir:-1};
+function torQuality(t){
+  const s = (t||'').toLowerCase();
+  if(/2160p|\b4k\b|uhd/.test(s)) return 4;
+  if(/1080p/.test(s)) return 3;
+  if(/720p/.test(s)) return 2;
+  if(/hdtv|dvd|bdrip|web-?dl|blu-?ray/.test(s)) return 1;
+  return 0;
+}
+function torSorted(){
+  const arr = torCache.slice();
+  if(torSort.key==='size') arr.sort((a,b)=> torSort.dir===-1 ? (b.Size||0)-(a.Size||0) : (a.Size||0)-(b.Size||0));
+  else if(torSort.key==='quality') arr.sort((a,b)=> (torQuality(b.Title)-torQuality(a.Title)) || ((b.Seeders||0)-(a.Seeders||0)));
+  else arr.sort((a,b)=> (b.Seeders||0)-(a.Seeders||0));
+  return arr;
+}
+function torBarHTML(n){
+  const c = (k,label)=>{
+    const on = torSort.key===k ? ' on' : '';
+    const arrow = (k==='size' && torSort.key==='size') ? (torSort.dir===-1 ? ' ↓' : ' ↑') : '';
+    return `<button class="tor-chip${on}" data-s="${k}">${label}${arrow}</button>`;
+  };
+  return `<div class="tor-bar"><span class="tor-count">${n} ${plural(n,'раздача','раздачи','раздач')}</span><div class="tor-chips">${c('seeds','Сиды')}${c('quality','Качество')}${c('size','Размер')}</div></div><div id="torList"></div>`;
+}
+function bindTorChips(box){
+  box.querySelectorAll('.tor-chip').forEach(el=>el.onclick=()=>{
+    const k = el.dataset.s;
+    if(k==='size' && torSort.key==='size') torSort.dir *= -1;
+    else torSort = {key:k, dir:-1};
+    box.innerHTML = torBarHTML(torCache.length);
+    bindTorChips(box); renderTorList();
+  });
+}
+function renderTorList(){
+  const list = $('#torList'); if(!list) return;
+  list.innerHTML = torSorted().map(t=>{
+    const i = torCache.indexOf(t);
+    return `<div class="tor-item" data-i="${i}">
+      <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
+      <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i]));
+}
 
 async function findTorrents(m){
   const box = $('#torBox'); if(!box) return;
@@ -1423,15 +1477,11 @@ async function findTorrents(m){
     const r = await fetch(state.jacUrl.replace(/\/+$/,'') + '/api/v2.0/indexers/all/results?Query=' + encodeURIComponent(q));
     if(!r.ok) throw new Error('HTTP '+r.status);
     const j = await r.json();
-    const res = (j.Results||[]).filter(x=>x.MagnetUri).sort((a,b)=>(b.Seeders||0)-(a.Seeders||0)).slice(0,30);
-    torCache = res;
+    const res = (j.Results||[]).filter(x=>x.MagnetUri);
+    torCache = res; torSort = {key:'seeds', dir:-1};
     if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕</div>'; return; }
-    box.innerHTML = res.map((t,i)=>`
-      <div class="tor-item" data-i="${i}">
-        <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
-        <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
-      </div>`).join('');
-    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i], m));
+    box.innerHTML = torBarHTML(res.length);
+    bindTorChips(box); renderTorList();
   }catch(e){
     box.innerHTML = '<div class="tor-load">Парсер не отвечает · проверь адрес в Профиле</div>';
   }
