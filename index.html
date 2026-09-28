@@ -482,7 +482,7 @@ function syncFavStar(id){
   const b = $('#mvFav');
   if(b) b.classList.toggle('on', !!favHas(id));
 }
-$('#favVeil').addEventListener('click', e=>{ if(e.target.id==='favVeil') closeFavSheet(); });
+document.getElementById('favVeil').addEventListener('click', e=>{ if(e.target.id==='favVeil') closeFavSheet(); });
 
 /* =================== DEMO DATA =================== */
 const DEMO = [
