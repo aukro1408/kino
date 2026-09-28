@@ -127,6 +127,15 @@
     color:var(--text); font:inherit; font-size:15px; padding:13px 14px; outline:none}
   .roul-input:focus{border-color:var(--accent)}
   .roul-hint{font-size:12px; color:var(--muted); margin-top:7px}
+  .roul-filter-row{display:flex; justify-content:center; padding:16px 20px 0}
+  .roul-filter-btn{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid rgba(255,255,255,.12);
+    color:var(--text); border-radius:99px; padding:11px 18px; font:inherit; font-size:14px; font-weight:700; cursor:pointer}
+  .roul-filter-btn:active{transform:scale(.96)}
+  .roul-filter-btn .cnt{background:linear-gradient(135deg,#2f6fed,#4da3ff); color:#fff; border-radius:99px;
+    min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:0 6px}
+  #roulSheet{max-height:84vh; overflow-y:auto}
+  .roul-sheet-actions{display:flex; gap:10px; margin-top:20px; align-items:center}
+  .roul-sheet-actions .ai-go{margin-top:0}
   .lucky-genres{text-align:center; color:var(--muted); font-size:13px; margin-top:8px}
   .lucky-actions{display:flex; flex-direction:column; gap:10px; margin-top:16px}
   .lucky-card{margin-top:26px; width:100%; max-width:340px; display:none}
@@ -361,20 +370,10 @@
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="#fff" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="#fff" stroke="none"/></svg>
       </button>
       <div class="dice-label">Не знаешь, что посмотреть?</div>
-      <div class="dice-sub">Выбери жанры и настроение,<br>жми на кубик — выдадим случайный фильм</div>
-    </div>
-    <div class="roul-sec">
-      <div class="roul-h">Жанры</div>
-      <div class="roul-chips" id="roulGenres"></div>
-    </div>
-    <div class="roul-sec">
-      <div class="roul-h">Настроение</div>
-      <div class="roul-chips" id="roulMoods"></div>
-    </div>
-    <div class="roul-sec">
-      <div class="roul-h">Про что?</div>
-      <input class="roul-input" id="roulKw" placeholder="Например: космос, месть, свадьба">
-      <div class="roul-hint">Одно-два слова — подберём по тегам (нужен Gemini ключ)</div>
+      <div class="dice-sub">Настрой фильтры и жми на кубик —<br>выдадим случайный фильм</div>
+      <div class="roul-filter-row">
+        <button class="roul-filter-btn" id="roulFilterBtn">⚙️ Фильтры<span class="cnt" id="roulFilterCount" style="display:none">0</span></button>
+      </div>
     </div>
     <div class="roul-sec"><div class="lucky-card" id="luckyCard"></div></div>
   </div>
@@ -473,6 +472,21 @@
       Профиль</button>
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
+  <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
+    <div class="sheet-grip"></div>
+    <div class="sheet-title">Фильтры рулетки</div>
+    <div class="roul-h">Жанры</div>
+    <div class="roul-chips" id="roulGenres"></div>
+    <div class="roul-h" style="margin-top:16px">Настроение</div>
+    <div class="roul-chips" id="roulMoods"></div>
+    <div class="roul-h" style="margin-top:16px">Про что?</div>
+    <input class="roul-input" id="roulKw" placeholder="Например: космос, месть, свадьба">
+    <div class="roul-hint">Одно-два слова — подберём по тегам (нужен Gemini ключ)</div>
+    <div class="roul-sheet-actions">
+      <button class="roul-chip" id="roulReset">Сбросить</button>
+      <button class="ai-go" id="roulGo" style="flex:1">🎲 Крутить</button>
+    </div>
+  </div></div>
   <div class="toast" id="toast"></div>
 </div>
 
@@ -1019,14 +1033,33 @@ function renderRoulChips(){
     const id = +c.dataset.g;
     roulSel.genres.has(id) ? roulSel.genres.delete(id) : roulSel.genres.add(id);
     c.classList.toggle('on');
+    updateRoulCount();
   });
   $('#roulMoods').innerHTML = ROUL_MOODS.map(m=>`<button class="roul-chip${roulSel.mood===m.id?' on':''}" data-m="${m.id}">${m.name}</button>`).join('');
   $('#roulMoods').querySelectorAll('.roul-chip').forEach(c=>c.onclick=()=>{
     const id = c.dataset.m;
     roulSel.mood = roulSel.mood===id ? null : id;
     $('#roulMoods').querySelectorAll('.roul-chip').forEach(x=>x.classList.toggle('on', x.dataset.m===roulSel.mood));
+    updateRoulCount();
   });
 }
+function updateRoulCount(){
+  const n = roulSel.genres.size + (roulSel.mood?1:0) + (($('#roulKw').value||'').trim()?1:0);
+  const b = $('#roulFilterCount');
+  b.style.display = n ? 'inline-flex' : 'none';
+  b.textContent = n;
+}
+function openRoulSheet(){ updateRoulCount(); $('#roulVeil').classList.add('show'); }
+function closeRoulSheet(){ $('#roulVeil').classList.remove('show'); updateRoulCount(); }
+$('#roulFilterBtn').onclick = openRoulSheet;
+$('#roulGo').onclick = ()=>{ closeRoulSheet(); spinRoulette(); };
+$('#roulReset').onclick = ()=>{
+  roulSel.genres.clear(); roulSel.mood = null;
+  $('#roulKw').value = '';
+  renderRoulChips(); updateRoulCount();
+};
+$('#roulKw').addEventListener('input', updateRoulCount);
+document.getElementById('roulVeil').addEventListener('click', e=>{ if(e.target.id==='roulVeil') closeRoulSheet(); });
 // «Про что?»: Gemini переводит русские слова в английские keywords → TMDB /search/keyword
 async function roulKeywords(){
   try{
