@@ -476,7 +476,7 @@ function renderFavSheet(){
     favToggle(m.id, b.dataset.list, m);
     const l = FAV_LISTS.find(x=>x.id===b.dataset.list);
     const on = state.favs[b.dataset.list].some(x=>x.id===m.id);
-    renderFavSheet(); syncFavStar(m.id); renderRows();
+    renderFavSheet(); syncFavStar(m.id); renderRows(); updateStats();
     toast(on ? `«${m.title}» — ${l.name.toLowerCase()}` : 'Убрано из «'+l.name.toLowerCase()+'»');
   });
 }
@@ -940,6 +940,8 @@ $('#diceBtn').onclick = ()=>{
 /* =================== SETTINGS =================== */
 function updateStats(){
   $('#stWatched').textContent = state.watched.length;
+  const f = state.favs;
+  $('#stSaved').textContent = f.like.length + f.later.length + f.mark.length;
 }
 $('#tmdbKey').value = state.tmdbKey;
 $('#geminiKey').value = state.geminiKey;
