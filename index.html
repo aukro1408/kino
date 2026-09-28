@@ -196,6 +196,31 @@
   .fav-sec-h.mark{color:#7db9ff}
   .fav-sec-h.mark svg{fill:#4da3ff; color:#4da3ff}
   .fav-empty{padding:12px 18px 4px; color:var(--muted); font-size:13.5px; line-height:1.5}
+  /* ---------- AI ---------- */
+  .ai-wrap{padding:8px 18px 4px}
+  .ai-title{font-size:21px; font-weight:800; margin:6px 0 4px}
+  .ai-sub{font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:14px}
+  .ai-input{width:100%; box-sizing:border-box; background:var(--card); border:1px solid rgba(255,255,255,.1); border-radius:16px;
+    color:var(--text); font:inherit; font-size:15px; line-height:1.5; padding:14px; resize:none; outline:none}
+  .ai-input:focus{border-color:#7c5cff}
+  .ai-go{width:100%; margin-top:12px; padding:15px; border:none; border-radius:16px; font:inherit; font-size:16px; font-weight:800;
+    color:#fff; cursor:pointer; background:linear-gradient(135deg,#7c5cff,#4da3ff); box-shadow:0 8px 26px rgba(124,92,255,.35);
+    display:flex; align-items:center; justify-content:center; gap:8px}
+  .ai-go:active{transform:scale(.98)}
+  .ai-go:disabled{opacity:.55}
+  .ai-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+  .ai-chip{background:var(--card); border:1px solid rgba(255,255,255,.1); color:var(--text); border-radius:99px;
+    padding:9px 15px; font:inherit; font-size:13.5px; cursor:pointer}
+  .ai-chip:active{transform:scale(.96)}
+  .ai-status{display:flex; align-items:center; gap:12px; padding:26px 20px 8px; color:var(--muted); font-size:14px}
+  .ai-spin{width:22px; height:22px; border-radius:50%; border:3px solid rgba(124,92,255,.25); border-top-color:#7c5cff;
+    animation:ai-spin .8s linear infinite; flex:0 0 auto}
+  @keyframes ai-spin{to{transform:rotate(360deg)}}
+  .ai-skel{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 12px; padding:12px 18px}
+  .skel{aspect-ratio:2/3; border-radius:14px;
+    background:linear-gradient(100deg,#182238 40%,#243252 50%,#182238 60%); background-size:200% 100%;
+    animation:shimmer 1.3s infinite}
+  @keyframes shimmer{to{background-position:-200% 0}}
   .tab{flex:1; background:none; border:none; color:var(--muted); display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:4px; font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit}
   .tab svg{width:23px; height:23px}
@@ -284,9 +309,14 @@
   <div class="screen active" id="scr-home">
     <div class="header">
       <div class="logo">КИНО<span>.</span></div>
+      <div style="display:flex; gap:10px">
+      <button class="icon-btn" id="aiBtn" aria-label="AI-подборка">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.9 3.1L23 19l-3.1.9L19 23l-.9-3.1L15 19l3.1-.9z"/></svg>
+      </button>
       <button class="icon-btn" data-goto="profile" aria-label="Настройки">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
+      </div>
     </div>
     <div class="hero-wrap"><div class="hero" id="hero"></div></div>
     <div class="chips" id="chips"></div>
@@ -329,7 +359,7 @@
     <div class="stat-row">
       <div class="stat"><b id="stWatched">0</b><small>просмотрено</small></div>
       <div class="stat"><b id="stSaved">0</b><small>в избранном</small></div>
-      <div class="stat"><b id="stAi">–</b><small>AI-режим</small></div>
+      <div class="stat" id="stAiCard" style="cursor:pointer"><b id="stAi">–</b><small>AI-режим</small></div>
     </div>
     <div class="set-group">
       <div class="set-row">
@@ -371,6 +401,25 @@
   <div class="screen" id="scr-fav">
     <div class="header"><div class="logo">Избранное</div></div>
     <div id="favLists" style="padding-bottom:8px"></div>
+  </div>
+
+  <!-- ============ AI ============ -->
+  <div class="screen" id="scr-ai">
+    <div class="header">
+      <button class="icon-btn" id="aiBack" aria-label="Назад">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="logo" style="font-size:16px; letter-spacing:3px">AI-ПОДБОРКА</div>
+      <div style="width:42px"></div>
+    </div>
+    <div class="ai-wrap">
+      <div class="ai-title">Что хочешь посмотреть?</div>
+      <div class="ai-sub">Опиши настроение, жанр или пример — AI подберёт фильмы и сериалы</div>
+      <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
+      <button class="ai-go" id="aiGo">✨ Подобрать</button>
+      <div class="ai-chips" id="aiChips"></div>
+    </div>
+    <div id="aiResults"></div>
   </div>
 
   <!-- ============ DETAIL SHEET ============ -->
@@ -970,6 +1019,160 @@ $('#resetBtn').onclick = ()=>{
     location.reload();
   }
 };
+
+/* =================== AI =================== */
+// Логика перенесена из Lampa-плагина cinemaX_ai: очередь моделей/ключей,
+// JSON-парсинг, резолв через TMDB, пагинация через exclude + фоновая предзагрузка.
+const AI_MODELS = ['gemini-3.1-flash-lite-preview','gemini-3-flash-preview','gemini-2.5-flash-lite','gemini-2.5-flash','gemma-4-31b-it','gemma-3-27b-it','gemma-3-4b-it'];
+const AI_LIMIT = 18;
+const AI_PRESETS = ['Эпичная фантастика','Комедия на вечер','Захватывающий триллер','Что-то доброе','Детектив с твистом','Приключения','Ужасы','Мелодрама'];
+let aiSession = null;
+
+function aiParseJson(text){
+  if(!text) return null;
+  try{ return JSON.parse(text); }catch(e){}
+  const re = /\[[\s\S]*?\]/g; let m;
+  while((m = re.exec(text))!==null){
+    try{ const r = JSON.parse(m[0]); if(Array.isArray(r)&&r.length) return r; }catch(e2){}
+  }
+  try{ return JSON.parse(text.replace(/```json/gi,'').replace(/```/g,'').trim()); }catch(e3){}
+  return null;
+}
+async function aiAsk(prompt){
+  const keys = state.geminiKey.split(',').map(k=>k.trim()).filter(Boolean);
+  if(!keys.length) throw new Error('nokey');
+  const queue = [];
+  keys.forEach(k=>queue.push({model:AI_MODELS[0], key:k}));
+  AI_MODELS.slice(1).forEach(m=>keys.forEach(k=>queue.push({model:m, key:k})));
+  let lastErr = '';
+  for(const t of queue){
+    try{
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+t.model+':generateContent?key='+encodeURIComponent(t.key), {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+      });
+      if(r.status===429 || r.status===503) continue; // лимит / сервер лежит — следующий в очереди
+      const j = await r.json().catch(()=>null);
+      if(!r.ok){ lastErr = (j&&j.error&&j.error.message)||('HTTP '+r.status); continue; }
+      const parts = (j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+      const text = parts.map(p=>p.text||'').join('\n').trim();
+      if(text) return text;
+      lastErr = 'empty';
+    }catch(e){ lastErr = 'network'; } // обрыв сети — тоже идём дальше по очереди
+  }
+  throw new Error(lastErr||'fail');
+}
+function aiPrompt(q, exclude){
+  let p = 'Act as a movie expert. Suggest strictly '+AI_LIMIT+' movies or TV series for query: "'+q+'".';
+  if(exclude&&exclude.length) p += ' IMPORTANT: You MUST EXCLUDE these titles from your suggestions: '+exclude.slice(-50).join(', ')+'. Provide strictly NEW '+AI_LIMIT+' suggestions.';
+  p += ' Respond ONLY with a valid JSON array: [{"uk":"Название на русском","orig":"Original Title","year":Year}]. All titles and all text must be in Russian. No markdown, no intro text.';
+  return p;
+}
+async function aiResolve(sess, list){
+  // Урок из cinemaX_ai: ошибка одного запроса не должна вешать весь батч.
+  // Promise.all + try/catch внутри = все settled, счётчик processed не нужен.
+  const out = [];
+  await Promise.all(list.map(async item=>{
+    try{
+      const d = await tmdb('/search/movie?query='+encodeURIComponent(item.orig||item.uk));
+      const b = d.results && d.results[0];
+      if(b && !sess.excludeIds.includes(b.id)){
+        sess.excludeIds.push(b.id);
+        const m = norm(b);
+        out.push(m);
+        if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); // чтобы openMovie находил
+      }
+    }catch(e){}
+  }));
+  return out;
+}
+async function aiFetchBatch(sess){
+  const raw = await aiAsk(aiPrompt(sess.q, sess.excludeTitles));
+  const list = aiParseJson(raw);
+  if(!list || !list.length) return [];
+  list.forEach(i=>{ const t = i.orig||i.uk; if(t && !sess.excludeTitles.includes(t)) sess.excludeTitles.push(t); });
+  return aiResolve(sess, list);
+}
+function aiSetGo(disabled, label){
+  const b = $('#aiGo');
+  b.disabled = disabled;
+  b.innerHTML = disabled ? '<div class="ai-spin"></div> '+label : '✨ Подобрать';
+}
+async function aiRun(){
+  const q = $('#aiInput').value.trim();
+  if(!q){ toast('Опиши, что хочешь посмотреть'); return; }
+  if(!state.geminiKey.trim()){ toast('Добавь Gemini ключ в профиле'); goto('profile'); return; }
+  if(!state.tmdbKey){ toast('Добавь TMDB ключ в профиле'); goto('profile'); return; }
+  const sess = aiSession = {q, excludeTitles:[], excludeIds:[], items:[], preloaded:null, loading:true, preloading:false, loadingMore:false};
+  aiSetGo(true, 'AI думает…');
+  $('#aiResults').innerHTML = '<div class="ai-status"><div class="ai-spin"></div>AI подбирает фильмы…</div><div class="ai-skel">'+'<div class="skel"></div>'.repeat(6)+'</div>';
+  try{
+    const results = await aiFetchBatch(sess);
+    if(aiSession!==sess) return;
+    sess.loading = false; aiSetGo(false);
+    if(!results.length){ $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">AI ничего не нашёл. Попробуй переформулировать запрос.</div>'; return; }
+    sess.items = results;
+    aiRenderGrid(sess);
+    aiPreload(sess);
+  }catch(e){
+    if(aiSession!==sess) return;
+    sess.loading = false; aiSetGo(false);
+    $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">'+(e.message==='nokey'?'Добавь Gemini ключ в профиле':'AI недоступен — попробуй чуть позже')+'</div>';
+  }
+}
+function aiMoreTile(){
+  return '<div class="card more-card" id="aiMore"><div class="more-tile"><span>Ещё</span></div><div class="card-title">&nbsp;</div><div class="card-stars">&nbsp;</div></div>';
+}
+function aiRenderGrid(sess){
+  const box = $('#aiResults');
+  box.innerHTML = '<div class="grid3">'+sess.items.map(cardHTML).join('')+aiMoreTile()+'</div>';
+  bindCards(box);
+  $('#aiMore').onclick = ()=>aiMore(sess);
+}
+function aiAppend(sess, results){
+  sess.items = sess.items.concat(results);
+  const more = $('#aiMore');
+  const tmp = document.createElement('div');
+  tmp.innerHTML = results.map(cardHTML).join('');
+  bindCards(tmp);
+  more.before.apply(more, Array.from(tmp.childNodes));
+}
+async function aiPreload(sess){
+  if(sess.preloading || sess.loading) return;
+  sess.preloading = true;
+  try{
+    const results = await aiFetchBatch(sess);
+    if(aiSession===sess && results.length) sess.preloaded = results;
+  }catch(e){}
+  sess.preloading = false;
+}
+async function aiMore(sess){
+  if(aiSession!==sess || sess.loadingMore) return;
+  if(sess.preloaded){ // уже подгружено в фоне — показываем мгновенно
+    const r = sess.preloaded; sess.preloaded = null;
+    aiAppend(sess, r); aiPreload(sess); return;
+  }
+  sess.loadingMore = true;
+  const tile = document.querySelector('#aiMore .more-tile'); const old = tile.innerHTML;
+  tile.innerHTML = '<div class="ai-spin"></div>';
+  try{
+    const results = await aiFetchBatch(sess);
+    if(aiSession!==sess) return;
+    if(results.length){ aiAppend(sess, results); aiPreload(sess); }
+    else toast('Больше ничего не найдено');
+  }catch(e){ toast('Не получилось загрузить ещё'); }
+  sess.loadingMore = false;
+  const t2 = document.querySelector('#aiMore .more-tile'); if(t2) t2.innerHTML = old;
+}
+function renderAiChips(){
+  $('#aiChips').innerHTML = AI_PRESETS.map(p=>'<button class="ai-chip">'+p+'</button>').join('');
+  $('#aiChips').querySelectorAll('.ai-chip').forEach(c=>c.onclick=()=>{ $('#aiInput').value = c.textContent; aiRun(); });
+}
+$('#aiBtn').onclick = ()=>goto('ai');
+$('#aiBack').onclick = ()=>goBack();
+$('#aiGo').onclick = aiRun;
+$('#stAiCard').onclick = ()=>goto('ai');
+renderAiChips();
 
 /* =================== BOOT =================== */
 (async function(){
