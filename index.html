@@ -52,7 +52,7 @@
   .hero-title{font-size:26px; font-weight:800; line-height:1.15; text-shadow:0 2px 18px rgba(0,0,0,.6)}
   .hero-meta{display:flex; align-items:center; gap:10px; margin-top:8px; font-size:13px; color:#cdd7e6}
   .hero-meta .rate{color:var(--star); font-weight:800}
-  .hero-dots{position:absolute; bottom:14px; right:18px; display:flex; gap:6px; z-index:2}
+  .hero-dots{position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:2}
   .hero-dots i{width:22px; height:4px; border-radius:3px; background:rgba(255,255,255,.28); transition:.3s}
   .hero-dots i.on{background:#fff; width:34px}
 
@@ -86,6 +86,8 @@
   .poster .demo-art small{font-size:10px; color:rgba(255,255,255,.75); font-weight:600; margin-top:3px}
   .watched-badge{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%;
     background:rgba(20,200,120,.92); display:none; align-items:center; justify-content:center; color:#04120a}
+  .tv-badge{position:absolute; left:8px; top:8px; padding:3px 8px; border-radius:20px; font-size:10px; font-weight:700;
+    background:rgba(88,60,220,.92); color:#fff; letter-spacing:.3px; z-index:2}
   .card.watched .watched-badge{display:flex}
   .card.watched .poster{opacity:.55}
   .card-title{font-size:12.5px; font-weight:700; margin-top:8px; line-height:1.3;
@@ -377,7 +379,7 @@
     <div class="search-box">
       <div class="search-input">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b98ad" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="searchInput" placeholder="Фильм, жанр, настроение…" autocomplete="off">
+        <input id="searchInput" placeholder="Фильм, сериал, жанр…" autocomplete="off">
       </div>
     </div>
     <div class="search-hint" id="searchHint">Напиши название или «про что» —<br>например «космос» или «месть»</div>
@@ -629,7 +631,7 @@ const GENRE_CHIPS = [
   {id:28, name:'Боевик'}, {id:18, name:'Драма'}, {id:35, name:'Комедия'},
   {id:878, name:'Фантастика'}, {id:53, name:'Триллер'}, {id:27, name:'Ужасы'},
 ];
-const RU_GENRE = {28:'Боевик',12:'Приключения',16:'Анимация',35:'Комедия',80:'Криминал',18:'Драма',14:'Фэнтези',27:'Ужасы',10749:'Мелодрама',878:'Фантастика',53:'Триллер',36:'История',10402:'Музыка'};
+const RU_GENRE = {28:'Боевик',12:'Приключения',16:'Анимация',35:'Комедия',80:'Криминал',18:'Драма',14:'Фэнтези',27:'Ужасы',10749:'Мелодрама',878:'Фантастика',53:'Триллер',36:'История',10402:'Музыка',10759:'Боевик',10765:'Фантастика'};
 
 /* =================== HELPERS =================== */
 const $ = s => document.querySelector(s);
@@ -650,10 +652,12 @@ function backdropHTML(m){
   if(m.backdrop) return `<img src="${IMG}w780${m.backdrop}" alt="">`;
   return `<div class="demo-art" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]});position:absolute;inset:0"></div>`;
 }
-function norm(m){
-  // unify TMDB / demo shape
+function norm(m, media){
+  // unify TMDB / demo shape; media: 'movie' | 'tv'
+  const mt = media || m.media_type || m.media || 'movie';
+  const rid = String(m.id);
   return {
-    id: m.id,
+    id: mt==='tv' && !rid.startsWith('tv') ? 'tv'+rid : m.id,
     title: m.title || m.name || 'Без названия',
     year: (m.release_date||m.first_air_date||'') .slice(0,4) || m.year || '—',
     date: m.release_date||m.first_air_date||'',
@@ -663,8 +667,12 @@ function norm(m){
     poster: m.poster_path || null,
     backdrop: m.backdrop_path || null,
     art: m.art || ['#2f6fed','#101a33'],
-    media: m.media_type || 'movie',
+    media: mt,
   };
+}
+function plural(n, a, b, c){
+  const m10 = n % 10, m100 = n % 100;
+  return m10===1 && m100!==11 ? a : (m10>=2 && m10<=4 && (m100<12 || m100>14) ? b : c);
 }
 function visible(list){
   if(!state.hideWatched) return list;
@@ -681,18 +689,19 @@ async function tmdb(path){
 async function bootLive(){
   if(!state.tmdbKey) return false;
   try{
-    const [tr, now, top] = await Promise.all([
+    const [tr, now, top, tvt] = await Promise.all([
       tmdb('/trending/movie/week'),
       tmdb('/movie/now_playing?region=RU'),
       tmdb('/movie/top_rated'),
+      tmdb('/trending/tv/week'),
     ]);
     state.live = true;
-    const T=(tr.results||[]).map(norm), N=(now.results||[]).map(norm), P=(top.results||[]).map(norm);
+    const T=(tr.results||[]).map(norm), N=(now.results||[]).map(norm), P=(top.results||[]).map(norm), TT=((tvt.results||[]).map(r=>norm(r,'tv')));
     const newest=[...N].sort((a,b)=>b.date.localeCompare(a.date));
     state.hero = newest.slice(0,10);
-    state.data = { trending:T, nowPlaying:newest, topRated:[...P].sort((a,b)=>b.rating-a.rating) };
+    state.data = { trending:T, nowPlaying:newest, topRated:[...P].sort((a,b)=>b.rating-a.rating), tvTrend:TT };
     buildSections();
-    state.pool = T.concat(N,P);
+    state.pool = T.concat(N,P,TT);
     $('#profileSub').textContent = 'онлайн · TMDB подключён';
     return true;
   }catch(e){ state.live=false; return false; }
@@ -711,12 +720,13 @@ function bootDemo(){
 }
 function buildSections(){
   const D = state.data;
-  const sec = (id,title,items,more)=>({id, title, items:items.slice(0,14), more});
+  const sec = (id,title,items,more)=>({id, title, items:(items||[]).slice(0,14), more});
   state.sections = [
     sec('trend','Сейчас в тренде', D.trending, {type:'trending', title:'Сейчас в тренде'}),
     sec('new','Новинки для вас', D.nowPlaying, {type:'now_playing', title:'Новинки для вас'}),
     sec('top','Топ по рейтингу', D.topRated, {type:'top_rated', title:'Топ по рейтингу'}),
   ];
+  if(D.tvTrend && D.tvTrend.length) state.sections.push(sec('tv','Сериалы в тренде', D.tvTrend, {type:'tv_trending', title:'Сериалы в тренде'}));
 }
 
 /* =================== RENDER =================== */
@@ -738,7 +748,7 @@ function renderHero(){
   const track = h.querySelector('.hero-track');
   h.querySelectorAll('.hero-slide').forEach(s=>s.addEventListener('click',()=>{
     if(h.dataset.sw==='1'){ h.dataset.sw='0'; return; }
-    openMovie(+s.dataset.id);
+    openMovie(s.dataset.id);
   }));
   h.querySelectorAll('.hero-dots i').forEach((d,i)=>d.onclick=e=>{e.stopPropagation(); heroGo(i); restartHero();});
   if(!h.dataset.swipe){ h.dataset.swipe='1'; initHeroSwipe(h); }
@@ -824,10 +834,12 @@ async function openCategory(more){
       const urls = more.type==='trending' ? [1,2,3].map(p=>`/trending/movie/week?page=${p}`)
         : more.type==='now_playing' ? [1,2,3].map(p=>`/movie/now_playing?region=RU&page=${p}`)
         : more.type==='top_rated' ? [1,2,3].map(p=>`/movie/top_rated?page=${p}`)
+        : more.type==='tv_trending' ? [1,2,3].map(p=>`/trending/tv/week?page=${p}`)
         : [1,2,3].map(p=>`/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${p}`);
       const rs = await Promise.all(urls.map(tmdb));
       const seen = new Set();
-      rs.forEach(r=>(r.results||[]).forEach(m=>{ if(!seen.has(m.id)){ seen.add(m.id); items.push(norm(m)); } }));
+      const tvMode = more.type==='tv_trending';
+      rs.forEach(r=>(r.results||[]).forEach(m=>{ if(!seen.has(m.id)){ seen.add(m.id); items.push(norm(m, tvMode?'tv':undefined)); } }));
     }catch(e){}
   } else {
     items = state.pool.slice(0,30);
@@ -840,6 +852,7 @@ function cardHTML(m){
   const w = state.watched.includes(m.id) ? ' watched' : '';
   return `<div class="card${w}" data-id="${m.id}">
     <div class="poster">${posterHTML(m)}
+      ${m.media==='tv'?'<div class="tv-badge">Сериал</div>':''}
       ${favBadgeHTML(m.id)}
       <div class="watched-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6"/></svg></div>
     </div>
@@ -848,7 +861,7 @@ function cardHTML(m){
   </div>`;
 }
 function bindCards(root){
-  root.querySelectorAll('.card').forEach(c=>c.onclick=()=>openMovie(+c.dataset.id));
+  root.querySelectorAll('.card').forEach(c=>c.onclick=()=>openMovie(c.dataset.id));
 }
 
 /* =================== NAV =================== */
@@ -893,21 +906,35 @@ async function openMovie(id){
   const box = $('#scr-movie');
   box.innerHTML = '<div class="mv-load">Загружаю…</div>';
   let m = byId(id);
+  if(!m && state.live){
+    // запасной путь: тянем напрямую с TMDB, даже если id нет в пуле
+    const tv0 = String(id).startsWith('tv');
+    try{
+      const d0 = await tmdb(`/${tv0?'tv':'movie'}/${String(id).replace(/^tv/,'')}`);
+      m = norm(d0, tv0?'tv':'movie');
+      state.pool.push(m);
+    }catch(e){}
+  }
   if(!m){ box.innerHTML = '<div class="mv-load">Фильм не найден</div>'; return; }
   if(state.live){
     try{
-      const d = await tmdb(`/movie/${id}?append_to_response=credits,videos,images&include_image_language=ru,en,null`);
-      const base = norm(d);
+      const isTv = m.media==='tv';
+      const num = String(m.id).replace(/^tv/,'');
+      const d = await tmdb(`/${isTv?'tv':'movie'}/${num}?append_to_response=credits,videos,images&include_image_language=ru,en,null`);
+      const base = norm(d, isTv?'tv':'movie');
       const logos = (d.images && d.images.logos) || [];
       const logo = logos.find(l=>l.iso_639_1==='ru') || logos.find(l=>l.iso_639_1==='en') || logos[0] || null;
-      const dirs = (d.credits.crew||[]).filter(c=>c.job==='Director');
+      let dirs = (d.credits.crew||[]).filter(c=>c.job==='Director');
+      if(isTv && !dirs.length && d.created_by && d.created_by.length) dirs = d.created_by.map(c=>({...c, job:'Создатель'}));
       let dirBio = '';
       if(dirs[0]){
         try{ const p = await tmdb(`/person/${dirs[0].id}?language=ru-RU`); dirBio = p.biography || ''; }catch(e){}
         if(dirs[0]) dirs[0].bio = dirBio;
       }
       m = {...base,
-        runtime: d.runtime || null,
+        runtime: isTv ? null : (d.runtime || null),
+        seasons: isTv ? (d.number_of_seasons || null) : null,
+        episodes: isTv ? (d.number_of_episodes || null) : null,
         cast: (d.credits.cast||[]).slice(0,14).map(c=>({id:c.id, name:c.name, character:c.character, photo:c.profile_path})),
         directors: dirs,
         trailer: trailerKey(d.videos),
@@ -915,7 +942,8 @@ async function openMovie(id){
       };
     }catch(e){ /* остаёмся на базовых данных */ }
   } else {
-    m = {...m, runtime: 95 + (m.id*37)%70, cast: demoCast(m.id), directors:[demoDirector(m.id)], trailer:null};
+    const nid = parseInt(String(m.id).replace(/^tv/,''), 10) || 1;
+    m = {...m, runtime: 95 + (nid*37)%70, cast: demoCast(nid), directors:[demoDirector(nid)], trailer:null};
   }
   if(currentScreenId()!=='scr-movie') return;
   renderMovie(m);
@@ -935,14 +963,14 @@ function renderMovie(m){
         ${m.logo?`<img class="mv-logo" src="${IMG}w500${m.logo}" alt="">`:`<div class="mv-title-t">${m.title}</div>`}
         <div class="mv-orig-c">${m.year}</div>
       </div>
-      <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
+      <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}${m.seasons?`<span>${m.seasons} ${plural(m.seasons,'сезон','сезона','сезонов')}</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
       <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}</div>
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
-      <div class="mv-sec"><h3>О фильме</h3><p class="mv-desc">${m.desc}</p></div>
-      ${dirs.length?`<div class="mv-sec"><h3>Режиссёр</h3>${dirs.slice(0,2).map(d=>`
+      <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
+      ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
         <div class="dir-card" data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">
           <div class="ph">${d.profile_path?`<img src="${IMG}w185${d.profile_path}" alt="" loading="lazy">`:initials(d.name)}</div>
           <div style="min-width:0"><b>${d.name}</b>${d.bio?`<p class="dir-bio">${d.bio}</p>`:''}</div>
@@ -974,12 +1002,15 @@ async function openPerson(pid, pname, role){
   let movies=[], photo=null, name=pname, bio='';
   if(state.live && /^\d+$/.test(String(pid))){
     try{
-      const [p, mc] = await Promise.all([ tmdb(`/person/${pid}`), tmdb(`/person/${pid}/movie_credits`) ]);
+      const [p, mc, tc] = await Promise.all([ tmdb(`/person/${pid}`), tmdb(`/person/${pid}/movie_credits`), tmdb(`/person/${pid}/tv_credits`) ]);
       name = p.name; photo = p.profile_path; bio = p.biography || '';
-      let list = role==='director' ? (mc.crew||[]).filter(x=>x.job==='Director') : (mc.cast||[]);
+      let list = role==='director' ? (mc.crew||[]).filter(x=>x.job==='Director')
+        : (mc.cast||[]).concat((tc.cast||[]).map(x=>({...x, media_type:'tv'})));
       const seen = new Set();
-      movies = list.filter(x=>x.poster_path && !seen.has(x.id) && seen.add(x.id))
+      const key = x=>(x.media_type==='tv'?'tv':'')+x.id;
+      movies = list.filter(x=>x.poster_path && !seen.has(key(x)) && seen.add(key(x)))
         .sort((a,b)=>(b.vote_count||0)-(a.vote_count||0)).slice(0,30).map(norm);
+      movies.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
     }catch(e){}
   } else {
     movies = state.pool.filter(x=>{
@@ -997,7 +1028,7 @@ async function openPerson(pid, pname, role){
       ${bio?`<div class="ps-bio">${bio}</div>`:''}
     </div>
     <div class="ps-grid">
-      <div class="mv-sec"><h3>Фильмы${movies.length?` · ${movies.length}`:''}</h3></div>
+      <div class="mv-sec"><h3>Фильмы и сериалы${movies.length?` · ${movies.length}`:''}</h3></div>
       <div class="grid3">${movies.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>'}</div>
     </div>`;
   $('#psBack').onclick = goBack;
@@ -1031,8 +1062,9 @@ async function doSearch(q){
   hint.style.display='none';
   if(state.live){
     try{
-      const d = await tmdb('/search/movie?query='+encodeURIComponent(q));
-      const items = (d.results||[]).map(norm);
+      const d = await tmdb('/search/multi?query='+encodeURIComponent(q)+'&include_adult=false');
+      const items = (d.results||[]).filter(r=>r.media_type==='movie'||r.media_type==='tv').map(norm);
+      items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
       grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>';
       bindCards(grid); return;
     }catch(e){}
