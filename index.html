@@ -406,6 +406,15 @@
   .tor-m .seeds{color:#7ee2a8; font-weight:800}
   .tor-m .trk{margin-left:auto; opacity:.75; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .tor-load{text-align:center; color:var(--muted); padding:18px; font-size:13.5px}
+  .tor-qmode{display:flex; align-items:center; gap:8px; margin:12px 2px 0; font-size:13px; color:var(--muted); cursor:pointer; padding:6px 2px}
+  .tor-qmode b{color:var(--accent2); font-weight:800}
+  .tor-qmode .qc{opacity:.6; font-size:11px}
+  .tor-q{font-size:11.5px; color:var(--muted); margin:8px 2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tor-q b{color:var(--text); font-weight:700}
+  .qm-opt{display:flex; align-items:center; justify-content:space-between; width:100%; background:none; border:none; color:var(--text); font:inherit; font-size:15px; font-weight:700; padding:14px 6px; cursor:pointer; border-top:1px solid rgba(255,255,255,.07)}
+  .qm-opt .chk{color:var(--accent2); font-size:18px; font-weight:800; opacity:0}
+  .qm-opt.on{color:var(--accent2)}
+  .qm-opt.on .chk{opacity:1}
   /* ---------- player (свой, blackroom) ---------- */
   #scr-player{background:#000; padding-bottom:0; overflow:hidden}
   .tabbar.hide{display:none}
@@ -670,6 +679,7 @@
       Профиль</button>
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
+  <div class="sheet-veil" id="qmodeVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title">Режим поиска</div><div id="qmodeList"></div></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
     <div class="sheet-title">Фильтры · Мне повезёт</div>
@@ -704,6 +714,7 @@ const state = {
   jacKey: LS.get('jac_key',''),
   jacUrl2: LS.get('jac_url2',''),
   jacKey2: LS.get('jac_key2',''),
+  torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
   genre: 'all',
@@ -1460,7 +1471,7 @@ function renderMovie(m){
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
-      <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div></div>
+      <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div><div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div></div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
       ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
@@ -1489,6 +1500,8 @@ function renderMovie(m){
   animBars();
   loadKpRating(m);
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>findTorrents(m);
+  const tqn = $('#torQmodeName'); if(tqn) tqn.textContent = torQmodeName();
+  const tqm = $('#torQmode'); if(tqm) tqm.onclick = openQmodeSheet;
 }
 
 /* =================== TORRENTS (JacRed + TorrServer) =================== */
@@ -1553,13 +1566,73 @@ function torSorted(){
   else arr.sort((a,b)=> (b.Seeders||0)-(a.Seeders||0));
   return arr;
 }
+/* ---------- режим поискового запроса (как в Lampa) ---------- */
+const TOR_QMODES = [
+  {id:'orig', t:'Оригинал'},
+  {id:'orig_year', t:'Оригинал + Год'},
+  {id:'orig_ru', t:'Оригинал + Русский'},
+  {id:'orig_ru_year', t:'Оригинал + Русский + Год'},
+  {id:'ru', t:'Русский'},
+  {id:'ru_year', t:'Русский + Год'},
+  {id:'ru_orig', t:'Русский + Оригинал'},
+  {id:'ru_orig_year', t:'Русский + Оригинал + Год'},
+];
+let torLastQ = '';
+function torQmodeName(){ const f = TOR_QMODES.find(x=>x.id===state.torQ); return f ? f.t : TOR_QMODES[3].t; }
+function torQuery(m){
+  const ru = (m.title||'').trim(), orig = (m.orig||'').trim();
+  const y = (m.year && m.year!=='—') ? m.year : '';
+  const parts = [];
+  const push = (...a)=>a.forEach(x=>{ x = (x||'').trim(); if(x && !parts.includes(x)) parts.push(x); });
+  switch(state.torQ){
+    case 'orig': push(orig, ru); break;
+    case 'orig_year': push(orig, y, ru); break;
+    case 'orig_ru': push(orig, ru); break;
+    case 'orig_ru_year': push(orig, ru, y); break;
+    case 'ru': push(ru); break;
+    case 'ru_year': push(ru, y); break;
+    case 'ru_orig': push(ru, orig); break;
+    default: push(ru, orig, y);
+  }
+  return parts.join(' ');
+}
+/* сериальные раздачи в выдаче фильма */
+function torIsSeriesTitle(t){
+  return /\[\s*\d{1,3}\s*-\s*\d{1,3}\s*из\s*\d{1,3}\s*\]/i.test(t)
+    || /\(\s*\d{1,2}\s*сезон[^)]*\)/i.test(t)
+    || /\[s\d{1,2}\]/i.test(t)
+    || /s\d{1,2}\s*e\d{1,3}/i.test(t)
+    || /\b\d{1,2}\s*сезон/i.test(t)
+    || /\d{1,3}\s*[-–]\s*\d{1,3}\s*сери[яйи]/i.test(t)
+    || /сериал/i.test(t);
+}
+/* год в названии не совпадает с годом фильма — чужая раздача */
+function torYearOK(title, year){
+  if(!year || year==='—') return true;
+  const years = title.match(/\b(19|20)\d{2}\b/g) || [];
+  if(!years.length) return true;
+  return years.includes(year);
+}
+function openQmodeSheet(){
+  $('#qmodeList').innerHTML = TOR_QMODES.map(o=>
+    `<button class="qm-opt ${state.torQ===o.id?'on':''}" data-m="${o.id}"><span>${o.t}</span><span class="chk">✓</span></button>`
+  ).join('');
+  $('#qmodeVeil').classList.add('show');
+  $('#qmodeList').querySelectorAll('.qm-opt').forEach(b=>b.onclick=()=>{
+    state.torQ = b.dataset.m; LS.set('tor_qmode', state.torQ);
+    const n = $('#torQmodeName'); if(n) n.textContent = torQmodeName();
+    $('#qmodeVeil').classList.remove('show');
+  });
+}
+$('#qmodeVeil').addEventListener('click', e=>{ if(e.target.id==='qmodeVeil') e.target.classList.remove('show'); });
+
 function torBarHTML(n){
   const c = (k,label)=>{
     const on = torSort.key===k ? ' on' : '';
     const arrow = (k==='size' && torSort.key==='size') ? (torSort.dir===-1 ? ' ↓' : ' ↑') : '';
     return `<button class="tor-chip${on}" data-s="${k}">${label}${arrow}</button>`;
   };
-  return `<div class="tor-bar"><span class="tor-count">${n} ${plural(n,'раздача','раздачи','раздач')}</span><div class="tor-chips">${c('top','Топ')}${c('seeds','Сиды')}${c('quality','Качество')}${c('size','Размер')}</div></div><div id="torList"></div>`;
+  return `<div class="tor-bar"><span class="tor-count">${n} ${plural(n,'раздача','раздачи','раздач')}</span><div class="tor-chips">${c('top','Топ')}${c('seeds','Сиды')}${c('quality','Качество')}${c('size','Размер')}</div></div>${torLastQ?`<div class="tor-q">Запрос: <b>${escTx(torLastQ)}</b></div>`:''}<div id="torList"></div>`;
 }
 function bindTorChips(box){
   box.querySelectorAll('.tor-chip').forEach(el=>el.onclick=()=>{
@@ -1613,11 +1686,13 @@ async function jacSearch(q){
 async function findTorrents(m){
   const box = $('#torBox'); if(!box) return;
   box.innerHTML = '<div class="tor-load">Ищу раздачи…</div>';
-  const q = (m.title||'') + (m.year && m.year!=='—' ? ' '+m.year : '');
+  const q = torQuery(m);
+  torLastQ = q;
   try{
-    const res = await jacSearch(q);
+    let res = await jacSearch(q);
+    if(m.media==='movie') res = res.filter(t=>!torIsSeriesTitle(t.Title||'') && torYearOK(t.Title||'', m.year));
     torCache = res; torSort = {key:'top', dir:-1};
-    if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕</div>'; return; }
+    if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕<br><span style="font-size:12px">попробуй другой режим запроса</span></div>'; return; }
     box.innerHTML = torBarHTML(res.length);
     bindTorChips(box); renderTorList();
   }catch(e){
