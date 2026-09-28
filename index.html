@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>КИНО — рекомендации фильмов</title>
+<title>blackroom — рекомендации фильмов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -27,6 +27,7 @@
   /* ---------- header ---------- */
   .header{display:flex; align-items:center; justify-content:space-between; padding:18px 20px 8px;}
   .logo{font-weight:800; font-size:22px; letter-spacing:6px;}
+  .logo.brand{letter-spacing:1px; font-size:21px;}
   .logo span{color:var(--accent)}
   .icon-btn{width:42px;height:42px;border-radius:50%;background:var(--card);border:none;color:var(--text);
     display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -377,7 +378,7 @@
   <!-- ============ HOME ============ -->
   <div class="screen active" id="scr-home">
     <div class="header">
-      <div class="logo">КИНО<span>.</span></div>
+      <div class="logo brand">blackroom<span>.</span></div>
       <div style="display:flex; gap:10px">
       <button class="icon-btn" id="aiBtn" aria-label="AI-подборка">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.9 3.1L23 19l-3.1.9L19 23l-.9-3.1L15 19l3.1-.9z"/></svg>
@@ -407,7 +408,7 @@
 
   <!-- ============ RANDOM ============ -->
   <div class="screen" id="scr-random">
-    <div class="header"><div class="logo">РУЛЕТКА<span>.</span></div></div>
+    <div class="header"><div class="logo">МНЕ ПОВЕЗЁТ<span>.</span></div></div>
     <div class="roul-top">
       <button class="dice-btn" id="diceBtn" aria-label="Случайный фильм">
         <span class="dice-aura"></span>
@@ -521,7 +522,7 @@
       Избранное</button>
     <button class="tab" data-tab="random">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
-      Рулетка</button>
+      Мне повезёт</button>
     <button class="tab" data-tab="profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5"/></svg>
       Профиль</button>
@@ -529,7 +530,7 @@
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
-    <div class="sheet-title">Фильтры рулетки</div>
+    <div class="sheet-title">Фильтры · Мне повезёт</div>
     <div class="roul-h">Жанры</div>
     <div class="roul-chips" id="roulGenres"></div>
     <div class="roul-h" style="margin-top:16px">Настроение</div>
@@ -1406,7 +1407,7 @@ async function roulKeywords(){
     return ids.join('|');
   }catch(e){ return ''; }
 }
-/* ===== Blob-субстанция рулетки: canvas-metaballs + goo-фильтр ===== */
+/* ===== Blob-субстанция «Мне повезёт»: canvas-metaballs + goo-фильтр ===== */
 let blobExcite = 0;
 function animateOrb(){
   return new Promise(res=>{
@@ -1485,7 +1486,7 @@ async function spinRoulette(){
   const card = $('#luckyCard');
   card.classList.remove('show');
   if(!state.tmdbKey){ animateOrb().then(()=>{ spinDemo(); spinBusy = false; }); return; }
-  card.innerHTML = '<div class="ai-status"><div class="ai-spin"></div>Крутим рулетку…</div>';
+  card.innerHTML = '<div class="ai-status"><div class="ai-spin"></div>Бросаем кости…</div>';
   card.classList.add('show');
   const blobP = animateOrb();
   try{
