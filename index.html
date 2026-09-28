@@ -34,11 +34,11 @@
 
   /* ---------- hero ---------- */
   .hero-wrap{padding:6px 16px 0; position:relative}
-  .hero{position:relative; height:300px; border-radius:24px; overflow:hidden; background:var(--card); touch-action:pan-y}
+  .hero{position:relative; height:300px; border-radius:24px; overflow:hidden; background:var(--card); touch-action:pan-y; z-index:1}
   .hero-track{display:flex; height:100%; transition:transform .5s cubic-bezier(.22,.9,.28,1); will-change:transform}
   .hero-track.drag{transition:none}
   .hero-slide{position:relative; flex:0 0 100%; height:100%; overflow:hidden}
-  .hero-art{position:absolute; inset:-4%}
+  .hero-art{position:absolute; inset:0}
   .hero-art img{width:100%;height:100%;object-fit:cover; will-change:transform}
   .hero-slide.on .hero-art img{animation:kb 9s ease-out both}
   @keyframes kb{from{transform:scale(1.1)}to{transform:scale(1)}}
@@ -55,6 +55,11 @@
   .hero-dots{position:absolute; bottom:14px; right:18px; display:flex; gap:6px; z-index:2}
   .hero-dots i{width:22px; height:4px; border-radius:3px; background:rgba(255,255,255,.28); transition:.3s}
   .hero-dots i.on{background:#fff; width:34px}
+  .hero-ambient{position:absolute; top:-16px; left:0; right:0; height:370px; z-index:0; pointer-events:none; opacity:.5;
+    -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 100%); mask-image:linear-gradient(180deg,#000 55%,transparent 100%)}
+  .hero-ambient div{position:absolute; inset:0; background-size:cover; background-position:center;
+    filter:blur(48px) saturate(1.7); transform:scale(1.2); opacity:0; transition:opacity .9s ease}
+  .hero-ambient div.on{opacity:1}
 
   /* ---------- chips ---------- */
   .chips{display:flex; gap:10px; overflow-x:auto; padding:16px 16px 4px; scrollbar-width:none}
@@ -76,8 +81,9 @@
     display:flex; align-items:center; justify-content:center;
     color:#aebdd4; font-weight:700; font-size:17px; cursor:pointer; transition:transform .15s}
   .more-tile:active{transform:scale(.95)}
-  .hrow{display:flex; gap:12px; overflow-x:auto; padding:2px 16px 12px; scrollbar-width:none; scroll-snap-type:x mandatory}
+  .hrow{display:flex; gap:12px; overflow-x:auto; padding:2px 0 14px; scrollbar-width:none; scroll-snap-type:x proximity}
   .hrow::-webkit-scrollbar{display:none}
+  .hrow::before,.hrow::after{content:''; flex:0 0 16px}
   .hrow .card{flex:0 0 40%; scroll-snap-align:start; cursor:pointer; min-width:0}
   .hrow .more-tile{flex:0 0 40%; scroll-snap-align:start}
   .poster img{width:100%; height:100%; object-fit:cover; display:block}
@@ -196,7 +202,10 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
-    <div class="hero-wrap"><div class="hero" id="hero"></div></div>
+    <div class="hero-wrap">
+      <div class="hero-ambient" id="heroAmbient"><div></div><div></div></div>
+      <div class="hero" id="hero"></div>
+    </div>
     <div class="chips" id="chips"></div>
     <div id="rows"></div>
   </div>
@@ -451,10 +460,23 @@ function renderHero(){
 }
 function heroGo(i){
   heroIdx = i;
-  const h = $('#hero'), track = h.querySelector('.hero-track'); if(!track) return;
-  track.style.transform = `translateX(${-i*h.clientWidth}px)`;
+  const h = $('#hero'), track = h.querySelector('.hero-track'); if(!track || !state.hero.length) return;
+  const step = 100/state.hero.length;
+  track.style.transform = `translateX(${-i*step}%)`;
   h.querySelectorAll('.hero-dots i').forEach((d,k)=>d.classList.toggle('on', k===i));
   h.querySelectorAll('.hero-slide').forEach((s,k)=>s.classList.toggle('on', k===i));
+  setAmbient(state.hero[i]);
+}
+function setAmbient(m){
+  const amb = $('#heroAmbient'); if(!amb || !m) return;
+  const divs = amb.querySelectorAll('div');
+  const cur = amb.querySelector('div.on');
+  const next = (cur===divs[0]) ? divs[1] : divs[0];
+  next.style.backgroundImage = m.backdrop
+    ? `url(${IMG}w780${m.backdrop})`
+    : `linear-gradient(140deg,${m.art[0]},${m.art[1]})`;
+  divs.forEach(d=>d.classList.remove('on'));
+  next.classList.add('on');
 }
 function restartHero(){
   clearInterval(heroTimer);
@@ -469,9 +491,10 @@ function initHeroSwipe(h){
     clearInterval(heroTimer);
   },{passive:true});
   h.addEventListener('touchmove',e=>{
-    if(!dragging) return; const t=trackEl(); if(!t) return;
+    if(!dragging) return; const t=trackEl(); if(!t || !state.hero.length) return;
     dx=e.touches[0].clientX-sx;
-    t.style.transform=`translateX(${-heroIdx*W+dx}px)`;
+    const step=100/state.hero.length;
+    t.style.transform=`translateX(calc(${-heroIdx*step}% + ${dx}px))`;
   },{passive:true});
   const end=()=>{
     if(!dragging) return; dragging=false;
