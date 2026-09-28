@@ -73,6 +73,8 @@
   .row-sec{margin-top:18px}
   .row-head{display:flex; align-items:center; justify-content:space-between; padding:0 16px 10px}
   .row-head h2{font-size:17px; font-weight:800}
+  .row-more{background:rgba(255,255,255,.09); border:0; color:#fff; font-size:12.5px; font-weight:700; padding:7px 15px; border-radius:999px; cursor:pointer}
+  .row-more:active{transform:scale(.95)}
   .row-head a{font-size:12.5px; color:var(--accent2); font-weight:700; cursor:pointer}
   .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 12px; padding:2px 16px 10px}
   .card{cursor:pointer; min-width:0}
@@ -971,9 +973,6 @@ function renderChips(){
     `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
   document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderRows(); });
 }
-function moreTileHTML(){
-  return `<div class="card more-card"><div class="more-tile"><span>Ещё</span></div><div class="mtitle">&nbsp;</div><div class="stars">&nbsp;</div></div>`;
-}
 async function renderRows(){
   const box = $('#rows');
   let sections = state.sections;
@@ -999,11 +998,11 @@ async function renderRows(){
       more:{type:'genre_tv', genreId:state.genre, title:gname+' · сериалы'}}];
   }
   const shown = sections.filter(s=>visible(s.items).length);
-  box.innerHTML = shown.map(s=>`
-    <div class="row-sec"><div class="row-head"><h2>${s.title}</h2></div>
-      <div class="hrow">${visible(s.items).map(cardHTML).join('')}${moreTileHTML()}</div></div>`).join('');
+  box.innerHTML = shown.map((s,i)=>`
+    <div class="row-sec"><div class="row-head"><h2>${s.title}</h2>${s.more?`<button class="row-more" data-i="${i}">Ещё</button>`:''}</div>
+      <div class="hrow">${visible(s.items).map(cardHTML).join('')}</div></div>`).join('');
   bindCards(box);
-  box.querySelectorAll('.more-card').forEach((t,i)=>{ t.onclick=()=>openCategory(shown[i].more); });
+  box.querySelectorAll('.row-more').forEach(b=>{ b.onclick=()=>openCategory(shown[+b.dataset.i].more); });
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
 function catURL(more, page){
