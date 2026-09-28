@@ -1600,8 +1600,8 @@ function renderMovie(m){
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
       <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div><div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div></div>
-      <div class="mv-sec"><h3>Lumio</h3><div id="onlBox"><button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Найти источники</button></div></div>
-      <div class="mv-sec"><h3>Filmix 4k</h3><div id="fxBox"><button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Найти на Filmix</button></div></div>
+      <div class="mv-sec"><h3>Lumio</h3><div id="onlBox"><button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Lumio</button></div></div>
+      <div class="mv-sec"><h3>Filmix 4k</h3><div id="fxBox"><button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Filmix 4k</button></div></div>
       <div class="mv-sec"><h3>Обсуждение</h3><button class="tor-find" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Комментарии Rezka</button></div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
       ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
@@ -2106,7 +2106,7 @@ function onlBack(){
   onlStack.pop();
   const top = onlStack[onlStack.length-1];
   if(!top){ onlReset(); const box = $('#onlBox');
-    if(box) box.innerHTML = '<button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Найти источники</button>';
+    if(box) box.innerHTML = '<button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Lumio</button>';
     const b = $('#onlFind'); if(b && onlMovie) b.onclick = ()=>onlFind(onlMovie);
     return;
   }
@@ -2236,7 +2236,7 @@ function fxBack(){
   fxStack.pop();
   const top = fxStack[fxStack.length-1];
   if(!top){ const box = $('#fxBox');
-    if(box) box.innerHTML = '<button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Найти на Filmix</button>';
+    if(box) box.innerHTML = '<button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Filmix 4k</button>';
     const b = $('#fxFind'); if(b && fxMovie) b.onclick = ()=>fxFind(fxMovie);
     return;
   }
