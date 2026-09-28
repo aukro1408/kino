@@ -878,13 +878,35 @@ async function catLoadMore(){
   const sens = $('#catSens');
   if(sens) sens.style.display = catDone ? 'none' : '';
 }
+function attachCatSentinel(){
+  const grid = $('#catGrid');
+  if(catObs){ catObs.disconnect(); catObs = null; }
+  const oldSens = $('#catSens'); if(oldSens) oldSens.remove();
+  const sens = document.createElement('div');
+  sens.id = 'catSens';
+  sens.innerHTML = '<div class="search-hint">Загружаю…</div>';
+  if(catDone) sens.style.display = 'none';
+  grid.after(sens);
+  catObs = new IntersectionObserver(es=>{ if(es[0].isIntersecting) catLoadMore(); },
+    {root: document.getElementById('scr-cat'), rootMargin:'700px'});
+  catObs.observe(sens);
+}
 async function openCategory(more){
   const grid = $('#catGrid');
   $('#catTitle').textContent = more.title.toUpperCase().slice(0,22);
-  if(catObs){ catObs.disconnect(); catObs = null; }
-  const oldSens = $('#catSens'); if(oldSens) oldSens.remove();
+  saveScrollState();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('#scr-cat').classList.add('active');
+  if(lastCat && lastCat.html && JSON.stringify(lastCat.more)===JSON.stringify(more)){
+    grid.innerHTML = lastCat.html;
+    bindCards(grid);
+    catMore = lastCat.more; catPage = lastCat.page; catDone = lastCat.done; catLoading = false;
+    attachCatSentinel();
+    const st = lastCat.scroll||0;
+    requestAnimationFrame(()=>{ const sc = document.getElementById('scr-cat'); if(sc) sc.scrollTop = st; });
+    return;
+  }
+  lastCat = null;
   $('#scr-cat').scrollTop = 0;
   catMore = more; catPage = 0; catDone = false; catLoading = false;
   if(!state.live){
@@ -899,13 +921,7 @@ async function openCategory(more){
     grid.innerHTML = '<div class="search-hint">Ничего не найдено</div>';
     return;
   }
-  const sens = document.createElement('div');
-  sens.id = 'catSens';
-  sens.innerHTML = '<div class="search-hint">Загружаю…</div>';
-  grid.after(sens);
-  catObs = new IntersectionObserver(es=>{ if(es[0].isIntersecting) catLoadMore(); },
-    {root: document.getElementById('scr-cat'), rootMargin:'700px'});
-  catObs.observe(sens);
+  attachCatSentinel();
 }
 function cardHTML(m){
   const w = state.watched.includes(m.id) ? ' watched' : '';
@@ -925,14 +941,27 @@ function bindCards(root){
 
 /* =================== NAV =================== */
 let navStack = [];
-function showScreen(id){
+const scrollMem = {};
+let hrowMem = [];
+let lastCat = null;
+function showScreen(id, restore){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', 'scr-'+t.dataset.tab===id));
-  const sc = document.getElementById(id); if(sc) sc.scrollTop = 0;
+  const sc = document.getElementById(id); if(sc) sc.scrollTop = restore ? (scrollMem[id]||0) : 0;
+  if(restore && id==='scr-home'){
+    document.querySelectorAll('#scr-home .hrow').forEach((r,i)=>{ if(hrowMem[i]) r.scrollLeft = hrowMem[i]; });
+  }
 }
 function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
-function pushScreen(id){ navStack.push(currentScreenId()); showScreen(id); }
-function goBack(){ const p=navStack.pop(); if(p) showScreen(p); else goto('home'); }
+function saveScrollState(){
+  const cur = currentScreenId();
+  const el = document.getElementById(cur);
+  if(el) scrollMem[cur] = el.scrollTop;
+  if(cur==='scr-home') hrowMem = [...document.querySelectorAll('#scr-home .hrow')].map(r=>r.scrollLeft);
+  if(cur==='scr-cat' && catMore) lastCat = {more:catMore, html:document.getElementById('catGrid').innerHTML, page:catPage, done:catDone, scroll:el?el.scrollTop:0};
+}
+function pushScreen(id){ saveScrollState(); navStack.push(currentScreenId()); showScreen(id); }
+function goBack(){ const p=navStack.pop(); if(p) showScreen(p, true); else goto('home'); }
 
 /* =================== MOVIE PAGE =================== */
 const DEMO_ACTORS = ['Алексей Воронов','Мария Соколова','Дмитрий Кравцов','Анна Лебедева','Игорь Савельев','Ольга Миронова','Сергей Тарасов','Елена Громова','Николай Фролов','Дарья Климова','Павел Агеев','Ирина Белова','Андрей Зимин','Светлана Орлова'];
