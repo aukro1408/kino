@@ -303,6 +303,10 @@
     background:rgba(120,160,220,.13); color:#c4d2e8}
   .mv-sec{margin-top:22px}
   .mv-sec h3{font-size:15px; font-weight:800; margin-bottom:10px; letter-spacing:.3px}
+  .facts{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .fact{background:var(--card2); border-radius:12px; padding:10px 12px; min-width:0}
+  .fact span{display:block; font-size:11px; color:var(--muted); margin-bottom:2px}
+  .fact b{display:block; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
   .mv-trailer{position:relative; border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:var(--card); cursor:pointer}
   .mv-trailer img{width:100%; height:100%; object-fit:cover}
@@ -674,6 +678,15 @@ function plural(n, a, b, c){
   const m10 = n % 10, m100 = n % 100;
   return m10===1 && m100!==11 ? a : (m10>=2 && m10<=4 && (m100<12 || m100>14) ? b : c);
 }
+function money(n){
+  if(!n || n<=0) return null;
+  const f = (x, d) => (+x.toFixed(d)).toString().replace('.', ',');
+  if(n>=1e9) return '$' + f(n/1e9, 2) + ' млрд';
+  if(n>=1e6) return '$' + f(n/1e6, 1) + ' млн';
+  return '$' + Math.round(n).toLocaleString('ru-RU');
+}
+const LANG_RU = {en:'Английский',ru:'Русский',uk:'Украинский',fr:'Французский',de:'Немецкий',es:'Испанский',it:'Итальянский',ja:'Японский',ko:'Корейский',zh:'Китайский',hi:'Хинди',pt:'Португальский',pl:'Польский',tr:'Турецкий'};
+const STATUS_RU = {'Released':'Выпущен','In Production':'В производстве','Post Production':'Постпродакшн','Planned':'Запланирован','Rumored':'По слухам','Canceled':'Отменён','Returning Series':'Выходит','Ended':'Завершён'};
 function visible(list){
   if(!state.hideWatched) return list;
   return list.filter(m=>state.watched.indexOf(m.id)===-1);
@@ -943,6 +956,13 @@ async function openMovie(id){
         runtime: isTv ? null : (d.runtime || null),
         seasons: isTv ? (d.number_of_seasons || null) : null,
         episodes: isTv ? (d.number_of_episodes || null) : null,
+        budget: d.budget || null,
+        revenue: d.revenue || null,
+        countries: (d.production_countries||[]).map(c=>c.name),
+        lang: d.original_language || null,
+        status: d.status || null,
+        studio: (d.production_companies||[])[0] ? d.production_companies[0].name : null,
+        network: isTv && d.networks && d.networks[0] ? d.networks[0].name : null,
         cast: (d.credits.cast||[]).slice(0,14).map(c=>({id:c.id, name:c.name, character:c.character, photo:c.profile_path})),
         directors: dirs,
         trailer: trailerKey(d.videos),
@@ -960,6 +980,15 @@ function renderMovie(m){
   const box = $('#scr-movie');
   const w = state.watched.includes(m.id);
   const dirs = m.directors || [];
+  const facts = [];
+  if(m.budget){ const v = money(m.budget); if(v) facts.push(['Бюджет', v]); }
+  if(m.revenue){ const v = money(m.revenue); if(v) facts.push(['Сборы', v]); }
+  if(m.countries && m.countries.length) facts.push(['Страна', m.countries.slice(0,2).join(', ')]);
+  if(m.lang) facts.push(['Язык', LANG_RU[m.lang] || m.lang.toUpperCase()]);
+  if(m.status) facts.push(['Статус', STATUS_RU[m.status] || m.status]);
+  if(m.studio) facts.push(['Студия', m.studio]);
+  if(m.network) facts.push(['Канал', m.network]);
+  if(m.episodes) facts.push(['Серий', m.episodes]);
   box.innerHTML = `
     <div class="mv-backdrop">${backdropHTML(m)}<div class="mv-shade"></div>
       <button class="back-btn" id="mvBack">←</button>
@@ -978,6 +1007,7 @@ function renderMovie(m){
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
+      ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
         <div class="dir-card" data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">
           <div class="ph">${d.profile_path?`<img src="${IMG}w185${d.profile_path}" alt="" loading="lazy">`:initials(d.name)}</div>
