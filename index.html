@@ -841,33 +841,71 @@ async function renderRows(){
   bindCards(box);
   box.querySelectorAll('.more-card').forEach((t,i)=>{ t.onclick=()=>openCategory(shown[i].more); });
 }
+let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
+function catURL(more, page){
+  return more.type==='trending' ? `/trending/movie/week?page=${page}`
+    : more.type==='now_playing' ? `/movie/now_playing?region=RU&page=${page}`
+    : more.type==='top_rated' ? `/movie/top_rated?page=${page}`
+    : more.type==='tv_trending' ? `/trending/tv/week?page=${page}`
+    : more.type==='genre_tv' ? `/discover/tv?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`
+    : `/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`;
+}
+async function catLoadMore(){
+  if(catLoading || catDone || !state.live || !catMore) return;
+  catLoading = true;
+  const grid = $('#catGrid');
+  const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv';
+  try{
+    const d = await tmdb(catURL(catMore, catPage+1));
+    const seen = new Set();
+    const items = [];
+    (d.results||[]).forEach(m=>{
+      const n = norm(m, tvMode?'tv':undefined);
+      if(!seen.has(n.id)){ seen.add(n.id); items.push(n); }
+    });
+    items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
+    if(catPage===0) grid.innerHTML = '';
+    const html = visible(items).map(cardHTML).join('');
+    if(html) grid.insertAdjacentHTML('beforeend', html);
+    bindCards(grid);
+    catPage++;
+    if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
+  }catch(e){
+    if(catPage===0) grid.innerHTML = '<div class="search-hint">Не удалось загрузить</div>';
+    catDone = true;
+  }
+  catLoading = false;
+  const sens = $('#catSens');
+  if(sens) sens.style.display = catDone ? 'none' : '';
+}
 async function openCategory(more){
   const grid = $('#catGrid');
   $('#catTitle').textContent = more.title.toUpperCase().slice(0,22);
-  grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
+  if(catObs){ catObs.disconnect(); catObs = null; }
+  const oldSens = $('#catSens'); if(oldSens) oldSens.remove();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('#scr-cat').classList.add('active');
   $('#scr-cat').scrollTop = 0;
-  let items = [];
-  if(state.live){
-    try{
-      const urls = more.type==='trending' ? [1,2,3].map(p=>`/trending/movie/week?page=${p}`)
-        : more.type==='now_playing' ? [1,2,3].map(p=>`/movie/now_playing?region=RU&page=${p}`)
-        : more.type==='top_rated' ? [1,2,3].map(p=>`/movie/top_rated?page=${p}`)
-        : more.type==='tv_trending' ? [1,2,3].map(p=>`/trending/tv/week?page=${p}`)
-        : more.type==='genre_tv' ? [1,2,3].map(p=>`/discover/tv?sort_by=popularity.desc&with_genres=${more.genreId}&page=${p}`)
-        : [1,2,3].map(p=>`/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${p}`);
-      const rs = await Promise.all(urls.map(tmdb));
-      const seen = new Set();
-      const tvMode = more.type==='tv_trending' || more.type==='genre_tv';
-      rs.forEach(r=>(r.results||[]).forEach(m=>{ if(!seen.has(m.id)){ seen.add(m.id); items.push(norm(m, tvMode?'tv':undefined)); } }));
-    }catch(e){}
-  } else {
-    items = state.pool.slice(0,30);
+  catMore = more; catPage = 0; catDone = false; catLoading = false;
+  if(!state.live){
+    const items = state.pool.slice(0,30);
+    grid.innerHTML = visible(items).map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено (демо-режим)</div>';
+    bindCards(grid);
+    return;
   }
-  items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
-  grid.innerHTML = visible(items).map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>';
-  bindCards(grid);
+  grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
+  await catLoadMore();
+  if(catDone && !grid.querySelector('.card')){
+    grid.innerHTML = '<div class="search-hint">Ничего не найдено</div>';
+    return;
+  }
+  const sens = document.createElement('div');
+  sens.id = 'catSens';
+  sens.innerHTML = '<div class="search-hint">Загружаю…</div>';
+  grid.after(sens);
+  catObs = new IntersectionObserver(es=>{ if(es[0].isIntersecting) catLoadMore(); },
+    {root: document.getElementById('scr-cat'), rootMargin:'700px'});
+  catObs.observe(sens);
 }
 function cardHTML(m){
   const w = state.watched.includes(m.id) ? ' watched' : '';
