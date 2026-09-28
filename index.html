@@ -1519,6 +1519,7 @@ function fmtSize(b){ if(!b) return '—'; const g=b/1073741824; if(g>=1) return 
 function isVideo(p){ p=(p||'').toLowerCase(); return VID_EXT.some(e=>p.endsWith(e)); }
 function shortName(p){ p=p||''; const i=Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\')); return i>=0?p.slice(i+1):p; }
 let torCache = [];
+let torMovie = null;
 let torSort = {key:'top', dir:-1};
 let torSubsCache = [];
 function torQuality(t){
@@ -1668,7 +1669,7 @@ function renderTorList(){
       <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
     </div>`;
   }).join('');
-  list.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i]));
+  list.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i], torMovie));
 }
 
 function jacQueryURL(base, key, q){
@@ -1695,6 +1696,7 @@ async function jacSearch(q){
 
 async function findTorrents(m){
   const box = $('#torBox'); if(!box) return;
+  torMovie = m || null;
   box.innerHTML = '<div class="tor-load">Ищу раздачи…</div>';
   const q = torQuery(m);
   torLastQ = q;
