@@ -420,6 +420,12 @@
   .rz-text a{color:#8dbcff}
   .rz-text .title_spoiler{color:#8dbcff; cursor:pointer}
   .rz-load,.rz-empty{text-align:center; color:var(--muted); padding:34px 20px; font-size:14px; line-height:1.65}
+  .rz-more-wrap{padding:4px 0 26px}
+  .rz-more{width:100%; padding:15px; border-radius:16px; cursor:pointer;
+    border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:#fff;
+    font:inherit; font-size:14px; font-weight:700}
+  .rz-more:active{transform:scale(.98)}
+  .rz-more:disabled{opacity:.6}
   @media (max-width:600px){
     .rz-head{height:230px}
     .rz-info{left:16px; right:16px; bottom:16px}
@@ -1627,14 +1633,61 @@ async function rzSearchId(name, year){
   try{ if(url) host = new URL(url).origin; }catch(e){}
   return { id: item.dataset.id, url, host };
 }
-async function rzCommentsHtml(found){
+async function rzCommentsHtml(found, cstart){
   const t = Date.now();
   const host = (found && found.host) || RZ_HOST;
-  const txt = await rzFetch(host + '/ajax/get_comments/?t=' + t + '&news_id=' + found.id + '&cstart=1&type=0&comment_id=0&skin=hdrezka', found.url);
+  const txt = await rzFetch(host + '/ajax/get_comments/?t=' + t + '&news_id=' + found.id + '&cstart=' + (cstart||1) + '&type=0&comment_id=0&skin=hdrezka', found.url);
   if(rzBotCheck(txt)) throw new Error('bot');
   const j = JSON.parse(txt);
   if(!j || !j.comments) throw new Error('empty');
-  return j.comments;
+  return j;
+}
+function rzTotalPages(navHtml){
+  // навигация вида: sof.comments.loadComments(770, 2, false, 0)
+  let max = 1;
+  const re = /loadComments\(\d+,\s*(\d+)/g;
+  let m;
+  while((m = re.exec(navHtml||''))){ const n = parseInt(m[1],10); if(n>max) max = n; }
+  return max;
+}
+let rzCur = null; // {found, page, total}
+function rzRenderPage(j, append){
+  const list = document.getElementById('rzList');
+  const dom = new DOMParser().parseFromString(j.comments, 'text/html');
+  const root = dom.querySelector('.comments-tree-list');
+  if(!root || !root.children.length) return false;
+  if(!append) list.innerHTML = '';
+  else { const old = document.getElementById('rzMoreWrap'); if(old) old.remove(); }
+  list.appendChild(rzBuildTree(root));
+  return true;
+}
+function rzMoreHTML(){
+  return `<div class="rz-more-wrap" id="rzMoreWrap"><button class="rz-more" id="rzMore">Показать ещё · страница ${rzCur.page+1} из ${rzCur.total}</button></div>`;
+}
+function rzBindMore(){
+  const b = document.getElementById('rzMore');
+  if(!b) return;
+  b.onclick = async ()=>{
+    b.disabled = true;
+    b.textContent = 'Загружаю…';
+    try{
+      const j = await rzCommentsHtml(rzCur.found, rzCur.page+1);
+      if(currentScreenId()!=='scr-rezka') return;
+      rzCur.page++;
+      const ok = rzRenderPage(j, true);
+      if(!ok || rzCur.page >= rzCur.total){
+        const w = document.getElementById('rzMoreWrap'); if(w) w.remove();
+        if(!ok) toast('Больше комментариев нет');
+        return;
+      }
+      const list = document.getElementById('rzList');
+      list.insertAdjacentHTML('beforeend', rzMoreHTML());
+      rzBindMore();
+    }catch(e){
+      b.disabled = false;
+      b.textContent = 'Не получилось · попробовать ещё раз';
+    }
+  };
 }
 function rzSanitize(root){
   root.querySelectorAll('script,style,iframe,object,embed').forEach(e=>e.remove());
@@ -1748,13 +1801,15 @@ async function rzLoadComments(m){
     if(currentScreenId()!=='scr-rezka') return;
     if(!found){ list.innerHTML = '<div class="rz-empty">На Rezka этот фильм не нашёлся</div>'; return; }
     list.innerHTML = '<div class="rz-load">Загружаю комментарии…</div>';
-    const html = await rzCommentsHtml(found);
+    const j = await rzCommentsHtml(found, 1);
     if(currentScreenId()!=='scr-rezka') return;
-    const dom = new DOMParser().parseFromString(html, 'text/html');
-    const root = dom.querySelector('.comments-tree-list');
-    if(!root || !root.children.length){ list.innerHTML = '<div class="rz-empty">Комментариев пока нет — стань первым 😉</div>'; return; }
-    list.innerHTML = '';
-    list.appendChild(rzBuildTree(root));
+    rzCur = {found, page:1, total:rzTotalPages(j.navigation)};
+    const ok = rzRenderPage(j, false);
+    if(!ok){ list.innerHTML = '<div class="rz-empty">Комментариев пока нет — стань первым 😉</div>'; return; }
+    if(rzCur.total > 1){
+      list.insertAdjacentHTML('beforeend', rzMoreHTML());
+      rzBindMore();
+    }
   }catch(e){
     if(currentScreenId()!=='scr-rezka') return;
     list.innerHTML = e.message==='bot'
