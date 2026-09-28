@@ -112,8 +112,12 @@
     background:conic-gradient(from 0deg,#2f6fed,#9b5cff,#4da3ff,#ff7ad9,#2f6fed);
     filter:blur(30px); opacity:.5; animation:auraSpin 7s linear infinite}
   @keyframes auraSpin{to{transform:rotate(360deg)}}
-  .blob-wrap{display:block; width:190px; height:190px; position:relative; z-index:1; animation:blobFloat 5.5s ease-in-out infinite}
-  @keyframes blobFloat{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-12px) scale(1.04,.97)}}
+  .orb-wrap{display:block; width:200px; height:200px; position:relative; z-index:1; animation:orbFloat 6s ease-in-out infinite}
+  @keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  #orbVideo{display:block; width:100%; height:100%; object-fit:cover; border-radius:50%; mix-blend-mode:screen}
+  #orbVideo.orb-hidden{display:none}
+  #orbVideo.surge{animation:orbSurge 1s ease-out}
+  @keyframes orbSurge{0%{transform:scale(1) rotate(0); filter:brightness(1)}30%{transform:scale(1.28) rotate(10deg); filter:brightness(1.7)}100%{transform:scale(1) rotate(0); filter:brightness(1)}}
   #blobCanvas{display:block; width:100%; height:100%; filter:url(#goo)}
   #blobCanvas.gulping{animation:gulp .95s cubic-bezier(.3,1.35,.4,1)}
   @keyframes gulp{0%{transform:scale(1,1)}22%{transform:scale(.68,1.24)}45%{transform:scale(1.24,.72)}68%{transform:scale(.93,1.08)}100%{transform:scale(1,1)}}
@@ -121,7 +125,7 @@
   .d-tw.t1{top:16%; left:24%} .d-tw.t2{top:26%; right:14%; animation-delay:1s}
   .d-tw.t3{bottom:20%; left:16%; animation-delay:1.8s} .d-tw.t4{bottom:28%; right:24%; animation-delay:.5s}
   @keyframes tw{0%,100%{opacity:0; transform:scale(.4)}50%{opacity:1; transform:scale(1.2)}}
-  @media (prefers-reduced-motion: reduce){.blob-wrap,.dice-aura,.d-tw,#blobCanvas.gulping{animation:none}}
+  @media (prefers-reduced-motion: reduce){.orb-wrap,.dice-aura,.d-tw,#blobCanvas.gulping,#orbVideo.surge{animation:none}}
   .dice-label{margin-top:22px; font-size:15px; font-weight:700}
   .dice-sub{margin-top:6px; font-size:13px; color:var(--muted); text-align:center; line-height:1.5}
   .roul-sec{padding:16px 20px 0}
@@ -386,14 +390,17 @@
     <div class="roul-top">
       <button class="dice-btn" id="diceBtn" aria-label="Случайный фильм">
         <span class="dice-aura"></span>
-        <span class="blob-wrap"><canvas id="blobCanvas" width="240" height="240"></canvas></span>
+        <span class="orb-wrap">
+          <video id="orbVideo" src="roul-orb.mp4" autoplay muted loop playsinline preload="auto"></video>
+          <canvas id="blobCanvas" width="240" height="240" style="display:none"></canvas>
+        </span>
         <span class="d-tw t1"></span><span class="d-tw t2"></span><span class="d-tw t3"></span><span class="d-tw t4"></span>
       </button>
       <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
         <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -13"/></filter>
       </defs></svg>
       <div class="dice-label">Не знаешь, что посмотреть?</div>
-      <div class="dice-sub">Настрой фильтры и тыкни в субстанцию —<br>выдадим случайный фильм</div>
+      <div class="dice-sub">Настрой фильтры и тыкни в сферу —<br>выдадим случайный фильм</div>
       <div class="roul-filter-row">
         <button class="roul-filter-btn" id="roulFilterBtn">⚙️ Фильтры<span class="cnt" id="roulFilterCount" style="display:none">0</span></button>
       </div>
@@ -1101,14 +1108,27 @@ async function roulKeywords(){
 }
 /* ===== Blob-субстанция рулетки: canvas-metaballs + goo-фильтр ===== */
 let blobExcite = 0;
-function animateBlob(){
+function animateOrb(){
   return new Promise(res=>{
-    blobExcite = 1;
-    const el = document.getElementById('blobCanvas');
-    if(el){ el.classList.remove('gulping'); void el.offsetWidth; el.classList.add('gulping'); }
+    const v = document.getElementById('orbVideo');
+    const c = document.getElementById('blobCanvas');
+    if(v && !v.classList.contains('orb-hidden')){
+      v.classList.remove('surge'); void v.offsetWidth; v.classList.add('surge');
+    }else if(c){
+      blobExcite = 1;
+      c.classList.remove('gulping'); void c.offsetWidth; c.classList.add('gulping');
+    }
     setTimeout(res, 1000);
   });
 }
+(function(){ // если видео не загрузилось — запасной вариант: canvas-субстанция
+  const v = document.getElementById('orbVideo');
+  const c = document.getElementById('blobCanvas');
+  if(!v || !c) return;
+  const fb = ()=>{ v.classList.add('orb-hidden'); c.style.display = 'block'; };
+  v.addEventListener('error', fb);
+  setTimeout(()=>{ if(v.readyState < 2) fb(); }, 6000);
+})();
 (function(){
   const cv = document.getElementById('blobCanvas');
   if(!cv) return;
@@ -1164,10 +1184,10 @@ async function spinRoulette(){
   if(spinBusy) return; spinBusy = true;
   const card = $('#luckyCard');
   card.classList.remove('show');
-  if(!state.tmdbKey){ animateBlob().then(()=>{ spinDemo(); spinBusy = false; }); return; }
+  if(!state.tmdbKey){ animateOrb().then(()=>{ spinDemo(); spinBusy = false; }); return; }
   card.innerHTML = '<div class="ai-status"><div class="ai-spin"></div>Крутим рулетку…</div>';
   card.classList.add('show');
-  const blobP = animateBlob();
+  const blobP = animateOrb();
   try{
     const g = new Set(roulSel.genres);
     const mood = ROUL_MOODS.find(m=>m.id===roulSel.mood);
