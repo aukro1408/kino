@@ -20,7 +20,7 @@
     overflow:hidden; overscroll-behavior:none; user-select:none; -webkit-user-select:none;
   }
   #app{height:100dvh; display:flex; flex-direction:column; position:relative; max-width:520px; margin:0 auto;}
-  .screen{flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:20px; scrollbar-width:none; display:none}
+  .screen{flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:calc(var(--tabbar-h) + 20px); scrollbar-width:none; display:none}
   .screen.active{display:block}
   .screen::-webkit-scrollbar{display:none}
 
@@ -34,7 +34,7 @@
 
   /* ---------- hero ---------- */
   .hero-wrap{padding:0; position:relative}
-  .hero{position:relative; height:320px; border-radius:0; overflow:hidden; background:var(--card); touch-action:pan-y; z-index:1}
+  .hero{position:relative; height:320px; border-radius:24px; overflow:hidden; background:var(--card); touch-action:pan-y; z-index:1}
   .hero-track{display:flex; height:100%; transition:transform .5s cubic-bezier(.22,.9,.28,1); will-change:transform}
   .hero-track.drag{transition:none}
   .hero-slide{position:relative; flex:0 0 100%; height:100%; overflow:hidden}
@@ -145,6 +145,7 @@
 
   /* ---------- tabbar ---------- */
   .tabbar{position:relative; flex:0 0 auto; height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    margin-top:calc(-1 * (var(--tabbar-h) + env(safe-area-inset-bottom))); z-index:50;
     padding-bottom:env(safe-area-inset-bottom);
     background:rgba(13,20,34,.82); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
     border-top:1px solid rgba(255,255,255,.07); display:flex; z-index:50}
@@ -309,6 +310,10 @@
   </div>
 
   <!-- ============ TABBAR ============ -->
+
+  <!-- ============ DETAIL SHEET ============ -->
+  <div class="screen" id="scr-movie"></div>
+  <div class="screen" id="scr-person"></div>
   <nav class="tabbar">
     <button class="tab on" data-tab="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
@@ -323,10 +328,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5"/></svg>
       Профиль</button>
   </nav>
-
-  <!-- ============ DETAIL SHEET ============ -->
-  <div class="screen" id="scr-movie"></div>
-  <div class="screen" id="scr-person"></div>
   <div class="toast" id="toast"></div>
 </div>
 
