@@ -88,6 +88,24 @@
   .hrow::-webkit-scrollbar{display:none}
   .hrow::before,.hrow::after{content:''; flex:0 0 16px}
   .hrow .card{flex:0 0 40%; scroll-snap-align:start; cursor:pointer; min-width:0}
+
+  /* ---------- коллекции (CUB) ---------- */
+  .col-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; padding:2px 16px 10px}
+  .col-card{cursor:pointer; min-width:0}
+  .col-card:active{transform:scale(.97)}
+  .col-card{transition:transform .15s}
+  .col-cover{position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#1b2740;
+    box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .col-cover img{width:100%; height:100%; object-fit:cover; display:block}
+  .col-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,8,16,.02) 35%, rgba(5,8,16,.6))}
+  .col-count{position:absolute; left:10px; bottom:8px; font-size:11.5px; font-weight:700; color:#fff;
+    background:rgba(0,0,0,.55); padding:4px 10px; border-radius:999px}
+  .col-title{font-size:13.5px; font-weight:700; margin:8px 2px 0; display:-webkit-box;
+    -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .col-meta{font-size:11.5px; color:var(--muted); margin:3px 2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .hrow .col-card{flex:0 0 236px; scroll-snap-align:start}
+  .col-chips{display:flex; gap:10px; overflow-x:auto; padding:4px 16px 12px; scrollbar-width:none}
+  .col-chips::-webkit-scrollbar{display:none}
   .poster img{width:100%; height:100%; object-fit:cover; display:block}
   .poster .demo-art{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:10px}
   .poster .demo-art b{font-size:13px; line-height:1.25; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.55)}
@@ -829,12 +847,13 @@ async function tmdb(path){
 async function bootLive(){
   if(!state.tmdbKey) return false;
   try{
-    const [tr, now, top, tvt, fy] = await Promise.all([
+    const [tr, now, top, tvt, fy, cl] = await Promise.all([
       tmdb('/trending/movie/week'),
       tmdb('/movie/now_playing?region=RU'),
       tmdb('/movie/top_rated'),
       tmdb('/trending/tv/week'),
       forYouPayload(),
+      cubGet('list?category=top').catch(()=>null),
     ]);
     state.live = true;
     const T=(tr.results||[]).map(norm), N=(now.results||[]).map(norm), P=(top.results||[]).map(norm), TT=((tvt.results||[]).map(r=>norm(r,'tv')));
@@ -846,6 +865,9 @@ async function bootLive(){
       state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
     }
+    const cols = cl && cl.results ? cl.results.slice(0,12) : [];
+    if(cols.length) state.sections.push({id:'cols', title:'Коллекции', items:cols, kind:'collections',
+      more:{type:'collections', cat:'top', title:'Коллекции'}});
     state.pool = T.concat(N,P,TT,fy?fy.items:[]);
     $('#profileSub').textContent = 'онлайн · TMDB подключён';
     return true;
@@ -907,6 +929,54 @@ async function refreshForYou(){
       more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
   }
   if(currentScreenId()==='scr-home' && state.genre==='all') renderRows();
+}
+
+/* =================== КОЛЛЕКЦИИ (CUB) =================== */
+const CUB_API = 'https://cub.red/api/collections/';
+async function cubGet(path){
+  const r = await fetch(CUB_API + path);
+  if(!r.ok) throw new Error('cub '+r.status);
+  return r.json();
+}
+function shortNum(n){
+  n = +n || 0;
+  const f = v => (Math.round(v*10)/10).toString().replace('.', ',');
+  if(n>=1e6) return f(n/1e6)+'M';
+  if(n>=1e3) return f(n/1e3)+'K';
+  return String(n);
+}
+function cubMovie(it){
+  if(!it || (!it.title && !it.name)) return null;
+  return norm(it, it.title ? undefined : 'tv');
+}
+const COL_CATS = [
+  {id:'top', name:'В топе'},
+  {id:'week', name:'За неделю'},
+  {id:'month', name:'За месяц'},
+  {id:'new', name:'Новинки'},
+  {id:'all', name:'Все'},
+];
+function colCardHTML(c){
+  const img = c.backdrop_path ? IMG+'w500'+c.backdrop_path : '';
+  const t = (c.title||'').replace(/"/g,'&quot;');
+  return `<div class="col-card" data-id="${c.id}" data-title="${t}">
+    <div class="col-cover">${img?`<img loading="lazy" src="${img}" alt="">`:''}<div class="col-shade"></div>
+      <div class="col-count">${c.items_count||0} ${plural(c.items_count||0,'фильм','фильма','фильмов')}</div></div>
+    <div class="col-title">${c.title||''}</div>
+    <div class="col-meta">@${c.username||'cub'} · ${shortNum(c.views||0)}</div>
+  </div>`;
+}
+function colChipsHTML(active){
+  return `<div class="col-chips">${COL_CATS.map(c=>
+    `<button class="chip${c.id===active?' on':''}" data-colcat="${c.id}">${c.name}</button>`).join('')}</div>`;
+}
+function bindColCards(root){
+  root.querySelectorAll('.col-card').forEach(c=>{
+    c.onclick = ()=>openCategory({type:'collection', colId:c.dataset.id, title:c.dataset.title||'Коллекция'});
+  });
+  root.querySelectorAll('[data-colcat]').forEach(ch=>{
+    ch.onclick = ()=>openCategory({type:'collections', cat:ch.dataset.colcat, title:'Коллекции'});
+  });
 }
 
 let heroIdx = 0, heroTimer = null;
@@ -997,11 +1067,14 @@ async function renderRows(){
       {id:'gtv', title:gname+' · сериалы', items:tvItems.slice(0,14),
       more:{type:'genre_tv', genreId:state.genre, title:gname+' · сериалы'}}];
   }
-  const shown = sections.filter(s=>visible(s.items).length);
-  box.innerHTML = shown.map((s,i)=>`
-    <div class="row-sec"><div class="row-head"><h2>${s.title}</h2>${s.more?`<button class="row-more" data-i="${i}">Ещё</button>`:''}</div>
-      <div class="hrow">${visible(s.items).map(cardHTML).join('')}</div></div>`).join('');
+  const shown = sections.filter(s=> s.kind==='collections' ? (s.items&&s.items.length) : visible(s.items).length);
+  box.innerHTML = shown.map((s,i)=>{
+    const cards = s.kind==='collections' ? s.items.map(colCardHTML).join('') : visible(s.items).map(cardHTML).join('');
+    return `<div class="row-sec"><div class="row-head"><h2>${s.title}</h2>${s.more?`<button class="row-more" data-i="${i}">Ещё</button>`:''}</div>
+      <div class="hrow">${cards}</div></div>`;
+  }).join('');
   bindCards(box);
+  bindColCards(box);
   box.querySelectorAll('.row-more').forEach(b=>{ b.onclick=()=>openCategory(shown[+b.dataset.i].more); });
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
@@ -1015,25 +1088,38 @@ function catURL(more, page){
     : `/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`;
 }
 async function catLoadMore(){
-  if(catLoading || catDone || !state.live || !catMore) return;
+  if(catLoading || catDone || !catMore) return;
+  const isColList = catMore.type==='collections';
+  const isCol = catMore.type==='collection';
+  if(!state.live && !isColList && !isCol) return;
   catLoading = true;
   const grid = $('#catGrid');
-  const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv';
   try{
-    const d = await tmdb(catURL(catMore, catPage+1));
-    const seen = new Set();
-    const items = [];
-    (d.results||[]).forEach(m=>{
-      const n = norm(m, tvMode?'tv':undefined);
-      if(!seen.has(n.id)){ seen.add(n.id); items.push(n); }
-    });
-    items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
-    if(catPage===0) grid.innerHTML = '';
-    const html = visible(items).map(cardHTML).join('');
-    if(html) grid.insertAdjacentHTML('beforeend', html);
-    bindCards(grid);
-    catPage++;
-    if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
+    if(isColList){
+      const d = await cubGet(`list?category=${catMore.cat||'top'}&page=${catPage+1}`);
+      const cards = (d.results||[]).map(colCardHTML).join('');
+      if(catPage===0) grid.innerHTML = colChipsHTML(catMore.cat||'top') + `<div class="col-grid">${cards}</div>`;
+      else { const cg = grid.querySelector('.col-grid'); if(cg) cg.insertAdjacentHTML('beforeend', cards); }
+      bindColCards(grid);
+      catPage++;
+      if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
+    } else {
+      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv';
+      const d = isCol ? await cubGet(`view/${catMore.colId}?page=${catPage+1}`) : await tmdb(catURL(catMore, catPage+1));
+      const seen = new Set();
+      const items = [];
+      (d.results||[]).forEach(m=>{
+        const n = isCol ? cubMovie(m) : norm(m, tvMode?'tv':undefined);
+        if(n && !seen.has(n.id)){ seen.add(n.id); items.push(n); }
+      });
+      items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
+      if(catPage===0) grid.innerHTML = '';
+      const html = visible(items).map(cardHTML).join('');
+      if(html) grid.insertAdjacentHTML('beforeend', html);
+      bindCards(grid);
+      catPage++;
+      if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
+    }
   }catch(e){
     if(catPage===0) grid.innerHTML = '<div class="search-hint">Не удалось загрузить</div>';
     catDone = true;
@@ -1061,9 +1147,16 @@ async function openCategory(more){
   saveScrollState();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('#scr-cat').classList.add('active');
+  const isColList = more.type==='collections';
+  const isCol = isColList || more.type==='collection';
+  const setGridMode = ()=>{
+    grid.classList.toggle('grid3', !isColList);
+    grid.style.display = isColList ? 'block' : '';
+  };
   if(lastCat && lastCat.html && JSON.stringify(lastCat.more)===JSON.stringify(more)){
     grid.innerHTML = lastCat.html;
-    bindCards(grid);
+    setGridMode();
+    bindCards(grid); bindColCards(grid);
     catMore = lastCat.more; catPage = lastCat.page; catDone = lastCat.done; catLoading = false;
     attachCatSentinel();
     const st = lastCat.scroll||0;
@@ -1073,7 +1166,8 @@ async function openCategory(more){
   lastCat = null;
   $('#scr-cat').scrollTop = 0;
   catMore = more; catPage = 0; catDone = false; catLoading = false;
-  if(!state.live){
+  setGridMode();
+  if(!state.live && !isCol){
     const items = state.pool.slice(0,30);
     grid.innerHTML = visible(items).map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено (демо-режим)</div>';
     bindCards(grid);
@@ -1081,7 +1175,7 @@ async function openCategory(more){
   }
   grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
   await catLoadMore();
-  if(catDone && !grid.querySelector('.card')){
+  if(catDone && !grid.querySelector('.card') && !grid.querySelector('.col-card')){
     grid.innerHTML = '<div class="search-hint">Ничего не найдено</div>';
     return;
   }
