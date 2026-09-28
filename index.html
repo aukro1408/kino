@@ -112,9 +112,9 @@
     background:conic-gradient(from 0deg,#2f6fed,#9b5cff,#4da3ff,#ff7ad9,#2f6fed);
     filter:blur(30px); opacity:.5; animation:auraSpin 7s linear infinite}
   @keyframes auraSpin{to{transform:rotate(360deg)}}
-  .d-scene{width:112px; height:112px; perspective:700px; position:relative; z-index:1; transition:transform .15s}
+  .d-scene{display:block; width:112px; height:112px; perspective:700px; position:relative; z-index:1; transition:transform .15s}
   .dice-btn:active .d-scene{transform:scale(.9)}
-  .d-cube{width:100%; height:100%; position:relative; transform-style:preserve-3d; transform:rotateX(-20deg) rotateY(32deg)}
+  .d-cube{display:block; width:100%; height:100%; position:relative; transform-style:preserve-3d; transform:rotateX(-20deg) rotateY(32deg)}
   .d-cube.idle{animation:dIdle 7s ease-in-out infinite}
   @keyframes dIdle{0%,100%{transform:rotateX(-20deg) rotateY(32deg)}50%{transform:rotateX(-34deg) rotateY(54deg)}}
   .d-face{position:absolute; inset:0; border-radius:26px; background-color:#2f6fed; background-image:var(--dots); background-repeat:no-repeat;
