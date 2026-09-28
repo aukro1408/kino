@@ -378,6 +378,58 @@
   .mv-watched{width:100%; margin-top:24px; padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,.13);
     background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
   .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
+  /* ---------- rezka comments ---------- */
+  #scr-rezka{background:#151718}
+  .rz-page{min-height:100%; background:#151718; color:#fff; padding-bottom:90px}
+  .rz-head{position:relative; height:250px; overflow:hidden; background:#202223}
+  .rz-bd{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  .rz-shade{position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(10,12,13,.05) 0%, rgba(10,12,13,.25) 38%, #151718 100%),
+      linear-gradient(to right, rgba(0,0,0,.30), transparent 70%)}
+  .rz-x{position:absolute; top:12px; right:12px; width:40px; height:40px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.45); color:#fff;
+    font-size:16px; cursor:pointer; z-index:3; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px)}
+  .rz-x:active{transform:scale(.92)}
+  .rz-info{position:absolute; left:20px; right:20px; bottom:18px; z-index:2}
+  .rz-title{font-size:27px; line-height:1.12; font-weight:800; letter-spacing:-.2px; text-shadow:0 2px 10px rgba(0,0,0,.75)}
+  .rz-meta{margin-top:8px; font-size:15px; line-height:1.3; font-weight:500; color:rgba(255,255,255,.86); text-shadow:0 1px 6px rgba(0,0,0,.75)}
+  .rz-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center}
+  .rz-chip{display:inline-flex; align-items:center; gap:7px; min-height:44px; min-width:112px;
+    padding:7px 12px; box-sizing:border-box; border:1px solid rgba(255,255,255,.20); border-radius:14px;
+    background:rgba(0,0,0,.72); color:rgba(255,255,255,.96);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+  .rz-chip b{font-size:18px; line-height:1; font-weight:800; color:#fff}
+  .rz-chip.kp b{color:#ffb000}
+  .rz-chip.imdb b{color:#f5c518}
+  .rz-chip strong{font-size:17px; line-height:1.1; font-weight:750}
+  .rz-chip small{font-size:11.5px; line-height:1.1; color:rgba(255,255,255,.65); font-weight:500}
+  .rz-fin{margin-top:10px; font-size:14px; line-height:1.3; color:rgba(255,255,255,.78); text-shadow:0 1px 5px rgba(0,0,0,.75)}
+  .rz-cap{padding:18px 20px 6px; font-size:17px; font-weight:800}
+  .rz-list{padding:6px 16px 20px}
+  .rz-c{display:flex; align-items:flex-start; gap:12px; margin:0 0 18px}
+  .rz-av{flex:0 0 50px; width:50px; height:50px; border-radius:11px; overflow:hidden; background:#202223}
+  .rz-av img{width:100%; height:100%; object-fit:cover; display:block}
+  .rz-body{flex:1 1 auto; min-width:0}
+  .rz-chead{display:flex; align-items:baseline; flex-wrap:wrap; line-height:1.25}
+  .rz-name{font-size:15px; font-weight:700; color:#fff}
+  .rz-date{margin-left:7px; font-size:12px; color:rgba(255,255,255,.48)}
+  .rz-text{margin-top:5px; font-size:15px; line-height:1.52; color:rgba(255,255,255,.88); word-break:break-word}
+  .rz-text p{margin:0 0 7px}
+  .rz-text p:last-child{margin-bottom:0}
+  .rz-text ul,.rz-text ol{margin:5px 0; padding-left:18px}
+  .rz-text a{color:#8dbcff}
+  .rz-text .title_spoiler{color:#8dbcff; cursor:pointer}
+  .rz-load,.rz-empty{text-align:center; color:var(--muted); padding:34px 20px; font-size:14px; line-height:1.65}
+  @media (max-width:600px){
+    .rz-head{height:230px}
+    .rz-info{left:16px; right:16px; bottom:16px}
+    .rz-title{font-size:25px}
+    .rz-meta{font-size:14px}
+    .rz-chip{min-height:34px; min-width:0; padding:6px 9px; border-radius:12px}
+    .rz-chip b{font-size:16px}
+    .rz-chip strong{font-size:14.5px}
+    .rz-chip small{font-size:10px}
+  }
   /* ---------- torrents ---------- */
   .tor-find{width:100%; padding:16px; border-radius:18px; border:none; cursor:pointer;
     background:linear-gradient(135deg,#3b8cff,#7b5cff); color:#fff;
@@ -587,6 +639,16 @@
     </div>
     <div class="set-group">
       <div class="set-row">
+        <div><div class="t">Прокси Rezka</div><div class="d">Обход CORS для hdrezka.ag · комментарии</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="rzProxy" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Cookie Rezka</div><div class="d">Если сайт включит проверку «ты не бот»</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="rzCookie" placeholder="dle_user_id=…;" autocomplete="off" autocapitalize="off"></div>
+      </div>
+    </div>
+    <div class="set-group">
+      <div class="set-row">
         <div><div class="t">Скрывать просмотренное</div><div class="d">Фильмы «уже смотрел» не попадут в ряды</div></div>
         <button class="switch" id="hideWatched"></button>
       </div>
@@ -639,6 +701,7 @@
   <!-- ============ DETAIL SHEET ============ -->
   <div class="screen" id="scr-movie"></div>
   <div class="screen" id="scr-person"></div>
+  <div class="screen" id="scr-rezka"></div>
   <div class="screen" id="scr-player">
     <div class="pl-stage" id="plStage">
       <video id="plVideo" playsinline preload="metadata"></video>
@@ -722,6 +785,8 @@ const state = {
   jacUrl2: LS.get('jac_url2',''),
   jacKey2: LS.get('jac_key2',''),
   subdlKey: LS.get('subdl_key',''),
+  rzProxy: LS.get('rz_proxy','https://worker-patient-dream-26d8.bdvburik.workers.dev:8443/'),
+  rzCookie: LS.get('rz_cookie',''),
   torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
@@ -903,10 +968,10 @@ function kpCacheGet(id){
   }catch(e){}
   return null;
 }
-function kpCacheSet(id, kp, votes){
+function kpCacheSet(id, kp, votes, imdb){
   try{
     const c = JSON.parse(localStorage.getItem('kino.kp_cache')||'{}');
-    c[id] = {kp, votes, ts: Date.now()};
+    c[id] = {kp, votes, imdb: imdb||0, ts: Date.now()};
     const ks = Object.keys(c);
     if(ks.length>500) ks.slice(0, ks.length-500).forEach(k=>delete c[k]);
     localStorage.setItem('kino.kp_cache', JSON.stringify(c));
@@ -937,40 +1002,42 @@ function kpHideIfEmpty(){
     const sec = box.closest('.mv-sec'); if(sec) sec.style.display = 'none';
   }
 }
+async function kpFilmDetail(m){
+  // {kp, votes, imdb} или null; результат кэшируется на 7 дней
+  const cid = String(m.id);
+  const cached = kpCacheGet(cid);
+  if(cached && cached.imdb !== undefined) return cached.kp>0 ? cached : null;
+  const titles = [];
+  if(m.orig) titles.push(m.orig);
+  if(m.title && m.title!==m.orig) titles.push(m.title);
+  const yr = /^\d{4}$/.test(String(m.year)) ? String(m.year) : '';
+  let film = null;
+  for(const t of titles){
+    const d = await kpFetch('api/v2.1/films/search-by-keyword?keyword='+encodeURIComponent(t)+'&page=1');
+    const films = d.films||d.items||[];
+    if(!films.length) continue;
+    const want = kpNorm(t);
+    let cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n)===want));
+    if(!cands.length) cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n).indexOf(want)!==-1));
+    if(yr){ const yc = cands.filter(f=>String(f.year||'').slice(0,4)===yr); if(yc.length) cands = yc; }
+    if(cands.length){ film = cands[0]; break; }
+  }
+  if(!film){ kpCacheSet(cid, 0, 0, 0); return null; }
+  const det = await kpFetch('api/v2.2/films/'+(film.filmId||film.kinopoiskId));
+  const kp = Number(det.ratingKinopoisk)||0;
+  const votes = Number(det.ratingKinopoiskVoteCount)||0;
+  const imdb = Number(det.ratingImdb)||0;
+  kpCacheSet(cid, kp, votes, imdb);
+  return kp>0 ? {kp, votes, imdb} : null;
+}
 async function loadKpRating(m){
   if(!state.kpKey || !state.live) return;
   const slot = document.getElementById('kpCardSlot');
   if(!slot) return;
-  const cid = String(m.id);
-  const cached = kpCacheGet(cid);
-  if(cached){
-    if(cached.kp>0){ slot.outerHTML = kpCardHTML(cached.kp, cached.votes); animBars(); }
-    else kpHideIfEmpty();
-    return;
-  }
   try{
-    const titles = [];
-    if(m.orig) titles.push(m.orig);
-    if(m.title && m.title!==m.orig) titles.push(m.title);
-    const yr = /^\d{4}$/.test(String(m.year)) ? String(m.year) : '';
-    let film = null;
-    for(const t of titles){
-      const d = await kpFetch('api/v2.1/films/search-by-keyword?keyword='+encodeURIComponent(t)+'&page=1');
-      const films = d.films||d.items||[];
-      if(!films.length) continue;
-      const want = kpNorm(t);
-      let cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n)===want));
-      if(!cands.length) cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n).indexOf(want)!==-1));
-      if(yr){ const yc = cands.filter(f=>String(f.year||'').slice(0,4)===yr); if(yc.length) cands = yc; }
-      if(cands.length){ film = cands[0]; break; }
-    }
-    if(!film){ kpCacheSet(cid, 0, 0); kpHideIfEmpty(); return; }
-    const det = await kpFetch('api/v2.2/films/'+(film.filmId||film.kinopoiskId));
-    const kp = Number(det.ratingKinopoisk)||0;
-    const votes = Number(det.ratingKinopoiskVoteCount)||0;
-    kpCacheSet(cid, kp, votes);
-    if(kp>0){ slot.outerHTML = kpCardHTML(kp, votes); animBars(); }
-    else kpHideIfEmpty();
+    const d = await kpFilmDetail(m);
+    if(!d){ kpHideIfEmpty(); return; }
+    slot.outerHTML = kpCardHTML(d.kp, d.votes); animBars();
   }catch(e){ kpHideIfEmpty(); }
 }
 function visible(list){
@@ -1496,6 +1563,7 @@ function renderMovie(m){
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
       <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div><div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div></div>
+      <div class="mv-sec"><h3>Обсуждение</h3><button class="tor-find" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Комментарии Rezka</button></div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
       ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
@@ -1524,8 +1592,175 @@ function renderMovie(m){
   animBars();
   loadKpRating(m);
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>findTorrents(m);
+  const rzo = $('#rzOpen'); if(rzo) rzo.onclick = ()=>openRezka(m);
   const tqn = $('#torQmodeName'); if(tqn) tqn.textContent = torQmodeName();
   const tqm = $('#torQmode'); if(tqm) tqm.onclick = openQmodeSheet;
+}
+
+/* =================== REZKA COMMENTS =================== */
+const RZ_HOST = 'https://hdrezka.ag';
+function rzBase(){
+  let p = (state.rzProxy||'').trim();
+  if(!p) p = 'https://worker-patient-dream-26d8.bdvburik.workers.dev:8443/';
+  return p.replace(/\/+$/,'') + '/';
+}
+async function rzFetch(path, referer){
+  let url = rzBase();
+  if(state.rzCookie) url += 'param/Cookie=' + encodeURIComponent(state.rzCookie) + '/';
+  if(referer) url += 'param/Referer=' + encodeURIComponent(referer) + '/';
+  url += path;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('http '+r.status);
+  return r.text();
+}
+function rzBotCheck(t){ return /Проверяем, что вы не бот|Anubis/i.test(t); }
+async function rzSearchId(name, year){
+  const q = encodeURIComponent(name) + (/^\d{4}$/.test(String(year)) ? '+' + year : '');
+  const html = await rzFetch(RZ_HOST + '/search/?do=search&subaction=search&q=' + q);
+  if(rzBotCheck(html)) throw new Error('bot');
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const item = dom.querySelector('.b-content__inline_item');
+  if(!item || !item.dataset.id) return null;
+  const linkA = item.querySelector('.b-content__inline_item-link a');
+  const url = item.dataset.url || (linkA && linkA.getAttribute('href')) || '';
+  let host = RZ_HOST;
+  try{ if(url) host = new URL(url).origin; }catch(e){}
+  return { id: item.dataset.id, url, host };
+}
+async function rzCommentsHtml(found){
+  const t = Date.now();
+  const host = (found && found.host) || RZ_HOST;
+  const txt = await rzFetch(host + '/ajax/get_comments/?t=' + t + '&news_id=' + found.id + '&cstart=1&type=0&comment_id=0&skin=hdrezka', found.url);
+  if(rzBotCheck(txt)) throw new Error('bot');
+  const j = JSON.parse(txt);
+  if(!j || !j.comments) throw new Error('empty');
+  return j.comments;
+}
+function rzSanitize(root){
+  root.querySelectorAll('script,style,iframe,object,embed').forEach(e=>e.remove());
+  root.querySelectorAll('.actions,i,.share-link').forEach(e=>e.remove());
+  root.querySelectorAll('[onclick]').forEach(el=>{
+    const oc = el.getAttribute('onclick')||'';
+    const mm = oc.match(/ShowOrHide\s*\(\s*['"]([^'"]+)['"]\s*\)/i);
+    if(mm) el.setAttribute('data-spoiler', mm[1]);
+    el.removeAttribute('onclick');
+  });
+  root.querySelectorAll('*').forEach(el=>{
+    for(const a of [...el.attributes]){ if(/^on/i.test(a.name)) el.removeAttribute(a.name); }
+    const href = el.getAttribute && el.getAttribute('href');
+    if(href && /^\s*javascript:/i.test(href)) el.removeAttribute('href');
+  });
+}
+function rzBuildTree(rootList){
+  const frag = document.createDocumentFragment();
+  for(const li of rootList.children){
+    const indent = parseInt(li.dataset.indent||'0', 10) || 0;
+    const av = li.querySelector('.ava img');
+    const avatar = (av && (av.dataset.src || av.src)) || '';
+    const user = (li.querySelector('.name, .b-comment__user')||{}).textContent;
+    const date = (li.querySelector('.date, .b-comment__time')||{}).textContent;
+    const textSrc = li.querySelector('.message .text, .text');
+    const wrap = document.createElement('div');
+    wrap.className = 'rz-c';
+    if(indent>0) wrap.style.marginLeft = Math.min(indent, 3)*18 + 'px';
+    wrap.innerHTML = `<div class="rz-av">${avatar?`<img src="${avatar}" alt="" loading="lazy">`:''}</div>
+      <div class="rz-body"><div class="rz-chead"><span class="rz-name"></span><span class="rz-date"></span></div><div class="rz-text"></div></div>`;
+    wrap.querySelector('.rz-name').textContent = (user||'').trim() || 'Без имени';
+    wrap.querySelector('.rz-date').textContent = (date||'').trim();
+    const tbox = wrap.querySelector('.rz-text');
+    tbox.innerHTML = textSrc ? textSrc.innerHTML : '';
+    rzSanitize(tbox);
+    frag.appendChild(wrap);
+    const kids = li.querySelector('ol.comments-tree-list');
+    if(kids) frag.appendChild(rzBuildTree(kids));
+  }
+  return frag;
+}
+function rzMoneyFmt(n){
+  const s = money(n);
+  if(!s) return '';
+  return s[0]==='$' ? s.slice(1) + ' $' : s;
+}
+async function openRezka(m){
+  pushScreen('scr-rezka');
+  const box = $('#scr-rezka');
+  const bd = m.backdrop ? IMG+'w780'+m.backdrop : (m.poster ? IMG+'w780'+m.poster : '');
+  const genres = (m.genres||[]).slice(0,3).map(g=>g.name||g).filter(Boolean).join(' • ');
+  const meta = [(/^\d{4}$/.test(String(m.year))?m.year:''), genres].filter(Boolean).join(' • ');
+  const fin = [m.budget?'Бюджет '+rzMoneyFmt(m.budget):'', m.revenue?'Сборы '+rzMoneyFmt(m.revenue):''].filter(Boolean).join(' • ');
+  box.innerHTML = `
+    <div class="rz-page">
+      <div class="rz-head">
+        ${bd?`<img class="rz-bd" src="${bd}" alt="">`:''}
+        <div class="rz-shade"></div>
+        <button class="rz-x" id="rzBack" aria-label="Закрыть">✕</button>
+        <div class="rz-info">
+          <div class="rz-title">${escTx(m.title)}</div>
+          ${meta?`<div class="rz-meta">${escTx(meta)}</div>`:''}
+          <div class="rz-chips" id="rzChips">${m.rating?`<span class="rz-chip"><b>★</b><strong>${Number(m.rating).toFixed(1)}</strong><small>TMDB${m.votes?' • '+kpVotesFmt(m.votes):''}</small></span>`:''}</div>
+          ${fin?`<div class="rz-fin">${fin}</div>`:''}
+        </div>
+      </div>
+      <div class="rz-cap">Комментарии Rezka</div>
+      <div class="rz-list" id="rzList"><div class="rz-load">Ищу фильм на Rezka…</div></div>
+    </div>`;
+  $('#rzBack').onclick = goBack;
+  box.onclick = e=>{
+    const sp = e.target.closest('[data-spoiler]');
+    if(!sp) return;
+    e.preventDefault();
+    const t = document.getElementById(sp.dataset.spoiler) || box.querySelector('#'+CSS.escape(sp.dataset.spoiler));
+    if(t){
+      t.style.display = 'inline';
+      const prev = t.previousElementSibling;
+      if(prev && prev.classList && prev.classList.contains('title_spoiler')) prev.remove();
+    }
+  };
+  rzLoadChips(m);
+  rzLoadComments(m);
+}
+async function rzLoadChips(m){
+  if(!state.kpKey || !state.live) return;
+  try{
+    const d = await kpFilmDetail(m);
+    if(currentScreenId()!=='scr-rezka') return;
+    const el = document.getElementById('rzChips');
+    if(!el || !d) return;
+    let h = el.innerHTML;
+    if(d.kp>0) h += `<span class="rz-chip kp"><b>★</b><strong>${d.kp.toFixed(1)}</strong><small>КиноПоиск</small></span>`;
+    if(d.imdb>0) h += `<span class="rz-chip imdb"><b>★</b><strong>${d.imdb.toFixed(1)}</strong><small>IMDb</small></span>`;
+    el.innerHTML = h;
+  }catch(e){}
+}
+async function rzLoadComments(m){
+  const list = document.getElementById('rzList');
+  if(!list) return;
+  try{
+    const titles = [];
+    if(m.orig) titles.push(m.orig);
+    if(m.title && m.title!==m.orig) titles.push(m.title);
+    const yr = /^\d{4}$/.test(String(m.year)) ? String(m.year) : '';
+    let found = null;
+    for(const t of titles){
+      try{ found = await rzSearchId(t, yr); }catch(e){ if(e.message==='bot') throw e; found = null; }
+      if(found) break;
+    }
+    if(currentScreenId()!=='scr-rezka') return;
+    if(!found){ list.innerHTML = '<div class="rz-empty">На Rezka этот фильм не нашёлся</div>'; return; }
+    list.innerHTML = '<div class="rz-load">Загружаю комментарии…</div>';
+    const html = await rzCommentsHtml(found);
+    if(currentScreenId()!=='scr-rezka') return;
+    const dom = new DOMParser().parseFromString(html, 'text/html');
+    const root = dom.querySelector('.comments-tree-list');
+    if(!root || !root.children.length){ list.innerHTML = '<div class="rz-empty">Комментариев пока нет — стань первым 😉</div>'; return; }
+    list.innerHTML = '';
+    list.appendChild(rzBuildTree(root));
+  }catch(e){
+    if(currentScreenId()!=='scr-rezka') return;
+    list.innerHTML = e.message==='bot'
+      ? '<div class="rz-empty">Rezka включила проверку «ты не бот».<br>Вставь свой Cookie с hdrezka.ag в Профиле → Rezka.</div>'
+      : '<div class="rz-empty">Не получилось загрузить комментарии</div>';
+  }
 }
 
 /* =================== TORRENTS (JacRed + TorrServer) =================== */
@@ -2340,6 +2575,8 @@ $('#tmdbKey').value = state.tmdbKey;
 $('#geminiKey').value = state.geminiKey;
 $('#kpKey').value = state.kpKey;
 $('#subdlKey').value = state.subdlKey;
+$('#rzProxy').value = state.rzProxy;
+$('#rzCookie').value = state.rzCookie;
 $('#tsUrl').value = state.tsUrl;
 $('#jacUrl').value = state.jacUrl;
 $('#tsUrl').addEventListener('change', e=>{
@@ -2384,6 +2621,16 @@ $('#geminiKey').addEventListener('change', e=>{
 $('#subdlKey').addEventListener('change', e=>{
   state.subdlKey = e.target.value.trim(); LS.set('subdl_key', state.subdlKey);
   toast(state.subdlKey ? 'SubDL ключ сохранён' : 'Ключ удалён');
+});
+$('#rzProxy').addEventListener('change', e=>{
+  const v = e.target.value.trim().replace(/\/+$/,'');
+  state.rzProxy = v ? v + '/' : 'https://worker-patient-dream-26d8.bdvburik.workers.dev:8443/';
+  e.target.value = state.rzProxy; LS.set('rz_proxy', state.rzProxy);
+  toast('Прокси Rezka сохранён');
+});
+$('#rzCookie').addEventListener('change', e=>{
+  state.rzCookie = e.target.value.trim(); LS.set('rz_cookie', state.rzCookie);
+  toast(state.rzCookie ? 'Cookie Rezka сохранён' : 'Cookie удалён');
 });
 $('#geminiCheck').onclick = async ()=>{
   const k = $('#geminiKey').value.trim().split(',')[0];
