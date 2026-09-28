@@ -33,6 +33,15 @@
   .logo.brand{letter-spacing:1px; font-size:21px; font-family:'Inter',system-ui,sans-serif; animation:logo-breathe 4s ease-in-out infinite;}
   @keyframes logo-breathe{ from,to{ font-variation-settings:'wght' 300; } 50%{ font-variation-settings:'wght' 800; } }
   @media (prefers-reduced-motion: reduce){ .logo.brand{animation:none;} }
+  /* ===== Gooey-тикер «в тренде» ===== */
+  .ticker{position:relative; height:34px; overflow:hidden; margin-top:2px;}
+  .ticker_blur{position:absolute; inset:0; display:flex; align-items:center; background:var(--bg); filter:contrast(18);}
+  .ticker_blur .ticker_text{filter:blur(5px); color:#8b5cf6;}
+  .ticker_clear{position:absolute; inset:0; display:flex; align-items:center;}
+  .ticker_clear .ticker_text{color:rgba(235,240,255,.72);}
+  .ticker_text{margin:0; flex:none; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; animation:tick 30s linear infinite; will-change:transform;}
+  @keyframes tick{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce){ .ticker_text{animation:none;} }
   .logo span{color:var(--accent)}
   .icon-btn{width:42px;height:42px;border-radius:50%;background:var(--card);border:none;color:var(--text);
     display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -394,6 +403,10 @@
       </div>
     </div>
     <div class="hero-wrap"><div class="hero" id="hero"></div></div>
+    <div class="ticker" id="ticker" hidden>
+      <div class="ticker_blur" aria-hidden="true"><p class="ticker_text" id="tickerBlur"></p></div>
+      <div class="ticker_clear"><p class="ticker_text" id="tickerClear"></p></div>
+    </div>
     <div class="chips" id="chips"></div>
     <div id="rows"></div>
   </div>
@@ -907,7 +920,17 @@ async function refreshForYou(){
   if(currentScreenId()==='scr-home' && state.genre==='all') renderRows();
 }
 
-/* =================== RENDER =================== */
+function renderTicker(){
+  const t = $('#ticker'); if(!t) return;
+  const items = ((state.data && state.data.trending) || []).slice(0,10).map(m=>m.title).filter(Boolean);
+  if(!items.length){ t.hidden = true; return; }
+  const S = '\u00A0\u00A0\u2726\u00A0\u00A0';
+  const chunk = 'В тренде' + S + items.join(S) + S;
+  const txt = chunk + chunk;
+  $('#tickerBlur').textContent = txt;
+  $('#tickerClear').textContent = txt;
+  t.hidden = false;
+}
 let heroIdx = 0, heroTimer = null;
 function renderHero(){
   const h = $('#hero'); if(!state.hero || !state.hero.length) return;
@@ -1776,10 +1799,10 @@ renderAiChips();
 /* =================== BOOT =================== */
 (async function(){
   bootDemo();
-  renderHero(); renderChips(); renderRows(); updateStats();
+  renderHero(); renderChips(); renderRows(); renderTicker(); updateStats();
   if(state.tmdbKey){
     const ok = await bootLive();
-    if(ok){ renderHero(); renderRows(); }
+    if(ok){ renderHero(); renderRows(); renderTicker(); }
   }
 })();
 </script>
