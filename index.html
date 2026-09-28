@@ -866,8 +866,12 @@ async function bootLive(){
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
     }
     const cols = cl && cl.results ? cl.results.slice(0,12) : [];
-    if(cols.length) state.sections.push({id:'cols', title:'Коллекции', items:cols, kind:'collections',
-      more:{type:'collections', cat:'top', title:'Коллекции'}});
+    if(cols.length){
+      const colSec = {id:'cols', title:'Коллекции', items:cols, kind:'collections',
+        more:{type:'collections', cat:'top', title:'Коллекции'}};
+      const ti = state.sections.findIndex(s=>s.id==='trend');
+      if(ti>=0) state.sections.splice(ti+1, 0, colSec); else state.sections.push(colSec);
+    }
     state.pool = T.concat(N,P,TT,fy?fy.items:[]);
     $('#profileSub').textContent = 'онлайн · TMDB подключён';
     return true;
