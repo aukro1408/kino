@@ -378,6 +378,25 @@
   .mv-watched{width:100%; margin-top:24px; padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,.13);
     background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
   .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
+  /* ---------- torrents ---------- */
+  .tor-find{width:100%; padding:14px; border-radius:16px; border:1px dashed rgba(77,163,255,.5);
+    background:rgba(77,163,255,.08); color:var(--accent2); font:inherit; font-size:14.5px; font-weight:800; cursor:pointer}
+  .tor-find:active{transform:scale(.98)}
+  .tor-item{padding:12px 14px; background:var(--card); border-radius:14px; margin-bottom:8px; cursor:pointer;
+    border:1px solid rgba(255,255,255,.06)}
+  .tor-item:active{transform:scale(.98); border-color:rgba(77,163,255,.4)}
+  .tor-t{font-size:13.5px; font-weight:700; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .tor-m{display:flex; gap:12px; align-items:center; font-size:12px; color:var(--muted); margin-top:7px; flex-wrap:wrap}
+  .tor-m .seeds{color:#7ee2a8; font-weight:800}
+  .tor-m .trk{margin-left:auto; opacity:.75; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .tor-load{text-align:center; color:var(--muted); padding:18px; font-size:13.5px}
+  /* ---------- player ---------- */
+  #scr-player{background:#000}
+  .pl-top{display:flex; align-items:center; gap:12px; padding:12px 14px}
+  .pl-title{font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .pl-wrap{padding:6px 0 10px}
+  #plVideo{width:100%; max-height:62vh; background:#000; outline:none}
+  .pl-hint{text-align:center; color:var(--muted); font-size:12.5px; padding:0 20px 24px; line-height:1.5}
   /* ---------- person page ---------- */
   .ps-top{position:relative; padding:58px 16px 0; display:flex; flex-direction:column; align-items:center; text-align:center}
   .ps-photo{width:112px; height:112px; border-radius:50%; overflow:hidden; background:var(--card2);
@@ -483,6 +502,16 @@
     </div>
     <div class="set-group">
       <div class="set-row">
+        <div><div class="t">TorrServer</div><div class="d">Адрес твоего TorrServer · потоковое видео из торрентов</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="tsUrl" placeholder="http://127.0.0.1:8090" autocomplete="off" autocapitalize="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Парсер торрентов</div><div class="d">Поиск раздач по фильмам</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacUrl" placeholder="https://jac.red" autocomplete="off" autocapitalize="off"></div>
+      </div>
+    </div>
+    <div class="set-group">
+      <div class="set-row">
         <div><div class="t">Скрывать просмотренное</div><div class="d">Фильмы «уже смотрел» не попадут в ряды</div></div>
         <button class="switch" id="hideWatched"></button>
       </div>
@@ -535,6 +564,14 @@
   <!-- ============ DETAIL SHEET ============ -->
   <div class="screen" id="scr-movie"></div>
   <div class="screen" id="scr-person"></div>
+  <div class="screen" id="scr-player">
+    <div class="pl-top">
+      <button class="back-btn" id="plBack">←</button>
+      <div class="pl-title" id="plTitle"></div>
+    </div>
+    <div class="pl-wrap"><video id="plVideo" controls playsinline preload="metadata"></video></div>
+    <div class="pl-hint" id="plHint"></div>
+  </div>
   <nav class="tabbar">
     <button class="tab on" data-tab="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
@@ -582,6 +619,8 @@ const state = {
   tmdbKey: LS.get('tmdb_key',''),
   kpKey: LS.get('kp_key',''),
   geminiKey: LS.get('gemini_key',''),
+  tsUrl: LS.get('ts_url','http://127.0.0.1:8090'),
+  jacUrl: LS.get('jac_url','https://jac.red'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
   genre: 'all',
@@ -1337,6 +1376,7 @@ function renderMovie(m){
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
+      <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind">🔍 Найти раздачи</button></div></div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
       ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
@@ -1364,7 +1404,99 @@ function renderMovie(m){
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
   animBars();
   loadKpRating(m);
+  const tf = $('#torFind'); if(tf) tf.onclick = ()=>findTorrents(m);
 }
+
+/* =================== TORRENTS (JacRed + TorrServer) =================== */
+const VID_EXT = ['.mp4','.mkv','.avi','.ts','.m2ts','.webm','.mov','.mpg','.mpeg'];
+function escTx(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtSize(b){ if(!b) return '—'; const g=b/1073741824; if(g>=1) return g.toFixed(1)+' ГБ'; const m=b/1048576; if(m>=1) return m.toFixed(0)+' МБ'; return Math.round(b/1024)+' КБ'; }
+function isVideo(p){ p=(p||'').toLowerCase(); return VID_EXT.some(e=>p.endsWith(e)); }
+function shortName(p){ p=p||''; const i=Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\')); return i>=0?p.slice(i+1):p; }
+let torCache = [];
+
+async function findTorrents(m){
+  const box = $('#torBox'); if(!box) return;
+  box.innerHTML = '<div class="tor-load">Ищу раздачи…</div>';
+  const q = (m.title||'') + (m.year && m.year!=='—' ? ' '+m.year : '');
+  try{
+    const r = await fetch(state.jacUrl.replace(/\/+$/,'') + '/api/v2.0/indexers/all/results?Query=' + encodeURIComponent(q));
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const res = (j.Results||[]).filter(x=>x.MagnetUri).sort((a,b)=>(b.Seeders||0)-(a.Seeders||0)).slice(0,30);
+    torCache = res;
+    if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕</div>'; return; }
+    box.innerHTML = res.map((t,i)=>`
+      <div class="tor-item" data-i="${i}">
+        <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
+        <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
+      </div>`).join('');
+    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i], m));
+  }catch(e){
+    box.innerHTML = '<div class="tor-load">Парсер не отвечает · проверь адрес в Профиле</div>';
+  }
+}
+
+async function tsAPI(body){
+  const r = await fetch(state.tsUrl.replace(/\/+$/,'') + '/torrents', {
+    method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+function tsStreamURL(ts, link, idx, name){
+  return ts + '/stream/' + encodeURIComponent(name||'video') + '?link=' + encodeURIComponent(link) + '&index=' + idx + '&play';
+}
+
+async function playTorrent(t, m){
+  const ts = (state.tsUrl||'').replace(/\/+$/,'') || 'http://127.0.0.1:8090';
+  const box = $('#torBox');
+  toast('Подключаюсь к TorrServer…');
+  try{ const e = await fetch(ts+'/echo', {cache:'no-store'}); if(!e.ok) throw 0; }
+  catch(err){ toast('TorrServer не отвечает · проверь адрес в Профиле'); return; }
+  let files = null, hash = null;
+  try{
+    const added = await tsAPI({action:'add', link:t.MagnetUri});
+    const th = added && (added.hash || (added.torrent && added.torrent.hash));
+    if(th) hash = String(th).toLowerCase();
+    for(let i=0; i<20 && hash; i++){
+      let tor = null;
+      try{ const g = await tsAPI({action:'get', hash}); tor = (g && g.torrent) || g || {}; }
+      catch(e){ break; }
+      const fs = tor.file_stats || tor.files || [];
+      const vids = fs.filter(f=>isVideo(f.path||f.name))
+        .map(f=>({id:f.id, path:f.path||f.name, size:f.length||f.size||0}))
+        .filter(f=>f.id);
+      if(vids.length){ files = vids; break; }
+      await new Promise(r=>setTimeout(r,1500));
+    }
+  }catch(e){ /* ниже — прямой фолбэк */ }
+  if(files && files.length===1){ openPlayer(tsStreamURL(ts, hash, files[0].id, t.Title), t.Title); return; }
+  if(files && files.length>1){
+    const sorted = files.slice().sort((a,b)=>b.size-a.size);
+    box.innerHTML = '<div class="tor-load" style="text-align:left;padding:2px 2px 10px">Выбери файл · '+sorted.length+'</div>' +
+      sorted.map(f=>'<div class="tor-item" data-f="'+f.id+'"><div class="tor-t">'+escTx(shortName(f.path))+'</div><div class="tor-m"><span>'+fmtSize(f.size)+'</span></div></div>').join('');
+    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>openPlayer(tsStreamURL(ts, hash, el.dataset.f, t.Title), t.Title));
+    return;
+  }
+  // Фолбэк без чтения API: стрим первого файла напрямую по magnet
+  openPlayer(tsStreamURL(ts, t.MagnetUri, 1, t.Title), t.Title);
+}
+
+function stopPlayer(){
+  const v = $('#plVideo');
+  if(v){ try{v.pause();}catch(e){} v.removeAttribute('src'); v.load(); }
+  const t = $('#plTitle'); if(t) t.textContent = '';
+}
+function openPlayer(url, title){
+  pushScreen('scr-player');
+  $('#plTitle').textContent = title || '';
+  $('#plHint').textContent = 'Поток идёт через твой TorrServer · для полного экрана нажми ⛶ на видео';
+  const v = $('#plVideo');
+  v.src = url;
+  v.play().catch(()=>{});
+}
+$('#plBack').onclick = ()=>{ stopPlayer(); goBack(); };
 /* =================== PERSON PAGE =================== */
 async function openPerson(pid, pname, role){
   pushScreen('scr-person');
@@ -1411,6 +1543,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
 $('#catBack').onclick = ()=>goto('home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
+  stopPlayer();
   navStack = [];
   showScreen('scr-'+name);
   if(name==='fav') renderFav();
@@ -1662,6 +1795,18 @@ function updateStats(){
 $('#tmdbKey').value = state.tmdbKey;
 $('#geminiKey').value = state.geminiKey;
 $('#kpKey').value = state.kpKey;
+$('#tsUrl').value = state.tsUrl;
+$('#jacUrl').value = state.jacUrl;
+$('#tsUrl').addEventListener('change', e=>{
+  state.tsUrl = e.target.value.trim().replace(/\/+$/,'') || 'http://127.0.0.1:8090';
+  e.target.value = state.tsUrl; LS.set('ts_url', state.tsUrl);
+  toast('Адрес TorrServer сохранён');
+});
+$('#jacUrl').addEventListener('change', e=>{
+  state.jacUrl = e.target.value.trim().replace(/\/+$/,'') || 'https://jac.red';
+  e.target.value = state.jacUrl; LS.set('jac_url', state.jacUrl);
+  toast('Адрес парсера сохранён');
+});
 $('#kpKey').addEventListener('change', e=>{
   state.kpKey = e.target.value.trim(); LS.set('kp_key', state.kpKey);
   toast(state.kpKey ? 'Kinopoisk ключ сохранён' : 'Ключ удалён');
