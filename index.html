@@ -674,6 +674,16 @@
     </div>
     <div class="set-group">
       <div class="set-row">
+        <div><div class="t">Токен Filmix</div><div class="d">user_dev_token · хранится только на этом устройстве</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxToken" placeholder="вставь токен" autocomplete="off" autocapitalize="off"></div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Прокси Filmix</div><div class="d">Обход CORS для filmixapp.vip</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxProxy" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
+      </div>
+    </div>
+    <div class="set-group">
+      <div class="set-row">
         <div><div class="t">Скрывать просмотренное</div><div class="d">Фильмы «уже смотрел» не попадут в ряды</div></div>
         <button class="switch" id="hideWatched"></button>
       </div>
@@ -812,6 +822,8 @@ const state = {
   subdlKey: LS.get('subdl_key',''),
   rzProxy: LS.get('rz_proxy','https://worker-patient-dream-26d8.bdvburik.workers.dev:8443/'),
   rzCookie: LS.get('rz_cookie',''),
+  fxToken: LS.get('fx_token',''),
+  fxProxy: LS.get('fx_proxy','https://cors.jacred.stream/'),
   torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
@@ -1588,7 +1600,8 @@ function renderMovie(m){
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
       <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div><div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div></div>
-      <div class="mv-sec"><h3>Онлайн</h3><div id="onlBox"><button class="tor-find" id="onlFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>Найти источники</button></div></div>
+      <div class="mv-sec"><h3>Lumio</h3><div id="onlBox"><button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Найти источники</button></div></div>
+      <div class="mv-sec"><h3>Filmix 4k</h3><div id="fxBox"><button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Найти на Filmix</button></div></div>
       <div class="mv-sec"><h3>Обсуждение</h3><button class="tor-find" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Комментарии Rezka</button></div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
       ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
@@ -1620,6 +1633,7 @@ function renderMovie(m){
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>findTorrents(m);
   const rzo = $('#rzOpen'); if(rzo) rzo.onclick = ()=>openRezka(m);
   const onf = $('#onlFind'); if(onf) onf.onclick = ()=>onlFind(m);
+  const fxf = $('#fxFind'); if(fxf) fxf.onclick = ()=>fxFind(m);
   const tqn = $('#torQmodeName'); if(tqn) tqn.textContent = torQmodeName();
   const tqm = $('#torQmode'); if(tqm) tqm.onclick = openQmodeSheet;
 }
@@ -2092,7 +2106,7 @@ function onlBack(){
   onlStack.pop();
   const top = onlStack[onlStack.length-1];
   if(!top){ onlReset(); const box = $('#onlBox');
-    if(box) box.innerHTML = '<button class="tor-find" id="onlFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>Найти источники</button>';
+    if(box) box.innerHTML = '<button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Найти источники</button>';
     const b = $('#onlFind'); if(b && onlMovie) b.onclick = ()=>onlFind(onlMovie);
     return;
   }
@@ -2144,6 +2158,204 @@ function onlPlay(url, label){
   const m = onlMovie || {};
   const title = (m.title||'Онлайн') + (label ? ' · ' + label : '');
   openPlayer(url, title, [], m);
+}
+
+/* ---------- Filmix ---------- */
+let fxMovie = null, fxStack = [], fxMaxQ = 720;
+function fxProxy(){
+  const p = (state.fxProxy||'').trim().replace(/\/+$/,'');
+  return (p || 'https://cors.jacred.stream') + '/';
+}
+function fxUid(){
+  let u = LS.get('fx_uid','');
+  if(!u){ u = Math.random().toString(36).slice(2,10) + Date.now().toString(36); LS.set('fx_uid', u); }
+  return u;
+}
+function fxTokenQS(){
+  return 'app_lang=ru_RU&user_dev_apk=2.2.13&user_dev_id=' + encodeURIComponent(fxUid()) +
+    '&user_dev_name=Xiaomi+24069PC21G&user_dev_os=12&user_dev_token=' + encodeURIComponent(state.fxToken) +
+    '&user_dev_vendor=Xiaomi';
+}
+async function fxGet(path, extra){
+  const url = fxProxy() + 'http://filmixapp.vip/api/v2/' + path + '?' + fxTokenQS() + (extra ? '&' + extra : '');
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('http ' + r.status);
+  return r.json();
+}
+function fxNorm(s){ return String(s||'').toLowerCase().replace(/[^a-zа-я0-9]/g,''); }
+function fxQualities(link){
+  const m = String(link||'').match(/\[([\d,\s]*)\]/);
+  if(!m) return [];
+  return m[1].split(',').map(q=>parseInt(q,10)).filter(q=>q>0 && q<=fxMaxQ);
+}
+function fxFileUrl(link, q){
+  return String(link).replace(/_\[([\d,\s]*)\]\.mp4/i, '_'+q+'.mp4')
+    .replace('%s.mp4', q+'.mp4')
+    .replace(/^http:\/\//i, 'https://');
+}
+function fxBlocked(name){ return typeof name==='string' && name.toLowerCase().indexOf('заблокировано ')===0; }
+function fxIsSerial(pl){
+  return pl && pl.playlist && typeof pl.playlist==='object' && !Array.isArray(pl.playlist) && Object.keys(pl.playlist).length>0;
+}
+async function fxFind(m){
+  const box = $('#fxBox'); if(!box) return;
+  fxMovie = m; fxStack = [];
+  if(!state.fxToken){ box.innerHTML = '<div class="rz-empty">Вставь токен Filmix в Профиле 🙂</div>'; return; }
+  box.innerHTML = '<div class="rz-load">Проверяю подписку…</div>';
+  try{
+    fxMaxQ = 720;
+    try{
+      const prof = await fxGet('user_profile');
+      const ud = prof && prof.user_data;
+      if(ud){ if(ud.is_pro_plus) fxMaxQ = 2160; else if(ud.is_pro) fxMaxQ = 1080; }
+    }catch(_){}
+    box.innerHTML = '<div class="rz-load">Ищу на Filmix…</div>';
+    const res = await fxGet('search', 'story=' + encodeURIComponent(m.orig || m.title || ''));
+    const card = fxMatch(res, m);
+    if(card){ await fxOpenCard(card.id, card.title || card.original_title || m.title); }
+    else if(Array.isArray(res) && res.length){ fxRenderSimilars(res); }
+    else { box.innerHTML = '<div class="rz-empty">Ничего не нашлось 😕</div>'; }
+  }catch(e){
+    box.innerHTML = '<div class="rz-empty">Не получилось связаться с Filmix 😕</div>';
+  }
+}
+function fxMatch(json, m){
+  if(!Array.isArray(json) || !json.length) return null;
+  const year = parseInt(String(m.date||'').slice(0,4)) || 0;
+  const orig = m.orig || '';
+  const cards = json.filter(c=>{
+    const y = parseInt(c.year || String(c.alt_name||'').split('-').pop());
+    return y > year-2 && y < year+2;
+  });
+  let card = cards.find(c=>c.year==year && fxNorm(c.original_title)===fxNorm(orig));
+  if(!card) card = cards.find(c=>fxNorm(c.original_title)===fxNorm(orig));
+  if(!card && cards.length===1) card = cards[0];
+  return card || null;
+}
+function fxBack(){
+  fxStack.pop();
+  const top = fxStack[fxStack.length-1];
+  if(!top){ const box = $('#fxBox');
+    if(box) box.innerHTML = '<button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Найти на Filmix</button>';
+    const b = $('#fxFind'); if(b && fxMovie) b.onclick = ()=>fxFind(fxMovie);
+    return;
+  }
+  top.render();
+}
+function fxHead(){
+  return `<button class="onl-back" id="fxBack">‹ Назад</button>`;
+}
+function fxBindBack(){
+  const b = $('#fxBack'); if(b) b.onclick = fxBack;
+}
+function fxPush(entry){
+  fxStack.push(entry);
+  entry.render();
+}
+function fxRenderSimilars(res){
+  const box = $('#fxBox');
+  const render = ()=>{
+    box.innerHTML = fxHead() + '<div class="onl-crumb">Уточни, что именно:</div><div class="onl-list">' +
+      res.slice(0,12).map((c,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(c.title||c.original_title||('Вариант '+(i+1)))}<div class="onl-sub">${escTx(c.year||'')}</div></span><span class="go">›</span></button>`).join('') + '</div>';
+    fxBindBack();
+    box.querySelectorAll('.onl-row').forEach(btn=>{
+      btn.onclick = ()=>{ const c = res[+btn.dataset.i]; fxOpenCard(c.id, c.title || c.original_title); };
+    });
+  };
+  fxPush({render});
+}
+async function fxOpenCard(fid, title){
+  const box = $('#fxBox'); if(!box) return;
+  box.innerHTML = '<div class="rz-load">Загружаю…</div>';
+  try{
+    const data = await fxGet('post/' + fid);
+    const pl = data && data.player_links;
+    if(pl && pl.movie && pl.movie.length){ fxRenderMovie(pl.movie, title); }
+    else if(fxIsSerial(pl)){ fxRenderSeasons(pl.playlist, title); }
+    else { box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; }
+  }catch(e){
+    box.innerHTML = '<div class="rz-empty">Ошибка загрузки 😕</div>';
+  }
+}
+function fxRenderMovie(list, title){
+  const items = [];
+  list.forEach(f=>{
+    if(!f || !f.link || fxBlocked(f.translation)) return;
+    const qs = fxQualities(f.link);
+    if(!qs.length) return;
+    const q = Math.max.apply(null, qs);
+    items.push({voice: f.translation || 'Озвучка', q, url: fxFileUrl(f.link, q)});
+  });
+  const render = ()=>{
+    const box = $('#fxBox');
+    if(!items.length){ box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; return; }
+    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">` +
+      items.map((it,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(it.voice)}<div class="onl-sub">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+    fxBindBack();
+    box.querySelectorAll('.onl-row').forEach(btn=>{
+      btn.onclick = ()=>{
+        const it = items[+btn.dataset.i];
+        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · ' + it.voice + ' ' + it.q + 'p', [], fxMovie);
+      };
+    });
+  };
+  fxPush({render});
+}
+function fxRenderSeasons(playlist, title){
+  const seasons = Object.keys(playlist).sort((a,b)=>parseInt(a)-parseInt(b));
+  const render = ()=>{
+    const box = $('#fxBox');
+    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">` +
+      seasons.map((s,i)=>`<button class="onl-row" data-i="${i}"><span>${+s} сезон</span><span class="go">›</span></button>`).join('') + '</div>';
+    fxBindBack();
+    box.querySelectorAll('.onl-row').forEach(btn=>{
+      btn.onclick = ()=>fxRenderEpisodes(playlist[seasons[+btn.dataset.i]], +seasons[+btn.dataset.i], title);
+    });
+  };
+  fxPush({render});
+}
+function fxRenderEpisodes(seasonObj, sNum, title){
+  const eps = Object.keys(seasonObj).sort((a,b)=>parseInt(a)-parseInt(b));
+  const render = ()=>{
+    const box = $('#fxBox');
+    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')} · ${sNum} сезон</div><div class="onl-list">` +
+      eps.map((e,i)=>`<button class="onl-row" data-i="${i}"><span>${+e} серия</span><span class="go">›</span></button>`).join('') + '</div>';
+    fxBindBack();
+    box.querySelectorAll('.onl-row').forEach(btn=>{
+      btn.onclick = ()=>fxRenderVoices(seasonObj[eps[+btn.dataset.i]], sNum, +eps[+btn.dataset.i], title);
+    });
+  };
+  fxPush({render});
+}
+function fxRenderVoices(epObj, sNum, eNum, title){
+  const voices = [];
+  Object.keys(epObj||{}).forEach(vName=>{
+    if(fxBlocked(vName)) return;
+    let vm = epObj[vName];
+    if(Array.isArray(vm)){ const m2 = {}; vm.forEach((v,i)=>{ m2[String(i+1)] = v; }); vm = m2; }
+    Object.keys(vm).forEach(id=>{
+      const f = vm[id];
+      if(!f || !f.link) return;
+      const qs = (Array.isArray(f.qualities)?f.qualities:[]).map(q=>parseInt(q,10)).filter(q=>q>0 && q<=fxMaxQ);
+      if(!qs.length) return;
+      const q = Math.max.apply(null, qs);
+      voices.push({voice: vName, q, url: fxFileUrl(f.link, q)});
+    });
+  });
+  const render = ()=>{
+    const box = $('#fxBox');
+    if(!voices.length){ box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; return; }
+    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')} · S${sNum}E${eNum}</div><div class="onl-list">` +
+      voices.map((it,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(it.voice)}<div class="onl-sub">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+    fxBindBack();
+    box.querySelectorAll('.onl-row').forEach(btn=>{
+      btn.onclick = ()=>{
+        const it = voices[+btn.dataset.i];
+        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · S' + sNum + 'E' + eNum + ' ' + it.voice + ' ' + it.q + 'p', [], fxMovie);
+      };
+    });
+  };
+  fxPush({render});
 }
 
 async function findTorrents(m){
@@ -2793,6 +3005,8 @@ $('#kpKey').value = state.kpKey;
 $('#subdlKey').value = state.subdlKey;
 $('#rzProxy').value = state.rzProxy;
 $('#rzCookie').value = state.rzCookie;
+$('#fxToken').value = state.fxToken;
+$('#fxProxy').value = state.fxProxy;
 $('#tsUrl').value = state.tsUrl;
 $('#jacUrl').value = state.jacUrl;
 $('#tsUrl').addEventListener('change', e=>{
@@ -2847,6 +3061,16 @@ $('#rzProxy').addEventListener('change', e=>{
 $('#rzCookie').addEventListener('change', e=>{
   state.rzCookie = e.target.value.trim(); LS.set('rz_cookie', state.rzCookie);
   toast(state.rzCookie ? 'Cookie Rezka сохранён' : 'Cookie удалён');
+});
+$('#fxToken').addEventListener('change', e=>{
+  state.fxToken = e.target.value.trim(); LS.set('fx_token', state.fxToken);
+  toast(state.fxToken ? 'Токен Filmix сохранён' : 'Токен удалён');
+});
+$('#fxProxy').addEventListener('change', e=>{
+  const v = e.target.value.trim().replace(/\/+$/,'');
+  state.fxProxy = v ? v + '/' : 'https://cors.jacred.stream/';
+  e.target.value = state.fxProxy; LS.set('fx_proxy', state.fxProxy);
+  toast('Прокси Filmix сохранён');
 });
 $('#geminiCheck').onclick = async ()=>{
   const k = $('#geminiKey').value.trim().split(',')[0];
