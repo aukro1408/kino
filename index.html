@@ -406,13 +406,40 @@
   .tor-m .seeds{color:#7ee2a8; font-weight:800}
   .tor-m .trk{margin-left:auto; opacity:.75; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .tor-load{text-align:center; color:var(--muted); padding:18px; font-size:13.5px}
-  /* ---------- player ---------- */
+  /* ---------- player (свой, blackroom) ---------- */
   #scr-player{background:#000}
-  .pl-top{display:flex; align-items:center; gap:12px; padding:12px 14px}
-  .pl-title{font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .pl-wrap{padding:6px 0 10px}
-  #plVideo{width:100%; max-height:62vh; background:#000; outline:none}
-  .pl-hint{text-align:center; color:var(--muted); font-size:12.5px; padding:0 20px 24px; line-height:1.5}
+  .pl-stage{position:relative; width:100%; height:100dvh; background:#000; overflow:hidden; display:flex; align-items:center; justify-content:center}
+  #plVideo{width:100%; max-height:100%; background:#000; outline:none}
+  .pl-tap{position:absolute; inset:0; z-index:3}
+  .pl-ui{position:absolute; inset:0; z-index:4; pointer-events:none; opacity:1; transition:opacity .25s}
+  .pl-ui.hide{opacity:0}
+  .pl-ui>*{pointer-events:auto}
+  .pl-topbar{position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:10px; padding:14px 14px 26px; background:linear-gradient(180deg, rgba(0,0,0,.65), transparent)}
+  .pl-title{flex:1; font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 8px rgba(0,0,0,.8)}
+  .pl-icbtn{width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.16); background:rgba(10,14,24,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:800; flex:none}
+  .pl-icbtn:active{transform:scale(.92)}
+  .pl-icbtn svg{width:20px; height:20px; fill:#fff}
+  .pl-center{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none}
+  .pl-bigplay{width:84px; height:84px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#4da3ff,#7c5cff); box-shadow:0 8px 32px rgba(77,163,255,.45); pointer-events:auto; transition:transform .15s, opacity .2s}
+  .pl-bigplay:active{transform:scale(.93)}
+  .pl-bigplay svg{width:34px; height:34px; fill:#fff; margin-left:4px}
+  .pl-bigplay.hide{opacity:0; pointer-events:none; transform:scale(.8)}
+  .pl-bottom{position:absolute; left:0; right:0; bottom:0; padding:26px 14px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(0deg, rgba(0,0,0,.72), transparent)}
+  .pl-seek{position:relative; height:26px; display:flex; align-items:center; cursor:pointer; touch-action:none}
+  .pl-seek::before{content:''; position:absolute; left:0; right:0; height:5px; border-radius:3px; background:rgba(255,255,255,.22)}
+  .pl-buf{position:absolute; left:0; height:5px; border-radius:3px; background:rgba(255,255,255,.38); width:0}
+  .pl-fill{position:absolute; left:0; height:5px; border-radius:3px; background:linear-gradient(90deg,#4da3ff,#7c5cff); width:0}
+  .pl-knob{position:absolute; width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 1px 8px rgba(0,0,0,.6); left:0; transform:translateX(-50%)}
+  .pl-row{display:flex; align-items:center; gap:6px; margin-top:8px}
+  .pl-time{margin-left:6px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,.85); font-variant-numeric:tabular-nums; white-space:nowrap}
+  .pl-spacer{flex:1}
+  .pl-err{position:absolute; inset:0; z-index:5; display:none; align-items:center; justify-content:center; text-align:center; padding:30px; color:var(--muted); font-size:14px; line-height:1.6}
+  .pl-menu{position:absolute; z-index:6; right:12px; bottom:86px; min-width:210px; max-width:78%; background:rgba(16,22,38,.96); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:8px; box-shadow:0 12px 40px rgba(0,0,0,.6); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
+  .pl-menu .pm-t{font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); padding:8px 12px 4px}
+  .pl-menu .pm-i{padding:11px 12px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .pl-menu .pm-i:active{background:rgba(77,163,255,.15)}
+  .pl-menu .pm-i.on{color:var(--accent2)}
+  .pl-menu .pm-i.on::after{content:' ✓'; color:var(--accent2)}
   /* ---------- person page ---------- */
   .ps-top{position:relative; padding:58px 16px 0; display:flex; flex-direction:column; align-items:center; text-align:center}
   .ps-photo{width:112px; height:112px; border-radius:50%; overflow:hidden; background:var(--card2);
@@ -593,12 +620,33 @@
   <div class="screen" id="scr-movie"></div>
   <div class="screen" id="scr-person"></div>
   <div class="screen" id="scr-player">
-    <div class="pl-top">
-      <button class="back-btn" id="plBack">←</button>
-      <div class="pl-title" id="plTitle"></div>
+    <div class="pl-stage" id="plStage">
+      <video id="plVideo" playsinline preload="metadata"></video>
+      <div class="pl-tap" id="plTap"></div>
+      <div class="pl-err" id="plErr"></div>
+      <div class="pl-ui" id="plUI">
+        <div class="pl-topbar">
+          <button class="pl-icbtn" id="plBack" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15.5 4.5 8 12l7.5 7.5 2-2L12 12l5.5-5.5z"/></svg></button>
+          <div class="pl-title" id="plTitle"></div>
+          <button class="pl-icbtn" id="plPip" aria-label="Картинка в картинке"><svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h16V7zm11 2h4v6h-4z"/></svg></button>
+        </div>
+        <div class="pl-center"><button class="pl-bigplay" id="plBigPlay" aria-label="Смотреть"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+        <div class="pl-bottom">
+          <div class="pl-seek" id="plSeek"><div class="pl-buf" id="plBuf"></div><div class="pl-fill" id="plFill"></div><div class="pl-knob" id="plKnob"></div></div>
+          <div class="pl-row">
+            <button class="pl-icbtn" id="plPlay" aria-label="Пауза/играть"><svg viewBox="0 0 24 24" id="plPlayIco"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="pl-icbtn" id="plRw" aria-label="-10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V1L6.5 5.5 12 10V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/><text x="12" y="16.5" text-anchor="middle" font-size="7" font-weight="800" fill="#fff">10</text></svg></button>
+            <button class="pl-icbtn" id="plFf" aria-label="+10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V1l5.5 4.5L12 10V6a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/><text x="12" y="16.5" text-anchor="middle" font-size="7" font-weight="800" fill="#fff">10</text></svg></button>
+            <div class="pl-time"><span id="plCur">0:00</span> / <span id="plDur">0:00</span></div>
+            <div class="pl-spacer"></div>
+            <button class="pl-icbtn" id="plSubs" aria-label="Субтитры"><svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h16V7H4zm3 3h4v2H7zm0 3.5h7V15H7zM15 10h2v5h-2z"/></svg></button>
+            <button class="pl-icbtn" id="plRate" aria-label="Скорость">1×</button>
+            <button class="pl-icbtn" id="plFs" aria-label="Во весь экран"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM4 15h2v3h3v2H4zm13 1v3h-3v2h5v-5z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pl-menu" id="plMenu" style="display:none"></div>
     </div>
-    <div class="pl-wrap"><video id="plVideo" controls playsinline preload="metadata"></video></div>
-    <div class="pl-hint" id="plHint"></div>
   </div>
   <nav class="tabbar">
     <button class="tab on" data-tab="home">
@@ -1446,6 +1494,7 @@ function isVideo(p){ p=(p||'').toLowerCase(); return VID_EXT.some(e=>p.endsWith(
 function shortName(p){ p=p||''; const i=Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\')); return i>=0?p.slice(i+1):p; }
 let torCache = [];
 let torSort = {key:'top', dir:-1};
+let torSubsCache = [];
 function torQuality(t){
   const s = (t||'').toLowerCase();
   if(/2160p|\b4k\b|uhd/.test(s)) return 4;
@@ -1588,7 +1637,7 @@ async function playTorrent(t, m){
   toast('Подключаюсь к TorrServer…');
   try{ const e = await fetch(ts+'/echo', {cache:'no-store'}); if(!e.ok) throw 0; }
   catch(err){ toast('TorrServer не отвечает · проверь адрес в Профиле'); return; }
-  let files = null, hash = null;
+  let files = null, subs = [], hash = null;
   try{
     const added = await tsAPI({action:'add', link:t.MagnetUri});
     const th = added && (added.hash || (added.torrent && added.torrent.hash));
@@ -1601,36 +1650,171 @@ async function playTorrent(t, m){
       const vids = fs.filter(f=>isVideo(f.path||f.name))
         .map(f=>({id:f.id, path:f.path||f.name, size:f.length||f.size||0}))
         .filter(f=>f.id);
-      if(vids.length){ files = vids; break; }
+      if(vids.length){
+        files = vids;
+        subs = fs.filter(f=>/\.(srt|vtt)$/i.test(f.path||f.name||''))
+          .map(f=>({id:f.id, name:shortName(f.path||f.name), url:tsStreamURL(ts, hash, f.id, f.path||f.name)}))
+          .filter(f=>f.id);
+        break;
+      }
       await new Promise(r=>setTimeout(r,1500));
     }
   }catch(e){ /* ниже — прямой фолбэк */ }
-  if(files && files.length===1){ openPlayer(tsStreamURL(ts, hash, files[0].id, t.Title), t.Title); return; }
+  if(files && files.length===1){ openPlayer(tsStreamURL(ts, hash, files[0].id, t.Title), t.Title, subs); return; }
   if(files && files.length>1){
+    torSubsCache = subs;
     const sorted = files.slice().sort((a,b)=>b.size-a.size);
     box.innerHTML = '<div class="tor-load" style="text-align:left;padding:2px 2px 10px">Выбери файл · '+sorted.length+'</div>' +
       sorted.map(f=>'<div class="tor-item" data-f="'+f.id+'"><div class="tor-t">'+escTx(shortName(f.path))+'</div><div class="tor-m"><span>'+fmtSize(f.size)+'</span></div></div>').join('');
-    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>openPlayer(tsStreamURL(ts, hash, el.dataset.f, t.Title), t.Title));
+    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>openPlayer(tsStreamURL(ts, hash, el.dataset.f, t.Title), t.Title, torSubsCache));
     return;
   }
   // Фолбэк без чтения API: стрим первого файла напрямую по magnet
-  openPlayer(tsStreamURL(ts, t.MagnetUri, 1, t.Title), t.Title);
+  openPlayer(tsStreamURL(ts, t.MagnetUri, 1, t.Title), t.Title, []);
 }
 
 function stopPlayer(){
   const v = $('#plVideo');
-  if(v){ try{v.pause();}catch(e){} v.removeAttribute('src'); v.load(); }
+  if(v){ try{v.pause();}catch(e){} v.querySelectorAll('track').forEach(t=>t.remove()); v.removeAttribute('src'); v.load(); }
   const t = $('#plTitle'); if(t) t.textContent = '';
+  const e = $('#plErr'); if(e){ e.style.display='none'; e.textContent=''; }
+  const m = $('#plMenu'); if(m) m.style.display='none';
+  plSubsList = []; plCurSub = -1; plSetPlayIcon(false);
 }
-function openPlayer(url, title){
+function openPlayer(url, title, subs){
   pushScreen('scr-player');
   $('#plTitle').textContent = title || '';
-  $('#plHint').textContent = 'Поток идёт через твой TorrServer · для полного экрана нажми ⛶ на видео';
+  plSubsList = subs || []; plCurSub = -1;
   const v = $('#plVideo');
+  v.querySelectorAll('track').forEach(t=>t.remove());
+  const e = $('#plErr'); e.style.display='none'; e.textContent='';
   v.src = url;
+  plShowUI(true);
   v.play().catch(()=>{});
 }
 $('#plBack').onclick = ()=>{ stopPlayer(); goBack(); };
+
+/* ---------- свой плеер: контролы ---------- */
+let plSubsList = [], plCurSub = -1, plHideT = null, plSeeking = false;
+const PL_RATES = [1, 1.25, 1.5, 2, 0.75];
+function plFmt(s){
+  s = Math.max(0, Math.floor(s||0));
+  const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return (h? h+':' : '') + String(m).padStart(h?2:1,'0') + ':' + String(x).padStart(2,'0');
+}
+function plSetPlayIcon(playing){
+  $('#plPlayIco').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  $('#plBigPlay').classList.toggle('hide', !!playing);
+}
+function plShowUI(sticky){
+  const ui = $('#plUI'); ui.classList.remove('hide');
+  clearTimeout(plHideT);
+  if(!sticky){
+    plHideT = setTimeout(()=>{ if(!$('#plVideo').paused) ui.classList.add('hide'); }, 3500);
+  }
+}
+$('#plTap').addEventListener('click', ()=>{
+  $('#plMenu').style.display='none';
+  const ui = $('#plUI');
+  if(ui.classList.contains('hide')) plShowUI(); else ui.classList.add('hide');
+});
+$('#plPlay').onclick = ()=>{ const v=$('#plVideo'); v.paused ? v.play().catch(()=>{}) : v.pause(); plShowUI(); };
+$('#plBigPlay').onclick = ()=>{ $('#plVideo').play().catch(()=>{}); plShowUI(); };
+$('#plRw').onclick = ()=>{ const v=$('#plVideo'); v.currentTime = Math.max(0, v.currentTime-10); plShowUI(); };
+$('#plFf').onclick = ()=>{ const v=$('#plVideo'); v.currentTime = Math.min(v.duration||0, v.currentTime+10); plShowUI(); };
+$('#plRate').onclick = function(){ const v=$('#plVideo'); const i=(PL_RATES.indexOf(v.playbackRate)+1)%PL_RATES.length; v.playbackRate=PL_RATES[i]; this.textContent=(PL_RATES[i]+'').replace('.',',')+'×'; plShowUI(); };
+$('#plFs').onclick = async ()=>{
+  const st = $('#plStage');
+  try{
+    if(document.fullscreenElement) await document.exitFullscreen();
+    else{ await st.requestFullscreen(); try{ await screen.orientation.lock('landscape'); }catch(e){} }
+  }catch(e){}
+  plShowUI();
+};
+$('#plPip').onclick = async ()=>{
+  const v = $('#plVideo');
+  try{
+    if(document.pictureInPictureElement) await document.exitPictureInPicture();
+    else if(document.pictureInPictureEnabled && !v.paused) await v.requestPictureInPicture();
+    else toast('Картинка в картинке недоступна');
+  }catch(e){}
+  plShowUI();
+};
+/* сикбар */
+(function(){
+  const seek = $('#plSeek');
+  const go = cx=>{
+    const r = seek.getBoundingClientRect();
+    const p = Math.min(1, Math.max(0, (cx-r.left)/r.width));
+    const v = $('#plVideo');
+    if(v.duration) v.currentTime = p*v.duration;
+  };
+  seek.addEventListener('pointerdown', e=>{ plSeeking=true; try{seek.setPointerCapture(e.pointerId);}catch(_){} go(e.clientX); plShowUI(); });
+  seek.addEventListener('pointermove', e=>{ if(plSeeking) go(e.clientX); });
+  seek.addEventListener('pointerup', ()=>{ plSeeking=false; });
+})();
+function plUpdSeek(){
+  const v = $('#plVideo'); if(!v.duration || plSeeking) return;
+  const p = (v.currentTime/v.duration*100);
+  $('#plFill').style.width = p+'%';
+  $('#plKnob').style.left = p+'%';
+  $('#plCur').textContent = plFmt(v.currentTime);
+  $('#plDur').textContent = plFmt(v.duration);
+}
+$('#plSubs').onclick = e=>{
+  e.stopPropagation();
+  const m = $('#plMenu');
+  if(m.style.display!=='none'){ m.style.display='none'; return; }
+  if(!plSubsList.length){ toast('В раздаче нет субтитров'); return; }
+  m.innerHTML = '<div class="pm-t">Субтитры</div>' +
+    `<div class="pm-i ${plCurSub===-1?'on':''}" data-s="-1">Выключены</div>` +
+    plSubsList.map((s,i)=>`<div class="pm-i ${plCurSub===i?'on':''}" data-s="${i}">${escTx(s.name)}</div>`).join('');
+  m.style.display='block';
+  m.querySelectorAll('.pm-i').forEach(el=>el.onclick = ev=>{ ev.stopPropagation(); m.style.display='none'; plLoadSub(+el.dataset.s); });
+  plShowUI();
+};
+function srtToVtt(srt){
+  return 'WEBVTT\n\n' + srt.replace(/\r\n?/g,'\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g,'$1.$2');
+}
+async function plLoadSub(i){
+  const v = $('#plVideo');
+  v.querySelectorAll('track').forEach(t=>t.remove());
+  plCurSub = i;
+  if(i<0) return;
+  const s = plSubsList[i];
+  try{
+    const r = await fetch(s.url);
+    if(!r.ok) throw 0;
+    let txt = await r.text();
+    if(/\.srt$/i.test(s.name)) txt = srtToVtt(txt);
+    const tr = document.createElement('track');
+    tr.kind='subtitles'; tr.label=s.name; tr.srclang='ru'; tr.default=true;
+    tr.src = URL.createObjectURL(new Blob([txt], {type:'text/vtt'}));
+    v.appendChild(tr);
+    const show = ()=>{ for(const t of v.textTracks) t.mode = (t.label===s.name) ? 'showing' : 'disabled'; };
+    tr.addEventListener('load', show); setTimeout(show, 600);
+    toast('Субтитры: '+s.name);
+  }catch(e){ toast('Не удалось загрузить субтитры'); plCurSub=-1; }
+}
+(function(){
+  const v = $('#plVideo');
+  v.addEventListener('timeupdate', plUpdSeek);
+  v.addEventListener('loadedmetadata', plUpdSeek);
+  v.addEventListener('progress', ()=>{
+    try{
+      const b = v.buffered; if(b.length && v.duration) $('#plBuf').style.width = (b.end(b.length-1)/v.duration*100)+'%';
+    }catch(e){}
+  });
+  v.addEventListener('play', ()=>{ plSetPlayIcon(true); plShowUI(); });
+  v.addEventListener('pause', ()=>{ plSetPlayIcon(false); plShowUI(true); });
+  v.addEventListener('ended', ()=>{ plSetPlayIcon(false); plShowUI(true); });
+  v.addEventListener('error', ()=>{
+    const e = $('#plErr');
+    e.textContent = 'Не удалось воспроизвести 😕\nПопробуй другую раздачу';
+    e.style.display='flex';
+    $('#plBigPlay').classList.remove('hide');
+  });
+})();
 /* =================== PERSON PAGE =================== */
 async function openPerson(pid, pname, role){
   pushScreen('scr-person');
