@@ -307,6 +307,21 @@
   .fact{background:var(--card2); border-radius:12px; padding:10px 12px; min-width:0}
   .fact span{display:block; font-size:11px; color:var(--muted); margin-bottom:2px}
   .fact b{display:block; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .rates{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .rate-card{background:var(--card2); border-radius:14px; padding:12px; min-width:0}
+  .rate-top{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px}
+  .rate-brand{font-size:11px; font-weight:800; letter-spacing:.6px}
+  .rate-card.kp .rate-brand{color:#ff5500}
+  .rate-card.tmdb .rate-brand{color:#4da3ff}
+  .rate-q{font-size:11px; color:var(--muted); white-space:nowrap}
+  .rate-score{font-size:26px; font-weight:800; line-height:1}
+  .rate-score small{font-size:13px; color:var(--muted); font-weight:600}
+  .rate-votes{font-size:11px; color:var(--muted); margin-top:4px}
+  .rate-votes b{color:var(--text)}
+  .rate-bar{height:5px; background:rgba(255,255,255,.08); border-radius:3px; margin-top:10px; overflow:hidden}
+  .rate-bar i{display:block; height:100%; width:0; border-radius:3px; transition:width .8s cubic-bezier(.22,.61,.36,1)}
+  .rate-card.kp .rate-bar i{background:#ff5500}
+  .rate-card.tmdb .rate-bar i{background:#4da3ff}
   .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
   .mv-trailer{position:relative; border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:var(--card); cursor:pointer}
   .mv-trailer img{width:100%; height:100%; object-fit:cover}
@@ -435,6 +450,10 @@
         <div><div class="t">Gemini API ключ</div><div class="d">AI-подборки</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="geminiKey" placeholder="вставить ключ" autocomplete="off"><button class="mini-btn" id="geminiCheck">Проверить</button></div>
       </div>
+      <div class="set-row">
+        <div><div class="t">Kinopoisk API ключ</div><div class="d">Рейтинг Кинопоиска на странице фильма · ключ с kinopoiskapiunofficial.tech</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="kpKey" placeholder="вставить ключ" autocomplete="off"></div>
+      </div>
     </div>
     <div class="set-group">
       <div class="set-row">
@@ -535,6 +554,7 @@ const LS = {
 };
 const state = {
   tmdbKey: LS.get('tmdb_key',''),
+  kpKey: LS.get('kp_key',''),
   geminiKey: LS.get('gemini_key',''),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
@@ -663,9 +683,11 @@ function norm(m, media){
   return {
     id: mt==='tv' && !rid.startsWith('tv') ? 'tv'+rid : m.id,
     title: m.title || m.name || 'Без названия',
+    orig: m.original_title || m.original_name || m.title || m.name || '',
     year: (m.release_date||m.first_air_date||'') .slice(0,4) || m.year || '—',
     date: m.release_date||m.first_air_date||'',
     rating: m.vote_average!==undefined ? +m.vote_average.toFixed(1) : m.rating,
+    votes: m.vote_count || 0,
     genres: m.genre_ids ? m.genre_ids.map(g=>RU_GENRE[g]).filter(Boolean) : (m.genres||[]),
     desc: m.overview || m.desc || 'Описание скоро появится.',
     poster: m.poster_path || null,
@@ -687,6 +709,100 @@ function money(n){
 }
 const LANG_RU = {en:'Английский',ru:'Русский',uk:'Украинский',fr:'Французский',de:'Немецкий',es:'Испанский',it:'Итальянский',ja:'Японский',ko:'Корейский',zh:'Китайский',hi:'Хинди',pt:'Португальский',pl:'Польский',tr:'Турецкий'};
 const STATUS_RU = {'Released':'Выпущен','In Production':'В производстве','Post Production':'Постпродакшн','Planned':'Запланирован','Rumored':'По слухам','Canceled':'Отменён','Returning Series':'Выходит','Ended':'Завершён'};
+
+/* =================== KP RATINGS =================== */
+const KP_API = 'https://kinopoiskapiunofficial.tech/';
+function kpNorm(s){
+  return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim();
+}
+function kpVotesFmt(v){
+  v = Number(v||0);
+  if(!isFinite(v)||v<=0) return '';
+  if(v>=1e6) return (+(v/1e6).toFixed(1))+' млн';
+  if(v>=1e3) return (+(v/1e3).toFixed(1))+' тыс.';
+  return String(Math.round(v));
+}
+function kpQuality(r){
+  return r>=8?'Отлично':r>=7?'Хорошо':r>=6?'Неплохо':r>=5?'Средне':'Низкая оценка';
+}
+function kpCacheGet(id){
+  try{
+    const c = JSON.parse(localStorage.getItem('kino.kp_cache')||'{}');
+    const it = c[id];
+    if(it && Date.now()-it.ts < 7*864e5) return it;
+  }catch(e){}
+  return null;
+}
+function kpCacheSet(id, kp, votes){
+  try{
+    const c = JSON.parse(localStorage.getItem('kino.kp_cache')||'{}');
+    c[id] = {kp, votes, ts: Date.now()};
+    const ks = Object.keys(c);
+    if(ks.length>500) ks.slice(0, ks.length-500).forEach(k=>delete c[k]);
+    localStorage.setItem('kino.kp_cache', JSON.stringify(c));
+  }catch(e){}
+}
+async function kpFetch(path){
+  const r = await fetch(KP_API+path, {headers:{'X-API-KEY': state.kpKey, 'Accept':'application/json'}});
+  if(r.status===401) throw new Error('bad_key');
+  if(!r.ok) throw new Error('kp '+r.status);
+  return r.json();
+}
+function kpCardHTML(kp, votes){
+  const v = kpVotesFmt(votes);
+  return `<div class="rate-card kp"><div class="rate-top"><span class="rate-brand">КИНОПОИСК</span><span class="rate-q">${kpQuality(kp)}</span></div><div class="rate-score">${kp.toFixed(1)}<small>/10</small></div>${v?`<div class="rate-votes"><b>${v}</b> оценок</div>`:''}<div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,kp*10))}"></i></div></div>`;
+}
+function tmdbCardHTML(m){
+  const v = kpVotesFmt(m.votes);
+  return `<div class="rate-card tmdb"><div class="rate-top"><span class="rate-brand">TMDB</span><span class="rate-q">${kpQuality(m.rating)}</span></div><div class="rate-score">${Number(m.rating).toFixed(1)}<small>/10</small></div>${v?`<div class="rate-votes"><b>${v}</b> голосов</div>`:''}<div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,m.rating*10))}"></i></div></div>`;
+}
+function animBars(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('#rateCards .rate-bar i').forEach(i=>{ i.style.width = (i.dataset.w||0)+'%'; });
+  }));
+}
+function kpHideIfEmpty(){
+  const box = document.getElementById('rateCards');
+  if(box && !box.querySelector('.rate-card')){
+    const sec = box.closest('.mv-sec'); if(sec) sec.style.display = 'none';
+  }
+}
+async function loadKpRating(m){
+  if(!state.kpKey || !state.live) return;
+  const slot = document.getElementById('kpCardSlot');
+  if(!slot) return;
+  const cid = String(m.id);
+  const cached = kpCacheGet(cid);
+  if(cached){
+    if(cached.kp>0){ slot.outerHTML = kpCardHTML(cached.kp, cached.votes); animBars(); }
+    else kpHideIfEmpty();
+    return;
+  }
+  try{
+    const titles = [];
+    if(m.orig) titles.push(m.orig);
+    if(m.title && m.title!==m.orig) titles.push(m.title);
+    const yr = /^\d{4}$/.test(String(m.year)) ? String(m.year) : '';
+    let film = null;
+    for(const t of titles){
+      const d = await kpFetch('api/v2.1/films/search-by-keyword?keyword='+encodeURIComponent(t)+'&page=1');
+      const films = d.films||d.items||[];
+      if(!films.length) continue;
+      const want = kpNorm(t);
+      let cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n)===want));
+      if(!cands.length) cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n).indexOf(want)!==-1));
+      if(yr){ const yc = cands.filter(f=>String(f.year||'').slice(0,4)===yr); if(yc.length) cands = yc; }
+      if(cands.length){ film = cands[0]; break; }
+    }
+    if(!film){ kpCacheSet(cid, 0, 0); kpHideIfEmpty(); return; }
+    const det = await kpFetch('api/v2.2/films/'+(film.filmId||film.kinopoiskId));
+    const kp = Number(det.ratingKinopoisk)||0;
+    const votes = Number(det.ratingKinopoiskVoteCount)||0;
+    kpCacheSet(cid, kp, votes);
+    if(kp>0){ slot.outerHTML = kpCardHTML(kp, votes); animBars(); }
+    else kpHideIfEmpty();
+  }catch(e){ kpHideIfEmpty(); }
+}
 function visible(list){
   if(!state.hideWatched) return list;
   return list.filter(m=>state.watched.indexOf(m.id)===-1);
@@ -1069,6 +1185,7 @@ function renderMovie(m){
       </div>
       <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}${m.seasons?`<span>${m.seasons} ${plural(m.seasons,'сезон','сезона','сезонов')}</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
       <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}</div>
+      ${state.kpKey?`<div class="mv-sec"><h3>Рейтинги</h3><div class="rates" id="rateCards">${m.rating>0?tmdbCardHTML(m):''}<span id="kpCardSlot" style="display:contents"></span></div></div>`:''}
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
@@ -1098,6 +1215,8 @@ function renderMovie(m){
   const tr = $('#mvTrailer');
   if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
+  animBars();
+  loadKpRating(m);
 }
 /* =================== PERSON PAGE =================== */
 async function openPerson(pid, pname, role){
@@ -1395,6 +1514,11 @@ function updateStats(){
 }
 $('#tmdbKey').value = state.tmdbKey;
 $('#geminiKey').value = state.geminiKey;
+$('#kpKey').value = state.kpKey;
+$('#kpKey').addEventListener('change', e=>{
+  state.kpKey = e.target.value.trim(); LS.set('kp_key', state.kpKey);
+  toast(state.kpKey ? 'Kinopoisk ключ сохранён' : 'Ключ удалён');
+});
 $('#tmdbKey').addEventListener('change', async e=>{
   state.tmdbKey = e.target.value.trim(); LS.set('tmdb_key', state.tmdbKey);
   if(state.tmdbKey){
