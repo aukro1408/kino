@@ -179,11 +179,11 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .fav-opt{display:flex; align-items:center; gap:14px; width:100%; background:none; border:none; color:var(--text);
     font:inherit; font-size:15px; font-weight:700; padding:13px 6px; cursor:pointer; border-top:1px solid rgba(255,255,255,.07)}
-  .fav-opt-ic{width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.07)}
+  .fav-opt-ic{width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.07); color:rgba(255,255,255,.42)}
   .fav-opt-ic svg{width:20px; height:20px}
-  .fav-opt[data-list="like"] .fav-opt-ic{color:#ff5f6e}
-  .fav-opt[data-list="later"] .fav-opt-ic{color:#ffc94d}
-  .fav-opt[data-list="mark"] .fav-opt-ic{color:#4da3ff}
+  .fav-opt.on[data-list="like"] .fav-opt-ic{color:#ff5f6e}
+  .fav-opt.on[data-list="later"] .fav-opt-ic{color:#ffc94d}
+  .fav-opt.on[data-list="mark"] .fav-opt-ic{color:#4da3ff}
   .fav-opt-check{margin-left:auto; color:#3ddc84; font-size:18px; font-weight:800; min-width:22px; text-align:center}
   .fav-opt:active{background:rgba(255,255,255,.04)}
   .fav-sec{margin:20px 0 6px}
@@ -419,13 +419,15 @@ const IMG = 'https://image.tmdb.org/t/p/';
 /* =================== FAVORITES =================== */
 state.favs = LS.get('favs', {like:[], later:[], mark:[]});
 const IC_HEART = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+const IC_HEART_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
 const IC_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const IC_MARK_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
 const IC_MARK = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
 const IC_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>';
 const FAV_LISTS = [
-  {id:'like', name:'Нравится', icon:()=>IC_HEART, empty:'Пока пусто. Откройте фильм и нажмите на звёздочку → «Нравится».'},
-  {id:'later', name:'Смотреть позже', icon:()=>IC_CLOCK, empty:'Пока пусто. Отложите фильм через звёздочку → «Смотреть позже».'},
-  {id:'mark', name:'Закладки', icon:()=>IC_MARK, empty:'Пока пусто. Сохраняйте фильмы через звёздочку → «В закладки».'},
+  {id:'like', name:'Нравится', icon:()=>IC_HEART, iconOff:()=>IC_HEART_O, empty:'Пока пусто. Откройте фильм и нажмите на звёздочку → «Нравится».'},
+  {id:'later', name:'Смотреть позже', icon:()=>IC_CLOCK, iconOff:()=>IC_CLOCK, empty:'Пока пусто. Отложите фильм через звёздочку → «Смотреть позже».'},
+  {id:'mark', name:'Закладки', icon:()=>IC_MARK, iconOff:()=>IC_MARK_O, empty:'Пока пусто. Сохраняйте фильмы через звёздочку → «В закладки».'},
 ];
 function favSnap(m){ return {id:m.id, title:m.title, poster:m.poster||null, year:m.year, rating:m.rating, media:m.media||'movie', art:m.art||null}; }
 function favHas(id){
@@ -468,7 +470,7 @@ function renderFavSheet(){
   $('#favSheet').innerHTML = `<div class="sheet-grip"></div><div class="sheet-title">${m.title}</div>` +
     FAV_LISTS.map(l=>{
       const on = state.favs[l.id].some(x=>x.id===m.id);
-      return `<button class="fav-opt" data-list="${l.id}"><span class="fav-opt-ic">${l.icon()}</span>${l.name}<span class="fav-opt-check">${on?'✓':''}</span></button>`;
+      return `<button class="fav-opt${on?' on':''}" data-list="${l.id}"><span class="fav-opt-ic">${on?l.icon():l.iconOff()}</span>${l.name}<span class="fav-opt-check">${on?'✓':''}</span></button>`;
     }).join('');
   $('#favSheet').querySelectorAll('.fav-opt').forEach(b=>b.onclick=()=>{
     favToggle(m.id, b.dataset.list, m);
