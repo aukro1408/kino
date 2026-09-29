@@ -2637,30 +2637,27 @@ function vwAlpacAuth(er, tok){
     <button class="alp-refresh" id="alpRefresh">Обновить код</button>
   </div>`;
   $('#alpRefresh').onclick = ()=>vwAlpacInit();
-  vw.alpacAuthed = false;
   vw.alpacPoll = setInterval(async ()=>{
     if(!vwAlive(tok)){ try{ clearInterval(vw.alpacPoll); }catch(_){} return; }
     try{
-      const r = await fetch(ALPAC+'/tg/auth/status?uid='+encodeURIComponent(alpacUid()));
+      const r = await fetch(ALPAC+'/tg/auth/check?code='+encodeURIComponent(er.code||''));
       if(!r.ok) return;
       const j = await r.json();
-      if(j && j.authorized && !vw.alpacAuthed){
-        vw.alpacAuthed = true;
+      if(!j) return;
+      const st = $('#alpStatus');
+      if(j.status==='approved' && j.token){
         try{ clearInterval(vw.alpacPoll); }catch(_){}
         alpacSaveToken(j);
-        if(alpacToken()){
-          toast('Alpac подключён ✅');
-          if(vwAlive(tok)) vwAlpacInit();
-        }else{
-          vw.alpacRetries = (vw.alpacRetries||0)+1;
-          const st = $('#alpStatus');
-          if(vw.alpacRetries>2){
-            if(st) st.innerHTML = '<span class="alp-dot"></span>Не получилось получить доступ — нажми «Обновить код»';
-          }else{
-            if(st) st.innerHTML = '<span class="alp-dot"></span>Код принят, получаю доступ…';
-            if(vwAlive(tok)) vwAlpacInit();
-          }
-        }
+        toast('Alpac подключён ✅');
+        if(vwAlive(tok)) vwAlpacInit();
+      }else if(j.status==='claimed'){
+        if(st) st.innerHTML = '<span class="alp-dot"></span>Код принят, жду одобрения…';
+      }else if(j.status==='rejected'){
+        try{ clearInterval(vw.alpacPoll); }catch(_){}
+        if(st) st.innerHTML = '<span class="alp-dot"></span>Запрос отклонён администратором';
+      }else if(j.status==='expired'){
+        try{ clearInterval(vw.alpacPoll); }catch(_){}
+        if(vwAlive(tok)) vwAlpacInit();
       }
     }catch(_){}
   }, 3000);
