@@ -2298,6 +2298,17 @@ function vwSetWatch(label, onclick){
 function vwSetSub(html){ const s = $('#vwSub'); if(s) s.innerHTML = html||''; }
 function vwSetQ(q){ const e = $('#vwQ'); if(!e) return; if(q){ e.style.display=''; e.textContent=q; } else e.style.display='none'; }
 
+/* --- выбор: внутренний плеер или VLC --- */
+function vwAskPlayer(url, title, subs, mv, info){
+  openOptSheet('Чем открыть?', [
+    {t:'Встроенный плеер', s:'синий плеер blackroom'},
+    {t:'VLC', s:'внешнее приложение'}
+  ], -1, i=>{
+    if(i===1) openExternal(url);
+    else openPlayer(url, title, subs, mv, info);
+  });
+}
+
 /* =================== LUMIO =================== */
 function onlCleanName(s){
   return String(s||'').replace(/<[^>]*>/g,'').trim();
@@ -2471,7 +2482,7 @@ function vwLumioPlay(it, ei){
   if(m.media==='tv' && ei>=0) vwMarkW('l'+m.id, 's'+vw.seasonIdx+'e'+ei);
   const epT = (ei>=0 && vw.eps && vw.eps[ei]) ? vwEpName(vw.eps[ei], ei) : null;
   const title = m.title + (epT ? ' · серия '+epT.num : '') + (it.title ? ' · '+it.title : '');
-  openPlayer(it.url, title, [], m, {
+  vwAskPlayer(it.url, title, [], m, {
     file: it.title || '',
     source: 'Lumio · ' + vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx),
     voice: it.voice || '',
@@ -2718,7 +2729,7 @@ function vwFxPlay(it, sNum, eNum){
   const m = vw.m;
   if(sNum) vwMarkW('f'+m.id, 's'+sNum+'e'+eNum);
   const se = sNum ? ' · S'+sNum+'E'+eNum : '';
-  openPlayer(it.url, (m.title||'Filmix') + se + ' · ' + it.voice + ' ' + it.q + 'p', [], m, fxInfo(it));
+  vwAskPlayer(it.url, (m.title||'Filmix') + se + ' · ' + it.voice + ' ' + it.q + 'p', [], m, fxInfo(it));
 }
 
 /* =================== ТОРРЕНТЫ =================== */
