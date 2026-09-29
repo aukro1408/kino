@@ -2531,6 +2531,19 @@ function fxIsSerial(pl){
   return pl && pl.playlist && typeof pl.playlist==='object' && !Array.isArray(pl.playlist) && Object.keys(pl.playlist).length>0;
 }
 /* =================== FILMIX =================== */
+function fxMatch(json, m){
+  if(!Array.isArray(json) || !json.length) return null;
+  const year = parseInt(String(m.date||'').slice(0,4)) || 0;
+  const orig = m.orig || '';
+  const cards = json.filter(c=>{
+    const y = parseInt(c.year || String(c.alt_name||'').split('-').pop());
+    return y > year-2 && y < year+2;
+  });
+  let card = cards.find(c=>c.year==year && fxNorm(c.original_title)===fxNorm(orig));
+  if(!card) card = cards.find(c=>fxNorm(c.original_title)===fxNorm(orig));
+  if(!card && cards.length===1) card = cards[0];
+  return card || null;
+}
 async function vwFxInit(){
   const tok = vw.token, m = vw.m;
   vwPillsHTML([]); vwSetWatch(null); vwSetSub(''); vwSetQ('');
