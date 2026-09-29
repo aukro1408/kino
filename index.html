@@ -631,7 +631,7 @@
   .pl-tapzone.right{right:0}
   .pl-flash{position:absolute; top:42%; width:88px; height:88px; margin:-44px 0 0 -44px; border-radius:50%;
     background:rgba(255,255,255,.16); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
-    color:#fff; font-size:17px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:17px; font-weight:800; line-height:1; display:flex; align-items:center; justify-content:center;
     z-index:5; opacity:0; pointer-events:none}
   .pl-flash.left{left:25%}
   .pl-flash.right{left:75%}
@@ -661,7 +661,7 @@
     pointer-events:auto; transition:transform .15s, opacity .2s}
   .pl-bigplay:active{transform:scale(.93)}
   .pl-bigplay svg{width:34px; height:34px; fill:#fff; margin-left:4px; filter:drop-shadow(0 2px 10px rgba(0,0,0,.5))}
-  .pl-bigplay.hide{opacity:0; pointer-events:none; transform:scale(.8)}
+  .pl-bigplay.pause svg{margin-left:0}
   .pl-bottom{position:absolute; left:0; right:0; bottom:0; padding:0 14px calc(12px + env(safe-area-inset-bottom)); display:flex; justify-content:center; pointer-events:none}
   .pl-panel{pointer-events:auto; width:100%; max-width:600px; background:rgba(24,24,30,.66);
     -webkit-backdrop-filter:blur(22px) saturate(1.5); backdrop-filter:blur(22px) saturate(1.5);
@@ -916,16 +916,16 @@
           <button class="pl-icbtn" id="plInfo" aria-label="О файле"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
           <button class="pl-icbtn" id="plFs" aria-label="Во весь экран"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
         </div>
-        <div class="pl-center"><button class="pl-bigplay" id="plBigPlay" aria-label="Смотреть"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+        <div class="pl-center"><button class="pl-bigplay" id="plBigPlay" aria-label="Пауза/играть"><svg viewBox="0 0 24 24" id="plBigPlayIco"><path d="M8 5v14l11-7z"/></svg></button></div>
         <div class="pl-bottom">
           <div class="pl-panel">
             <div class="pl-seek" id="plSeek"><div class="pl-buf" id="plBuf"></div><div class="pl-fill" id="plFill"></div><div class="pl-knob" id="plKnob"></div></div>
             <div class="pl-timerow"><span id="plCur">0:00</span><button class="pl-rate" id="plRate" aria-label="Скорость">1.0×</button><span id="plRem">-0:00</span></div>
             <div class="pl-controls">
               <button class="pl-cbtn" id="plPip" aria-label="Картинка в картинке"><svg viewBox="0 0 24 24"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg></button>
-              <button class="pl-cbtn" id="plRw" aria-label="-10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/><text x="12.5" y="17.5" text-anchor="middle" font-size="8" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">10</text></svg></button>
+              <button class="pl-cbtn" id="plRw" aria-label="-10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/><text x="12" y="15.8" text-anchor="middle" font-size="7" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">10</text></svg></button>
               <button class="pl-cbtn big" id="plPlay" aria-label="Пауза/играть"><svg viewBox="0 0 24 24" id="plPlayIco"><path d="M8 5v14l11-7z"/></svg></button>
-              <button class="pl-cbtn" id="plFf" aria-label="+10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V2l5 4-5 4V7a5 5 0 1 0 5 5h2a7 7 0 1 1-7-7z"/><text x="11.5" y="17.5" text-anchor="middle" font-size="8" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">10</text></svg></button>
+              <button class="pl-cbtn" id="plFf" aria-label="+10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V1l5 5-5 5V7c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6h2c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8z"/><text x="12" y="15.8" text-anchor="middle" font-size="7" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">10</text></svg></button>
               <button class="pl-cbtn" id="plSubs" aria-label="Субтитры"><svg viewBox="0 0 24 24"><path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7.5c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1H10c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-2.5c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1H17c.55 0 1 .45 1 1v1z"/></svg></button>
             </div>
           </div>
@@ -3413,7 +3413,6 @@ function openPlayer(url, title, subs, mv, info){
       const e = $('#plErr');
       e.innerHTML = 'Поток недоступен 😕<br><span style="font-size:12px;opacity:.75">Попробуй другой источник или озвучку.<br>Тапни по экрану, чтобы скрыть.</span>';
       e.style.display='flex'; plErrMode = 'fatal';
-      $('#plBigPlay').classList.remove('hide');
     });
   } else {
     v.src = url;
@@ -3468,8 +3467,10 @@ function plFmt(s){
   return (h? h+':' : '') + String(m).padStart(h?2:1,'0') + ':' + String(x).padStart(2,'0');
 }
 function plSetPlayIcon(playing){
-  $('#plPlayIco').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
-  $('#plBigPlay').classList.toggle('hide', !!playing);
+  const pp = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  $('#plPlayIco').innerHTML = pp;
+  $('#plBigPlayIco').innerHTML = pp;
+  $('#plBigPlay').classList.toggle('pause', !!playing);
 }
 function plShowUI(sticky){
   const ui = $('#plUI'); ui.classList.remove('hide');
@@ -3509,7 +3510,7 @@ function plBindTapZone(id, dir){
 plBindTapZone('#plTapL', -1);
 plBindTapZone('#plTapR', +1);
 $('#plPlay').onclick = ()=>{ const v=$('#plVideo'); v.paused ? v.play().catch(()=>{}) : v.pause(); plShowUI(); };
-$('#plBigPlay').onclick = ()=>{ $('#plVideo').play().catch(()=>{}); plShowUI(); };
+$('#plBigPlay').onclick = ()=>{ const v=$('#plVideo'); v.paused ? v.play().catch(()=>{}) : v.pause(); plShowUI(); };
 $('#plRw').onclick = ()=>{ const v=$('#plVideo'); v.currentTime = Math.max(0, v.currentTime-10); plShowUI(); };
 $('#plFf').onclick = ()=>{ const v=$('#plVideo'); v.currentTime = Math.min(v.duration||0, v.currentTime+10); plShowUI(); };
 $('#plRate').onclick = function(){ const v=$('#plVideo'); const i=(PL_RATES.indexOf(v.playbackRate)+1)%PL_RATES.length; v.playbackRate=PL_RATES[i]; this.textContent=PL_RATES[i].toFixed(1)+'×'; plShowUI(); };
@@ -3681,7 +3682,6 @@ async function plLoadSub(i){
       : 'Не удалось воспроизвести';
     e.innerHTML = msg + ' 😕<br><span style="font-size:12px;opacity:.75">Попробуй другую раздачу — лучше 1080p (x264/H.264) с сидами.<br>Тапни по экрану, чтобы скрыть.</span>';
     e.style.display='flex'; plErrMode = 'fatal';
-    $('#plBigPlay').classList.remove('hide');
   });
   const plStallWarn = ()=>{
     plClearStall();
