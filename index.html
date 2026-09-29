@@ -1021,7 +1021,7 @@ function renderFav(){
     const shown = items.slice(0,3);
     return `<div class="fav-sec"><button class="fav-sec-h ${l.id}" data-fav="${l.id}">${l.icon()}<span>${l.name}</span><b>${items.length}</b><span class="fav-go">›</span></button>
       ${items.length ? `<div class="grid3">${shown.map(cardHTML).join('')}</div>` : `<div class="fav-empty">${l.empty}</div>`}
-      ${items.length>3 ? `<button class="fav-more" data-fav="${l.id}">Ещё · все ${items.length} ›</button>` : ''}</div>`;
+      ${items.length>3 ? `<button class="fav-more" data-fav="${l.id}">Ещё ›</button>` : ''}</div>`;
   }).join('');
   bindCards(box);
   const openFavCat = id=>{
