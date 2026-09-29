@@ -338,6 +338,11 @@
   .fact{background:var(--card2); border-radius:12px; padding:10px 12px; min-width:0}
   .fact span{display:block; font-size:11px; color:var(--muted); margin-bottom:2px}
   .fact b{display:block; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .fact.link{cursor:pointer; width:100%; font:inherit; color:inherit; text-align:left; border:1px solid rgba(245,185,66,.18); background:linear-gradient(180deg,rgba(245,185,66,.09),rgba(245,185,66,.02))}
+  .fact.link:active{transform:scale(.97)}
+  .fact.link b{padding-right:20px}
+  .fact-go{position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#ffcf7a; font-size:17px; font-weight:800; pointer-events:none}
+  .fact{position:relative}
   .rates{display:grid; grid-template-columns:1fr 1fr; gap:8px}
   .rate-card{background:linear-gradient(180deg,rgba(245,185,66,.12),rgba(245,185,66,.04)); border:1px solid rgba(245,185,66,.24); border-radius:16px; padding:14px; min-width:0; box-shadow:0 8px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08)}
   .rate-top{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px}
@@ -1262,6 +1267,19 @@ function colChipsHTML(active){
   return `<div class="col-chips">${COL_CATS.map(c=>
     `<button class="chip${c.id===active?' on':''}" data-colcat="${c.id}">${c.name}</button>`).join('')}</div>`;
 }
+function studioChipsHTML(active){
+  return `<div class="col-chips"><button class="chip${active!=='tv'?' on':''}" data-stsub="movie">Фильмы</button><button class="chip${active==='tv'?' on':''}" data-stsub="tv">Сериалы</button></div>`;
+}
+function bindStudioChips(grid){
+  grid.querySelectorAll('[data-stsub]').forEach(ch=>{
+    ch.onclick = ()=>{
+      catMore = {...catMore, sub: ch.dataset.stsub};
+      catPage = 0; catDone = false; catLoading = false; lastCat = null;
+      grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
+      catLoadMore().then(()=>attachCatSentinel());
+    };
+  });
+}
 function bindColCards(root){
   root.querySelectorAll('.col-card').forEach(c=>{
     c.onclick = ()=>openCategory({type:'collection', colId:c.dataset.id, title:c.dataset.title||'Коллекция'});
@@ -1393,6 +1411,10 @@ function catURL(more, page){
     : more.type==='tv_trending' ? `/trending/tv/week?page=${page}`
     : more.type==='foryou' ? `/discover/movie?with_genres=${more.genreIds}&sort_by=vote_average.desc&vote_count.gte=100&primary_release_date.lte=${todayStr()}&page=${page}`
     : more.type==='genre_tv' ? `/discover/tv?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`
+    : more.type==='studio' ? (more.sub==='tv'
+        ? `/discover/tv?with_companies=${more.coId}&sort_by=popularity.desc&page=${page}`
+        : `/discover/movie?with_companies=${more.coId}&sort_by=popularity.desc&page=${page}`)
+    : more.type==='network' ? `/discover/tv?with_networks=${more.coId}&sort_by=popularity.desc&page=${page}`
     : `/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`;
 }
 async function catLoadMore(){
@@ -1413,7 +1435,8 @@ async function catLoadMore(){
       const gotN = (d.results||[]).length;
       if(!gotN || gotN < 20 || catPage >= 60) catDone = true;
     } else {
-      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv';
+      const isStudio = catMore.type==='studio';
+      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv' || catMore.type==='network' || (isStudio && catMore.sub==='tv');
       const d = isCol ? await cubGet(`view/${catMore.colId}?page=${catPage+1}`) : await tmdb(catURL(catMore, catPage+1));
       const seen = new Set();
       const items = [];
@@ -1422,10 +1445,11 @@ async function catLoadMore(){
         if(n && !seen.has(n.id)){ seen.add(n.id); items.push(n); }
       });
       items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
-      if(catPage===0) grid.innerHTML = '';
+      if(catPage===0) grid.innerHTML = isStudio ? studioChipsHTML(catMore.sub) : '';
       const html = visible(items).map(cardHTML).join('');
       if(html) grid.insertAdjacentHTML('beforeend', html);
       bindCards(grid);
+      if(catPage===0 && isStudio) bindStudioChips(grid);
       catPage++;
       if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
     }
@@ -1597,7 +1621,9 @@ async function openMovie(id){
         lang: d.original_language || null,
         status: d.status || null,
         studio: (d.production_companies||[])[0] ? d.production_companies[0].name : null,
+        studioId: (d.production_companies||[])[0] ? d.production_companies[0].id : null,
         network: isTv && d.networks && d.networks[0] ? d.networks[0].name : null,
+        networkId: isTv && d.networks && d.networks[0] ? d.networks[0].id : null,
         cast: (d.credits.cast||[]).slice(0,14).map(c=>({id:c.id, name:c.name, character:c.character, photo:c.profile_path})),
         directors: dirs,
         trailer: trailerKey(d.videos),
@@ -1637,8 +1663,8 @@ function renderMovie(m){
   if(m.countries && m.countries.length) facts.push(['Страна', m.countries.slice(0,2).join(', ')]);
   if(m.lang) facts.push(['Язык', LANG_RU[m.lang] || m.lang.toUpperCase()]);
   if(m.status) facts.push(['Статус', STATUS_RU[m.status] || m.status]);
-  if(m.studio) facts.push(['Студия', m.studio]);
-  if(m.network) facts.push(['Канал', m.network]);
+  if(m.studio) facts.push(['Студия', m.studio, m.studioId ? {id:m.studioId, kind:'studio'} : null]);
+  if(m.network) facts.push(['Канал', m.network, m.networkId ? {id:m.networkId, kind:'network'} : null]);
   if(m.episodes) facts.push(['Серий', m.episodes]);
   box.innerHTML = `
     <div class="mv-backdrop">${backdropHTML(m)}<div class="mv-shade"></div>
@@ -1669,7 +1695,9 @@ function renderMovie(m){
         <div id="actBox"></div>
       </div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc clamp" id="mvDesc">${m.desc}</p><button class="desc-more" id="descMore">Читать полностью ▾</button></div>
-      ${facts.length?`<div class="mv-sec"><div class="facts">${facts.map(f=>`<div class="fact"><div class="fic">${factIcon(f[0])}<span>${f[0]}</span></div><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
+      ${facts.length?`<div class="mv-sec"><div class="facts">${facts.map(f=>f[2]
+        ? `<button class="fact link" data-kind="${f[2].kind}" data-id="${f[2].id}" data-name="${escTx(f[1])}"><div class="fic">${factIcon(f[0])}<span>${f[0]}</span></div><b>${f[1]}</b><span class="fact-go">›</span></button>`
+        : `<div class="fact"><div class="fic">${factIcon(f[0])}<span>${f[0]}</span></div><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
         <div class="dir-card" data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">
           <div class="ph">${d.profile_path?`<img src="${IMG}w185${d.profile_path}" alt="" loading="lazy">`:initials(d.name)}</div>
@@ -1698,6 +1726,7 @@ function renderMovie(m){
     dm.innerHTML = cl ? 'Читать полностью ▾' : 'Скрыть ▴';
   };
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
+  box.querySelectorAll('.fact.link').forEach(f=>f.onclick=()=>openCategory({type:f.dataset.kind, coId:f.dataset.id, title:f.dataset.name}));
   animBars();
   loadKpRating(m);
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>findTorrents(m);
