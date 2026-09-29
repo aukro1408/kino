@@ -1977,7 +1977,7 @@ async function rzLoadComments(m){
     if(currentScreenId()!=='scr-rezka') return;
     list.innerHTML = e.message==='bot'
       ? '<div class="rz-empty">Rezka включила проверку «ты не бот».<br>Вставь свой Cookie с hdrezka в Профиле → Rezka.</div>'
-      : '<div class="rz-empty">Не получилось загрузить комментарии</div>';
+      : '<div class="rz-empty">Не получилось загрузить комментарии<br><span style="opacity:.45;font-size:12px">'+escTx(e.message||'unknown')+'</span></div>';
   }
 }
 
