@@ -257,7 +257,8 @@
   .sheet-veil.show{opacity:1; pointer-events:auto}
   .sheet{position:absolute; left:50%; transform:translate(-50%,100%); bottom:0; width:100%; max-width:520px;
     background:#141d31; border-radius:22px 22px 0 0; padding:10px 18px calc(20px + env(safe-area-inset-bottom));
-    transition:transform .28s cubic-bezier(.2,.9,.25,1)}
+    transition:transform .28s cubic-bezier(.2,.9,.25,1); max-height:84dvh; display:flex; flex-direction:column}
+  #optList{overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; overscroll-behavior:contain}
   .sheet-veil.show .sheet{transform:translate(-50%,0)}
   .sheet-grip{width:40px; height:4px; border-radius:99px; background:rgba(255,255,255,.2); margin:4px auto 12px}
   .sheet-title{font-size:16px; font-weight:800; text-align:center; margin-bottom:10px; padding:0 10px;
@@ -2604,6 +2605,7 @@ async function alpacEvents(m, tok){
   if(j && j.accsdb && alpacSaveToken(j)) j = await alpacFetchEvents(m);
   if(j && j.accsdb) return {auth:j};
   if(j && j.life && j.memkey){
+    let best = [], stable = 0;
     for(let i=0;i<24;i++){
       if(i>0) await new Promise(r2=>setTimeout(r2, 1500));
       if(!vwAlive(tok)) throw new Error('gone');
@@ -2614,8 +2616,10 @@ async function alpacEvents(m, tok){
       if(!j3) continue;
       if(j3.accsdb){ alpacSaveToken(j3); return {auth:j3}; }
       const onl = Array.isArray(j3.online) ? j3.online : (Array.isArray(j3) ? j3 : []);
-      if(onl.length || j3.ready){ j = onl; break; }
+      if(onl.length > best.length){ best = onl; stable = 0; } else { stable++; }
+      if(j3.ready || stable>=3) break;
     }
+    j = best;
   }
   if(j && j.accsdb) return {auth:j};
   const arr = Array.isArray(j) ? j : [];
