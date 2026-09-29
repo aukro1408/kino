@@ -311,7 +311,7 @@
   .mv-load{padding:90px 20px; text-align:center; color:var(--muted); font-weight:700}
   .mv-backdrop{position:relative; height:240px; overflow:hidden; background:var(--card2)}
   .mv-backdrop img{width:100%; height:100%; object-fit:cover; filter:blur(4px) saturate(1.15); transform:scale(1.12)}
-  .mv-shade{position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,18,32,.12) 30%,var(--bg) 100%)}
+  .mv-shade{position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,18,32,.10) 25%,rgba(52,30,10,.42) 68%,var(--bg) 100%)}
   .back-btn{position:absolute; top:14px; left:14px; width:42px; height:42px; border-radius:50%;
     background:rgba(10,16,28,.55); border:1px solid rgba(255,255,255,.16); color:#fff; font-size:19px;
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
@@ -383,6 +383,39 @@
   .mv-watched{width:100%; margin-top:24px; padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,.13);
     background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
   .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
+/* ---------- movie page · golden ---------- */
+.watch-main{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:17px; border:none; border-radius:20px; cursor:pointer;
+  font:inherit; font-size:17px; font-weight:800; color:#3a2200;
+  background:linear-gradient(135deg,#ffdf9e 0%,#f5b942 45%,#e8930c 100%);
+  box-shadow:0 10px 32px rgba(232,147,12,.35), inset 0 1px 0 rgba(255,255,255,.5);}
+.watch-main:active{transform:scale(.98)}
+.watch-main svg{width:22px; height:22px; fill:#3a2200}
+.watch-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px}
+.wcard{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:17px 8px 15px; border-radius:18px; cursor:pointer;
+  font:inherit; color:var(--text);
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
+  border:1px solid rgba(245,185,66,.24);
+  box-shadow:0 8px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.09);}
+.wcard:active{transform:scale(.96)}
+.wcard svg{width:28px; height:28px; color:#ffcf7a}
+.wcard span{font-size:13px; font-weight:700}
+#actBox:empty{display:none}
+#actBox{margin-top:12px}
+.mv-genres i{border:1px solid rgba(245,185,66,.45); color:#ffcf7a; background:rgba(245,185,66,.08)}
+.mv-trailer{border-radius:20px; border:1px solid rgba(245,185,66,.18)}
+.mv-play span{background:rgba(20,12,4,.55); border:1.5px solid rgba(245,185,66,.65); backdrop-filter:blur(4px)}
+.fact{background:linear-gradient(180deg,rgba(245,185,66,.10),rgba(245,185,66,.03)); border:1px solid rgba(245,185,66,.20); border-radius:16px; padding:12px}
+.fact .fic{display:flex; align-items:center; gap:7px; color:#ffcf7a; margin-bottom:6px}
+.fact .fic svg{width:15px; height:15px; flex:none}
+.fact .fic span{font-size:11px; font-weight:700}
+.fact b{font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block}
+.mv-desc.clamp{display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden}
+.desc-more{background:none; border:none; color:#f5b942; font:inherit; font-size:13.5px; font-weight:800; margin-top:9px; cursor:pointer; padding:0}
+.mv-watched{border:1px solid rgba(245,185,66,.35); color:#ffcf7a; background:rgba(245,185,66,.05)}
+.mv-watched.on{background:rgba(245,185,66,.16); border-color:#f5b942; color:#ffdf9e}
+.watch-opt{display:flex; align-items:center; gap:14px; width:100%; background:none; border:none; color:var(--text); font:inherit; font-size:15px; font-weight:700; padding:15px 6px; cursor:pointer; border-top:1px solid rgba(255,255,255,.07); text-align:left}
+.watch-opt svg{width:26px; height:26px; color:#ffcf7a; flex:none}
+.watch-opt small{display:block; color:var(--muted); font-weight:600; font-size:12px; margin-top:2px}
   /* ---------- rezka comments ---------- */
   #scr-rezka{background:#151718}
   .rz-page{min-height:100%; background:#151718; color:#fff; padding-bottom:90px}
@@ -790,6 +823,7 @@
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
   <div class="sheet-veil" id="qmodeVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title">Режим поиска</div><div id="qmodeList"></div></div></div>
+  <div class="sheet-veil" id="watchVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title">Смотреть</div><div id="watchList"></div></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
     <div class="sheet-title">Фильтры · Мне повезёт</div>
@@ -1573,6 +1607,22 @@ async function openMovie(id){
   if(currentScreenId()!=='scr-movie') return;
   renderMovie(m);
 }
+function factIcon(n){
+  const s = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  const P = {
+    'Длительность': `<svg viewBox="0 0 24 24" ${s}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+    'Год': `<svg viewBox="0 0 24 24" ${s}><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>`,
+    'Страна': `<svg viewBox="0 0 24 24" ${s}><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>`,
+    'Язык': `<svg viewBox="0 0 24 24" ${s}><path d="M4 5h9M8.5 3v2c0 4-2.5 7.5-5.5 9M5 8c1.5 3 4 5.5 7 6.5M13 21l4.5-9L22 21M14.8 17h5.4"/></svg>`,
+    'Бюджет': `<svg viewBox="0 0 24 24" ${s}><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.6 5 3.2 5 1.4 5 3.3-2.2 3-5 3-5-1.1-5-3"/></svg>`,
+    'Сборы': `<svg viewBox="0 0 24 24" ${s}><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.6 5 3.2 5 1.4 5 3.3-2.2 3-5 3-5-1.1-5-3"/></svg>`,
+    'Статус': `<svg viewBox="0 0 24 24" ${s}><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>`,
+    'Студия': `<svg viewBox="0 0 24 24" ${s}><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9h18M7 5v4M17 5v4"/></svg>`,
+    'Канал': `<svg viewBox="0 0 24 24" ${s}><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M9 21h6"/></svg>`,
+    'Серий': `<svg viewBox="0 0 24 24" ${s}><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>`,
+  };
+  return P[n] || `<svg viewBox="0 0 24 24" ${s}><circle cx="12" cy="12" r="9"/></svg>`;
+}
 function renderMovie(m){
   const box = $('#scr-movie');
   const w = state.watched.includes(m.id);
@@ -1604,12 +1654,19 @@ function renderMovie(m){
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
-      <div class="mv-sec"><h3>Торренты</h3><div id="torBox"><button class="tor-find" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>Найти раздачи</button></div><div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div></div>
-      <div class="mv-sec"><h3>Lumio</h3><div id="onlBox"><button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Lumio</button></div></div>
-      <div class="mv-sec"><h3>Filmix 4k</h3><div id="fxBox"><button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Filmix 4k</button></div></div>
-      <div class="mv-sec"><h3>Обсуждение</h3><button class="tor-find" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Комментарии Rezka</button></div>
-      <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc">${m.desc}</p></div>
-      ${facts.length?`<div class="mv-sec"><h3>Факты</h3><div class="facts">${facts.map(f=>`<div class="fact"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
+      <div class="mv-sec watch">
+        <button class="watch-main" id="watchMain"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Смотреть</button>
+        <div class="watch-grid">
+          <button class="wcard" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg><span>Найти раздачи</span></button>
+          <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg><span>Lumio</span></button>
+          <button class="wcard" id="fxFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg><span>Filmix 4k</span></button>
+          <button class="wcard" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Комментарии</span></button>
+        </div>
+        <div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div>
+        <div id="actBox"></div>
+      </div>
+      <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc clamp" id="mvDesc">${m.desc}</p><button class="desc-more" id="descMore">Читать полностью ▾</button></div>
+      ${facts.length?`<div class="mv-sec"><div class="facts">${facts.map(f=>`<div class="fact"><div class="fic">${factIcon(f[0])}<span>${f[0]}</span></div><b>${f[1]}</b></div>`).join('')}</div></div>`:''}
       ${dirs.length?`<div class="mv-sec"><h3>${m.media==='tv'?'Создатель':'Режиссёр'}</h3>${dirs.slice(0,2).map(d=>`
         <div class="dir-card" data-pid="${d.id}" data-pname="${escAttr(d.name)}" data-role="director">
           <div class="ph">${d.profile_path?`<img src="${IMG}w185${d.profile_path}" alt="" loading="lazy">`:initials(d.name)}</div>
@@ -1632,6 +1689,12 @@ function renderMovie(m){
   };
   const tr = $('#mvTrailer');
   if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
+  const dm = $('#descMore'), dd = $('#mvDesc');
+  if(dm && dd) dm.onclick = ()=>{
+    const cl = dd.classList.toggle('clamp');
+    dm.innerHTML = cl ? 'Читать полностью ▾' : 'Скрыть ▴';
+  };
+  const wm = $('#watchMain'); if(wm) wm.onclick = ()=>openWatchSheet(m);
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
   animBars();
   loadKpRating(m);
@@ -1983,6 +2046,29 @@ function openQmodeSheet(){
 }
 $('#qmodeVeil').addEventListener('click', e=>{ if(e.target.id==='qmodeVeil') e.target.classList.remove('show'); });
 
+function openWatchSheet(m){
+  const ic = {
+    lumio: '<svg viewBox="0 0 64 64"><defs><linearGradient id="lumg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg3)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>',
+    fx: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>',
+    tor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>',
+  };
+  const opts = [
+    {id:'lumio', t:'Lumio', d:'Онлайн-источники', go:()=>onlFind(m)},
+    {id:'fx', t:'Filmix 4k', d:'Прямые mp4 · до 4K', go:()=>fxFind(m)},
+    {id:'tor', t:'Торренты', d:'Через TorrServer → VLC', go:()=>findTorrents(m)},
+  ];
+  $('#watchList').innerHTML = opts.map(o=>
+    `<button class="watch-opt" data-o="${o.id}">${ic[o.id]}<span>${o.t}<small>${o.d}</small></span></button>`
+  ).join('');
+  $('#watchVeil').classList.add('show');
+  $('#watchList').querySelectorAll('.watch-opt').forEach(b=>b.onclick=()=>{
+    $('#watchVeil').classList.remove('show');
+    const o = opts.find(x=>x.id===b.dataset.o);
+    if(o) o.go();
+  });
+}
+$('#watchVeil').addEventListener('click', e=>{ if(e.target.id==='watchVeil') e.target.classList.remove('show'); });
+
 function torBarHTML(n){
   const c = (k,label)=>{
     const on = torSort.key===k ? ' on' : '';
@@ -2061,7 +2147,7 @@ function onlReset(){
   onlMovie = null; onlStack = [];
 }
 async function onlFind(m){
-  const box = $('#onlBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   onlMovie = m; onlStack = [];
   box.innerHTML = '<div class="rz-load">Ищу источники…</div>';
   try{
@@ -2094,7 +2180,7 @@ function onlParse(html){
   return out;
 }
 async function onlDrill(url, title){
-  const box = $('#onlBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   box.innerHTML = '<div class="rz-load">Загружаю…</div>';
   try{
     const r = await fetch(url);
@@ -2110,24 +2196,20 @@ async function onlDrill(url, title){
 function onlBack(){
   onlStack.pop();
   const top = onlStack[onlStack.length-1];
-  if(!top){ onlReset(); const box = $('#onlBox');
-    if(box) box.innerHTML = '<button class="tor-find" id="onlFind"><svg viewBox="0 0 64 64" style="width:22px;height:22px"><defs><linearGradient id="lumg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>Lumio</button>';
-    const b = $('#onlFind'); if(b && onlMovie) b.onclick = ()=>onlFind(onlMovie);
-    return;
-  }
+  if(!top){ onlReset(); const box = $('#actBox'); if(box) box.innerHTML=''; return; }
   if(top.kind==='srcs') onlRenderSrcs(top.srcs);
   else onlRenderItems(top.items, top.title);
 }
 function onlHead(){
   return onlStack.length > 1
     ? `<button class="onl-back" id="onlBack">‹ Назад</button>`
-    : `<button class="onl-back" id="onlBack">‹ Источники</button>`;
+    : `<button class="onl-back" id="onlBack">‹ Закрыть</button>`;
 }
 function onlBindBack(){
   const b = $('#onlBack'); if(b) b.onclick = onlBack;
 }
 function onlRenderSrcs(srcs){
-  const box = $('#onlBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   box.innerHTML = '<div class="onl-list">' + srcs.map((s,i)=>
     `<button class="onl-row" data-i="${i}"><span>${escTx(onlCleanName(s.name)||('Источник '+(i+1)))}${s.balanser?`<div class="onl-sub">${escTx(s.balanser)}</div>`:''}</span><span class="go">›</span></button>`
   ).join('') + '</div>';
@@ -2141,7 +2223,7 @@ function onlRenderSrcs(srcs){
   });
 }
 function onlRenderItems(items, title){
-  const box = $('#onlBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   box.innerHTML = onlHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">'` +
     items.map((it,i)=>{
       if(it.method==='play'){
@@ -2203,7 +2285,7 @@ function fxIsSerial(pl){
   return pl && pl.playlist && typeof pl.playlist==='object' && !Array.isArray(pl.playlist) && Object.keys(pl.playlist).length>0;
 }
 async function fxFind(m){
-  const box = $('#fxBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   fxMovie = m; fxStack = [];
   if(!state.fxToken){ box.innerHTML = '<div class="rz-empty">Вставь токен Filmix в Профиле 🙂</div>'; return; }
   box.innerHTML = '<div class="rz-load">Проверяю подписку…</div>';
@@ -2240,15 +2322,13 @@ function fxMatch(json, m){
 function fxBack(){
   fxStack.pop();
   const top = fxStack[fxStack.length-1];
-  if(!top){ const box = $('#fxBox');
-    if(box) box.innerHTML = '<button class="tor-find" id="fxFind"><svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>Filmix 4k</button>';
-    const b = $('#fxFind'); if(b && fxMovie) b.onclick = ()=>fxFind(fxMovie);
-    return;
-  }
+  if(!top){ const box = $('#actBox'); if(box) box.innerHTML=''; return; }
   top.render();
 }
 function fxHead(){
-  return `<button class="onl-back" id="fxBack">‹ Назад</button>`;
+  return fxStack.length > 1
+    ? `<button class="onl-back" id="fxBack">‹ Назад</button>`
+    : `<button class="onl-back" id="fxBack">‹ Закрыть</button>`;
 }
 function fxBindBack(){
   const b = $('#fxBack'); if(b) b.onclick = fxBack;
@@ -2258,7 +2338,7 @@ function fxPush(entry){
   entry.render();
 }
 function fxRenderSimilars(res){
-  const box = $('#fxBox');
+  const box = $('#actBox');
   const render = ()=>{
     box.innerHTML = fxHead() + '<div class="onl-crumb">Уточни, что именно:</div><div class="onl-list">' +
       res.slice(0,12).map((c,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(c.title||c.original_title||('Вариант '+(i+1)))}<div class="onl-sub">${escTx(c.year||'')}</div></span><span class="go">›</span></button>`).join('') + '</div>';
@@ -2270,7 +2350,7 @@ function fxRenderSimilars(res){
   fxPush({render});
 }
 async function fxOpenCard(fid, title){
-  const box = $('#fxBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   box.innerHTML = '<div class="rz-load">Загружаю…</div>';
   try{
     const data = await fxGet('post/' + fid);
@@ -2292,7 +2372,7 @@ function fxRenderMovie(list, title){
     items.push({voice: f.translation || 'Озвучка', q, url: fxFileUrl(f.link, q)});
   });
   const render = ()=>{
-    const box = $('#fxBox');
+    const box = $('#actBox');
     if(!items.length){ box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; return; }
     box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">` +
       items.map((it,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(it.voice)}<div class="onl-sub">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
@@ -2309,7 +2389,7 @@ function fxRenderMovie(list, title){
 function fxRenderSeasons(playlist, title){
   const seasons = Object.keys(playlist).sort((a,b)=>parseInt(a)-parseInt(b));
   const render = ()=>{
-    const box = $('#fxBox');
+    const box = $('#actBox');
     box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">` +
       seasons.map((s,i)=>`<button class="onl-row" data-i="${i}"><span>${+s} сезон</span><span class="go">›</span></button>`).join('') + '</div>';
     fxBindBack();
@@ -2322,7 +2402,7 @@ function fxRenderSeasons(playlist, title){
 function fxRenderEpisodes(seasonObj, sNum, title){
   const eps = Object.keys(seasonObj).sort((a,b)=>parseInt(a)-parseInt(b));
   const render = ()=>{
-    const box = $('#fxBox');
+    const box = $('#actBox');
     box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')} · ${sNum} сезон</div><div class="onl-list">` +
       eps.map((e,i)=>`<button class="onl-row" data-i="${i}"><span>${+e} серия</span><span class="go">›</span></button>`).join('') + '</div>';
     fxBindBack();
@@ -2348,7 +2428,7 @@ function fxRenderVoices(epObj, sNum, eNum, title){
     });
   });
   const render = ()=>{
-    const box = $('#fxBox');
+    const box = $('#actBox');
     if(!voices.length){ box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; return; }
     box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')} · S${sNum}E${eNum}</div><div class="onl-list">` +
       voices.map((it,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(it.voice)}<div class="onl-sub">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
@@ -2364,7 +2444,7 @@ function fxRenderVoices(epObj, sNum, eNum, title){
 }
 
 async function findTorrents(m){
-  const box = $('#torBox'); if(!box) return;
+  const box = $('#actBox'); if(!box) return;
   torMovie = m || null;
   box.innerHTML = '<div class="tor-load">Ищу раздачи…</div>';
   const q = torQuery(m);
@@ -2409,7 +2489,7 @@ function openExternal(url){
 
 async function playTorrent(t, m){
   const ts = (state.tsUrl||'').replace(/\/+$/,'') || 'http://127.0.0.1:8090';
-  const box = $('#torBox');
+  const box = $('#actBox');
   toast('Подключаюсь к TorrServer…');
   try{ const e = await fetch(ts+'/echo', {cache:'no-store'}); if(!e.ok) throw 0; }
   catch(err){ toast('TorrServer не отвечает · проверь адрес в Профиле'); return; }
