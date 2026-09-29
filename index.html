@@ -339,18 +339,16 @@
   .fact span{display:block; font-size:11px; color:var(--muted); margin-bottom:2px}
   .fact b{display:block; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .rates{display:grid; grid-template-columns:1fr 1fr; gap:8px}
-  .rate-card{background:var(--card2); border-radius:14px; padding:12px; min-width:0}
+  .rate-card{background:linear-gradient(180deg,rgba(245,185,66,.12),rgba(245,185,66,.04)); border:1px solid rgba(245,185,66,.24); border-radius:16px; padding:14px; min-width:0; box-shadow:0 8px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08)}
   .rate-top{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px}
-  .rate-brand{font-size:11px; font-weight:800; letter-spacing:.6px}
-  .rate-card.kp .rate-brand{color:#ff5500}
-  .rate-card.tmdb .rate-brand{color:#4da3ff}
+  .rate-brand{font-size:11px; font-weight:800; letter-spacing:.8px; color:#ffcf7a}
   .rate-q{font-size:11px; color:var(--muted); white-space:nowrap}
-  .rate-score{font-size:26px; font-weight:800; line-height:1}
-  .rate-score small{font-size:13px; color:var(--muted); font-weight:600}
-  .rate-votes{font-size:11px; color:var(--muted); margin-top:4px}
+  .rate-score{font-size:28px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(245,185,66,.25)}
+  .rate-score small{font-size:13px; color:#d8a94e; font-weight:700}
+  .rate-votes{font-size:11px; color:var(--muted); margin-top:5px}
   .rate-votes b{color:var(--text)}
-  .rate-bar{height:5px; background:rgba(255,255,255,.08); border-radius:3px; margin-top:10px; overflow:hidden}
-  .rate-bar i{display:block; height:100%; width:0; border-radius:3px; transition:width .8s cubic-bezier(.22,.61,.36,1)}
+  .rate-bar{height:6px; background:rgba(0,0,0,.35); border-radius:4px; margin-top:10px; overflow:hidden}
+  .rate-bar i{display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#e8930c,#ffd98a); box-shadow:0 0 10px rgba(245,185,66,.65); transition:width .8s cubic-bezier(.22,.61,.36,1)}
   .rate-card.kp .rate-bar i{background:#ff5500}
   .rate-card.tmdb .rate-bar i{background:#4da3ff}
   .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
@@ -359,7 +357,7 @@
   .mv-play{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(5,10,20,.25)}
   .mv-play span{width:62px; height:62px; border-radius:50%; background:rgba(77,163,255,.94);
     display:flex; align-items:center; justify-content:center; box-shadow:0 8px 26px rgba(77,163,255,.45)}
-  .mv-play svg{width:24px; height:24px; fill:#fff; margin-left:3px}
+  .mv-play svg{width:24px; height:24px; fill:#fff; margin-left:2px}
   .mv-trailer iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
   .dir-card{display:flex; gap:14px; align-items:flex-start; cursor:pointer; margin-bottom:12px}
   .dir-card .ph{width:92px; height:122px; border-radius:14px; overflow:hidden; background:var(--card2);
@@ -384,13 +382,7 @@
     background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
   .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
 /* ---------- movie page · golden ---------- */
-.watch-main{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:17px; border:none; border-radius:20px; cursor:pointer;
-  font:inherit; font-size:17px; font-weight:800; color:#3a2200;
-  background:linear-gradient(135deg,#ffdf9e 0%,#f5b942 45%,#e8930c 100%);
-  box-shadow:0 10px 32px rgba(232,147,12,.35), inset 0 1px 0 rgba(255,255,255,.5);}
-.watch-main:active{transform:scale(.98)}
-.watch-main svg{width:22px; height:22px; fill:#3a2200}
-.watch-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px}
+.watch-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:0}
 .wcard{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:17px 8px 15px; border-radius:18px; cursor:pointer;
   font:inherit; color:var(--text);
   background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
@@ -413,9 +405,6 @@
 .desc-more{background:none; border:none; color:#f5b942; font:inherit; font-size:13.5px; font-weight:800; margin-top:9px; cursor:pointer; padding:0}
 .mv-watched{border:1px solid rgba(245,185,66,.35); color:#ffcf7a; background:rgba(245,185,66,.05)}
 .mv-watched.on{background:rgba(245,185,66,.16); border-color:#f5b942; color:#ffdf9e}
-.watch-opt{display:flex; align-items:center; gap:14px; width:100%; background:none; border:none; color:var(--text); font:inherit; font-size:15px; font-weight:700; padding:15px 6px; cursor:pointer; border-top:1px solid rgba(255,255,255,.07); text-align:left}
-.watch-opt svg{width:26px; height:26px; color:#ffcf7a; flex:none}
-.watch-opt small{display:block; color:var(--muted); font-weight:600; font-size:12px; margin-top:2px}
   /* ---------- rezka comments ---------- */
   #scr-rezka{background:#151718}
   .rz-page{min-height:100%; background:#151718; color:#fff; padding-bottom:90px}
@@ -823,7 +812,6 @@
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
   <div class="sheet-veil" id="qmodeVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title">Режим поиска</div><div id="qmodeList"></div></div></div>
-  <div class="sheet-veil" id="watchVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title">Смотреть</div><div id="watchList"></div></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
     <div class="sheet-title">Фильтры · Мне повезёт</div>
@@ -1655,10 +1643,9 @@ function renderMovie(m){
         <div class="mv-play"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></div>
       </div></div>`:''}
       <div class="mv-sec watch">
-        <button class="watch-main" id="watchMain"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Смотреть</button>
         <div class="watch-grid">
           <button class="wcard" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg><span>Найти раздачи</span></button>
-          <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg><span>Lumio</span></button>
+          <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffdf9e"/><stop offset="1" stop-color="#e8930c"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#3a2200"/></svg><span>Lumio</span></button>
           <button class="wcard" id="fxFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg><span>Filmix 4k</span></button>
           <button class="wcard" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Комментарии</span></button>
         </div>
@@ -1694,7 +1681,6 @@ function renderMovie(m){
     const cl = dd.classList.toggle('clamp');
     dm.innerHTML = cl ? 'Читать полностью ▾' : 'Скрыть ▴';
   };
-  const wm = $('#watchMain'); if(wm) wm.onclick = ()=>openWatchSheet(m);
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
   animBars();
   loadKpRating(m);
@@ -2045,29 +2031,6 @@ function openQmodeSheet(){
   });
 }
 $('#qmodeVeil').addEventListener('click', e=>{ if(e.target.id==='qmodeVeil') e.target.classList.remove('show'); });
-
-function openWatchSheet(m){
-  const ic = {
-    lumio: '<svg viewBox="0 0 64 64"><defs><linearGradient id="lumg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12D6DF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg3)"/><path d="M25 21v22l18-11-18-11z" fill="#fff"/></svg>',
-    fx: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg>',
-    tor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg>',
-  };
-  const opts = [
-    {id:'lumio', t:'Lumio', d:'Онлайн-источники', go:()=>onlFind(m)},
-    {id:'fx', t:'Filmix 4k', d:'Прямые mp4 · до 4K', go:()=>fxFind(m)},
-    {id:'tor', t:'Торренты', d:'Через TorrServer → VLC', go:()=>findTorrents(m)},
-  ];
-  $('#watchList').innerHTML = opts.map(o=>
-    `<button class="watch-opt" data-o="${o.id}">${ic[o.id]}<span>${o.t}<small>${o.d}</small></span></button>`
-  ).join('');
-  $('#watchVeil').classList.add('show');
-  $('#watchList').querySelectorAll('.watch-opt').forEach(b=>b.onclick=()=>{
-    $('#watchVeil').classList.remove('show');
-    const o = opts.find(x=>x.id===b.dataset.o);
-    if(o) o.go();
-  });
-}
-$('#watchVeil').addEventListener('click', e=>{ if(e.target.id==='watchVeil') e.target.classList.remove('show'); });
 
 function torBarHTML(n){
   const c = (k,label)=>{
