@@ -536,6 +536,14 @@
   .pl-icbtn.main{width:50px; height:50px; background:linear-gradient(135deg,#3b8cff,#7b5cff); border:none; box-shadow:0 8px 24px rgba(80,110,255,.5), inset 0 1px 0 rgba(255,255,255,.25)}
   .pl-icbtn.main svg{width:23px; height:23px; fill:#fff}
   .pl-icbtn.txt{color:#9cc8ff}
+  .pl-q{display:none; font-size:11px; font-weight:800; color:#9cc8ff; border:1px solid rgba(99,150,255,.4); background:rgba(59,140,255,.14); padding:4px 9px; border-radius:99px; margin-left:8px; flex:none}
+  .pl-q.show{display:inline-block}
+  .pl-info{position:absolute; left:16px; right:16px; bottom:118px; z-index:6; background:rgba(10,22,44,.94); border:1px solid rgba(99,150,255,.35); border-radius:18px; padding:4px 16px 12px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:0 16px 40px rgba(0,0,0,.5)}
+  .pl-info-h{display:flex; align-items:center; justify-content:space-between; padding:8px 0 4px; font-weight:800; font-size:14px; color:#fff}
+  .pl-info-x{background:none; border:none; color:#9cc8ff; font-size:17px; cursor:pointer; padding:6px}
+  .pl-info-row{display:flex; gap:10px; padding:8px 0; border-top:1px solid rgba(255,255,255,.07); font-size:13px}
+  .pl-info-row b{color:#7fa8d8; font-weight:700; min-width:88px; flex:none}
+  .pl-info-row span{color:#fff; word-break:break-word}
   .pl-center{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none}
   .pl-bigplay{width:88px; height:88px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#3b8cff,#7b5cff); box-shadow:0 10px 36px rgba(80,110,255,.55), inset 0 1px 0 rgba(255,255,255,.25); pointer-events:auto; transition:transform .15s, opacity .2s}
   .pl-bigplay:active{transform:scale(.93)}
@@ -783,14 +791,20 @@
             <button class="pl-icbtn" id="plRw" aria-label="-10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/><text x="12.5" y="17" text-anchor="middle" font-size="7.5" font-weight="800" fill="#cfe4ff" font-family="Manrope,system-ui,sans-serif">10</text></svg></button>
             <button class="pl-icbtn" id="plFf" aria-label="+10 секунд"><svg viewBox="0 0 24 24"><path d="M12 5V2l5 4-5 4V7a5 5 0 1 0 5 5h2a7 7 0 1 1-7-7z"/><text x="11.5" y="17" text-anchor="middle" font-size="7.5" font-weight="800" fill="#cfe4ff" font-family="Manrope,system-ui,sans-serif">10</text></svg></button>
             <div class="pl-time"><span id="plCur">0:00</span> / <span id="plDur">0:00</span></div>
+            <span class="pl-q" id="plQ"></span>
             <div class="pl-spacer"></div>
             <button class="pl-icbtn" id="plSubs" aria-label="Субтитры"><svg viewBox="0 0 24 24"><path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7.5c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1H10c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-2.5c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1H17c.55 0 1 .45 1 1v1z"/></svg></button>
             <button class="pl-icbtn txt" id="plRate" aria-label="Скорость">1×</button>
             <button class="pl-icbtn" id="plFs" aria-label="Во весь экран"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+            <button class="pl-icbtn" id="plInfo" aria-label="О файле"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
           </div>
         </div>
       </div>
       <div class="pl-menu" id="plMenu" style="display:none"></div>
+      <div class="pl-info" id="plInfoBox" style="display:none">
+        <div class="pl-info-h"><span>О файле</span><button class="pl-info-x" id="plInfoX" aria-label="Закрыть">✕</button></div>
+        <div id="plInfoRows"></div>
+      </div>
     </div>
   </div>
   <nav class="tabbar">
@@ -2199,19 +2213,26 @@ function onlRenderItems(items, title){
   box.querySelectorAll('.onl-row').forEach(btn=>{
     btn.onclick = ()=>{
       const it = items[+btn.dataset.i];
-      if(it.method==='play') onlPlay(it.url, it.title);
+      if(it.method==='play') onlPlay(it.url, it, title);
       else onlDrill(it.url, it.title);
     };
   });
 }
-function onlPlay(url, label){
+function onlPlay(url, it, srcTitle){
   const m = onlMovie || {};
-  const title = (m.title||'Онлайн') + (label ? ' · ' + label : '');
-  openPlayer(url, title, [], m);
+  it = it || {};
+  const title = (m.title||'Онлайн') + (it.title ? ' · ' + it.title : '');
+  openPlayer(url, title, [], m, {
+    file: it.title || '',
+    source: 'Lumio' + (srcTitle ? ' · ' + srcTitle : ''),
+    voice: it.voice || '',
+  });
 }
 
 /* ---------- Filmix ---------- */
 let fxMovie = null, fxStack = [], fxMaxQ = 720;
+function fxBaseName(u){ try{ return decodeURIComponent(String(u).split('?')[0].split('/').pop()) || ''; }catch(e){ return ''; } }
+function fxInfo(it){ return { file: fxBaseName(it.url), source: 'Filmix 4k', voice: it.voice || '', quality: it.q + 'p' }; }
 function fxProxy(){
   const p = (state.fxProxy||'').trim().replace(/\/+$/,'');
   return (p || 'https://cors.jacred.stream') + '/';
@@ -2343,7 +2364,7 @@ function fxRenderMovie(list, title){
     box.querySelectorAll('.onl-row').forEach(btn=>{
       btn.onclick = ()=>{
         const it = items[+btn.dataset.i];
-        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · ' + it.voice + ' ' + it.q + 'p', [], fxMovie);
+        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · ' + it.voice + ' ' + it.q + 'p', [], fxMovie, fxInfo(it));
       };
     });
   };
@@ -2399,7 +2420,7 @@ function fxRenderVoices(epObj, sNum, eNum, title){
     box.querySelectorAll('.onl-row').forEach(btn=>{
       btn.onclick = ()=>{
         const it = voices[+btn.dataset.i];
-        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · S' + sNum + 'E' + eNum + ' ' + it.voice + ' ' + it.q + 'p', [], fxMovie);
+        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · S' + sNum + 'E' + eNum + ' ' + it.voice + ' ' + it.q + 'p', [], fxMovie, fxInfo(it));
       };
     });
   };
@@ -2502,21 +2523,30 @@ function stopPlayer(){
   const t = $('#plTitle'); if(t) t.textContent = '';
   const e = $('#plErr'); if(e){ e.style.display='none'; e.textContent=''; }
   const m = $('#plMenu'); if(m) m.style.display='none';
+  const ib = $('#plInfoBox'); if(ib) ib.style.display='none';
+  plSetQ('');
   plSubsList = []; plCurSub = -1; plSetPlayIcon(false);
 }
-function openPlayer(url, title, subs, mv){
+function openPlayer(url, title, subs, mv, info){
   pushScreen('scr-player');
   $('#plTitle').textContent = title || '';
   plSubsList = subs || []; plCurSub = -1; plMovie = mv || null;
   plRetried = false; plClearStall(); plHideErr();
+  plInfoData = info || null; plSetQ((info && info.quality) || '');
+  const ib = $('#plInfoBox'); if(ib) ib.style.display = 'none';
   const v = $('#plVideo');
   v.querySelectorAll('track').forEach(t=>t.remove());
   const e = $('#plErr'); e.style.display='none'; e.textContent='';
   if(plHls){ try{plHls.destroy();}catch(_){} plHls = null; }
+  v.onloadedmetadata = ()=>{ if(v.videoWidth && v.videoHeight) plSetQ(plQLabel(v.videoWidth, v.videoHeight)); };
   if(/\.m3u8($|\?)/i.test(url) && window.Hls && Hls.isSupported()){
     plHls = new Hls({maxBufferLength:30});
     plHls.loadSource(url);
     plHls.attachMedia(v);
+    plHls.on(Hls.Events.LEVEL_SWITCHED, (ev,data)=>{
+      const lv = plHls.levels && plHls.levels[data.level];
+      if(lv) plSetQ(plQLabel(lv.width, lv.height) || (lv.bitrate ? Math.round(lv.bitrate/1000)+' кбит/с' : ''));
+    });
     plHls.on(Hls.Events.ERROR, (ev,data)=>{ if(!data.fatal) return;
       const e = $('#plErr');
       e.innerHTML = 'Поток недоступен 😕<br><span style="font-size:12px;opacity:.75">Попробуй другой источник или озвучку.<br>Тапни по экрану, чтобы скрыть.</span>';
@@ -2531,6 +2561,39 @@ function openPlayer(url, title, subs, mv){
 }
 let plHls = null;
 $('#plBack').onclick = ()=>{ stopPlayer(); goBack(); };
+
+/* ---------- свой плеер: качество и инфо о файле ---------- */
+let plInfoData = null, plQ = '';
+function plQLabel(w, h){
+  if(!w || !h) return '';
+  if(h >= 2100 || w >= 3800) return '4K';
+  if(h >= 1400) return '1440p';
+  if(h >= 1050) return '1080p';
+  if(h >= 700) return '720p';
+  if(h >= 470) return '480p';
+  return h + 'p';
+}
+function plSetQ(label){
+  plQ = label || '';
+  const el = $('#plQ');
+  if(el){ el.textContent = plQ; el.classList.toggle('show', !!plQ); }
+}
+function plRenderInfo(){
+  const box = $('#plInfoBox'), rows = $('#plInfoRows');
+  if(!box || !rows) return;
+  const v = $('#plVideo'), d = plInfoData || {};
+  const res = (v.videoWidth && v.videoHeight) ? v.videoWidth + '×' + v.videoHeight : '';
+  const list = [['Качество', [res, plQ || d.quality].filter(Boolean).join(' · ') || '—']];
+  if(d.file) list.push(['Файл', d.file]);
+  if(d.source) list.push(['Источник', d.source]);
+  if(d.voice) list.push(['Озвучка', d.voice]);
+  if(v.duration && isFinite(v.duration)) list.push(['Длительность', plFmt(v.duration)]);
+  if(d.size) list.push(['Размер', d.size]);
+  rows.innerHTML = list.map(r=>`<div class="pl-info-row"><b>${r[0]}</b><span>${escTx(String(r[1]))}</span></div>`).join('');
+  box.style.display = 'block';
+}
+$('#plInfo').onclick = ()=>{ plRenderInfo(); plShowUI(true); };
+$('#plInfoX').onclick = ()=>{ $('#plInfoBox').style.display = 'none'; plShowUI(true); };
 
 /* ---------- свой плеер: контролы ---------- */
 let plSubsList = [], plCurSub = -1, plHideT = null, plSeeking = false;
@@ -2556,6 +2619,7 @@ function plShowUI(sticky){
 }
 $('#plTap').addEventListener('click', ()=>{
   $('#plMenu').style.display='none';
+  $('#plInfoBox').style.display='none';
   const ui = $('#plUI');
   if(ui.classList.contains('hide')) plShowUI(); else ui.classList.add('hide');
 });
