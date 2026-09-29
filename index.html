@@ -424,7 +424,7 @@
 .wcard svg{width:28px; height:28px; color:#8dbcff; filter:drop-shadow(0 2px 8px rgba(77,163,255,.45))}
 .wcard span{font-size:13px; font-weight:700}
 .wcard-wide{grid-column:1/-1; flex-direction:row; justify-content:flex-start; align-items:center; gap:13px; padding:10px 16px 10px 11px; text-align:left}
-.alpac-ico{width:46px; height:46px; border-radius:13px; mix-blend-mode:screen; flex:none}
+.alpac-ico{width:46px; height:46px; border-radius:13px; flex:none}
 .alpac-tx{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; align-items:flex-start}
 .alpac-tx b{font-size:16.5px; font-weight:800; letter-spacing:.4px}
 .alpac-tx small{font-size:11.5px; color:var(--muted); font-weight:600}
@@ -1607,7 +1607,16 @@ function attachCatSentinel(){
 }
 async function openCategory(more){
   const grid = $('#catGrid');
-  $('#catTitle').textContent = more.title.toUpperCase().slice(0,22);
+  const ct = $('#catTitle');
+  if(more.type==='fav'){
+    ct.classList.add('brand');
+    ct.removeAttribute('style');
+    ct.innerHTML = escTx(more.title) + '<span class="dot">.</span>';
+  } else {
+    ct.classList.remove('brand');
+    ct.setAttribute('style','font-size:16px; letter-spacing:3px');
+    ct.textContent = more.title.toUpperCase().slice(0,22);
+  }
   saveScrollState();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('#scr-cat').classList.add('active');
@@ -1836,7 +1845,7 @@ function renderMovie(m){
       </div></div>`:''}
       <div class="mv-sec watch">
         <div class="watch-grid">
-          <button class="wcard wcard-wide" id="alpacFind"><img class="alpac-ico" src="alpac.jpg" alt=""><span class="alpac-tx"><b>Alpac</b><small id="alpacState">Онлайн · вход по QR</small></span><span class="alpac-go">›</span></button>
+          <button class="wcard wcard-wide" id="alpacFind"><img class="alpac-ico" src="alpac.png" alt=""><span class="alpac-tx"><b>Alpac</b><small id="alpacState">Онлайн · вход по QR</small></span><span class="alpac-go">›</span></button>
           <button class="wcard" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg><span>Найти раздачи</span></button>
           <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe0ff"/><stop offset="1" stop-color="#3b8cff"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#0a1c33"/></svg><span>Lumio</span></button>
           <button class="wcard" id="fxFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg><span>Filmix 4k</span></button>
