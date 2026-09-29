@@ -1800,10 +1800,32 @@ async function rzSearchId(name, year){
   try{ if(url) host = new URL(url).origin; }catch(e){}
   return { id: item.dataset.id, url, host };
 }
+let rzLastUrl = '';
+async function rzDiag(){
+  const W = rzBase();
+  const urls = [
+    ['1. Воркер', W + 'https://hdrezka-home.tv/'],
+    ['2. Ajax как в приложении', rzLastUrl || (W + 'https://hdrezka-home.tv/ajax/get_comments/?t=1&news_id=40288&cstart=1&type=0&comment_id=0&skin=hdrezka')],
+  ];
+  let out = '';
+  for(const [name, url] of urls){
+    try{
+      const r = await fetch(url, {headers:{'Content-Type':'text/plain'}});
+      const t = await r.text();
+      out += name + ' → HTTP ' + r.status + ', ' + t.length + ' байт\n';
+    }catch(e){ out += name + ' → ' + e.message + '\n'; }
+  }
+  return out;
+}
 async function rzCommentsHtml(found, cstart){
   const t = Date.now();
   const host = (found && found.host) || RZ_HOST;
   const path = host + '/ajax/get_comments/?t=' + t + '&news_id=' + found.id + '&cstart=' + (cstart||1) + '&type=0&comment_id=0&skin=hdrezka';
+  let url = rzBase();
+  if(state.rzCookie) url += 'param/Cookie=' + encodeURIComponent(state.rzCookie) + '/';
+  if(found.url) url += 'param/Referer=' + encodeURIComponent(found.url) + '/';
+  url += path;
+  rzLastUrl = url;
   let lastErr = null;
   for(let a=0; a<2; a++){
     try{
@@ -1993,9 +2015,16 @@ async function rzLoadComments(m){
     if(e.message==='bot'){
       list.innerHTML = '<div class="rz-empty">Rezka включила проверку «ты не бот».<br>Вставь свой Cookie с hdrezka в Профиле → Rezka.</div>';
     }else{
-      list.innerHTML = '<div class="rz-empty">Не получилось загрузить комментарии<br><span style="opacity:.45;font-size:12px">'+escTx(e.message||'unknown')+'</span><br><button class="rz-retry" id="rzRetry">Попробовать снова</button></div>';
+      list.innerHTML = '<div class="rz-empty">Не получилось загрузить комментарии<br><span style="opacity:.45;font-size:12px">'+escTx(e.message||'unknown')+'</span><br><button class="rz-retry" id="rzRetry">Попробовать снова</button> <button class="rz-retry" id="rzDiagBtn">Диагностика</button><div id="rzDiagOut" style="margin-top:12px;font-size:12px;line-height:1.6;white-space:pre-wrap;text-align:left;opacity:.75"></div></div>';
       const rb = document.getElementById('rzRetry');
       if(rb) rb.onclick = ()=>{ list.innerHTML = '<div class="rz-load">Загружаю комментарии…</div>'; rzLoadComments(m); };
+      const db = document.getElementById('rzDiagBtn');
+      if(db) db.onclick = async ()=>{
+        const o = document.getElementById('rzDiagOut');
+        if(o) o.textContent = 'Проверяю…';
+        try{ const res = await rzDiag(); if(o) o.textContent = res; }
+        catch(e){ if(o) o.textContent = 'diag: ' + e.message; }
+      };
     }
   }
 }
