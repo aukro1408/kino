@@ -2605,15 +2605,16 @@ async function alpacEvents(m, tok){
   if(j && j.accsdb) return {auth:j};
   if(j && j.life && j.memkey){
     for(let i=0;i<24;i++){
-      await new Promise(r2=>setTimeout(r2, 1500));
+      if(i>0) await new Promise(r2=>setTimeout(r2, 1500));
       if(!vwAlive(tok)) throw new Error('gone');
       let r3 = null;
-      try{ r3 = await fetch(ALPAC+'/lifeevents?memkey='+encodeURIComponent(j.memkey), {headers: alpacHeaders()}); }catch(_){ continue; }
+      try{ r3 = await fetch(ALPAC+'/lifeevents?memkey='+encodeURIComponent(j.memkey)+'&'+alpacAuthQS(), {headers: alpacHeaders()}); }catch(_){ continue; }
       if(!r3.ok) continue;
       const j3 = await r3.json().catch(()=>null);
       if(!j3) continue;
       if(j3.accsdb){ alpacSaveToken(j3); return {auth:j3}; }
-      if(!j3.life){ j = j3; break; }
+      const onl = Array.isArray(j3.online) ? j3.online : (Array.isArray(j3) ? j3 : []);
+      if(onl.length || j3.ready){ j = onl; break; }
     }
   }
   if(j && j.accsdb) return {auth:j};
