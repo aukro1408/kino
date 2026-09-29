@@ -400,8 +400,6 @@
 .wcard:active{transform:scale(.96)}
 .wcard svg{width:28px; height:28px; color:#ffcf7a}
 .wcard span{font-size:13px; font-weight:700}
-#actBox:empty{display:none}
-#actBox{margin-top:12px}
 .mv-genres i{border:1px solid rgba(245,185,66,.45); color:#ffcf7a; background:rgba(245,185,66,.08)}
 .mv-trailer{border-radius:20px; border:1px solid rgba(245,185,66,.18)}
 .mv-play span{background:rgba(20,12,4,.55); border:1.5px solid rgba(245,185,66,.65); backdrop-filter:blur(4px)}
@@ -467,23 +465,88 @@
     font:inherit; font-size:14px; font-weight:700}
   .rz-retry:active{transform:scale(.97)}
 
-  /* ---------- онлайн (Lumio) ---------- */
-  .onl-back{display:inline-flex; align-items:center; gap:6px; margin:0 0 10px; padding:8px 14px;
+  /* ---------- экран просмотра (источники) ---------- */
+  .vw-hero{position:relative; height:360px; overflow:hidden; background:var(--card2)}
+  .vw-bd{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  .vw-shade{position:absolute; inset:0; background:linear-gradient(to bottom, rgba(11,18,32,.30) 0%, rgba(11,18,32,.12) 35%, rgba(11,18,32,.90) 76%, var(--bg) 100%)}
+  .vw-top{position:absolute; top:0; left:0; right:0; z-index:3; display:flex; justify-content:space-between; padding:14px 14px 0}
+  .vw-btn{width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.22); background:rgba(8,12,22,.5);
+    color:#fff; font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+  .vw-btn:active{transform:scale(.92)}
+  .vw-info{position:absolute; left:20px; right:20px; bottom:0; z-index:2; padding-bottom:16px}
+  .vw-kicker{font-size:11px; font-weight:800; letter-spacing:2.5px; color:var(--accent2); text-transform:uppercase; margin-bottom:7px}
+  .vw-title{font-size:28px; line-height:1.12; font-weight:800; letter-spacing:-.2px; text-shadow:0 2px 12px rgba(0,0,0,.7)}
+  .vw-badges{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap}
+  .vw-q{background:linear-gradient(135deg,#3b8cff,#7b5cff); color:#fff; font-size:11px; font-weight:800;
+    padding:4px 10px; border-radius:8px; letter-spacing:.5px}
+  .vw-meta{font-size:13.5px; color:rgba(255,255,255,.88); font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .vw-meta .rate{color:var(--star); font-weight:800}
+  .vw-watch{margin-top:14px; width:100%; padding:16px; border:none; border-radius:18px; cursor:pointer;
+    background:linear-gradient(135deg,#3b8cff,#7b5cff); color:#fff;
+    font:inherit; font-size:16px; font-weight:800; letter-spacing:.2px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    box-shadow:0 12px 30px rgba(70,110,255,.40), inset 0 1px 0 rgba(255,255,255,.25)}
+  .vw-watch:active{transform:scale(.98)}
+  .vw-watch svg{width:18px; height:18px; fill:#fff}
+  .vw-watch small{font-weight:600; opacity:.85; font-size:13px}
+  .vw-sub{margin-top:10px; font-size:12.5px; color:rgba(255,255,255,.68); font-weight:600; line-height:1.5}
+  .vw-sub b{color:#fff}
+  .vw-body{padding:8px 16px 0}
+  .vw-pills{display:flex; gap:8px; overflow-x:auto; padding:4px 0 14px; scrollbar-width:none}
+  .vw-pills::-webkit-scrollbar{display:none}
+  .vw-pill{flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:11px 15px; border-radius:14px;
+    background:var(--card); border:1px solid rgba(255,255,255,.10); color:var(--text);
+    font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; max-width:230px}
+  .vw-pill:active{transform:scale(.96)}
+  .vw-pill .pv{color:var(--accent2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .vw-pill .pd{color:var(--muted); font-size:11px; flex:0 0 auto}
+  .vw-sec-t{font-size:12.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; margin:8px 2px 12px}
+  .vw-list{display:flex; flex-direction:column; gap:10px}
+  .vw-ep{display:flex; gap:13px; align-items:center; padding:10px; border-radius:18px; cursor:pointer; text-align:left; width:100%;
+    background:var(--card); border:1px solid rgba(255,255,255,.07); color:var(--text); font:inherit}
+  .vw-ep:active{transform:scale(.98); border-color:rgba(77,163,255,.4)}
+  .vw-thumb{position:relative; width:104px; height:72px; flex:0 0 auto; border-radius:12px; overflow:hidden;
+    background:linear-gradient(135deg,#1d2f55,#31497e); display:flex; align-items:center; justify-content:center}
+  .vw-thumb img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  .vw-num{font-size:30px; font-weight:800; color:rgba(255,255,255,.92); text-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .vw-epbody{flex:1; min-width:0}
+  .vw-ept{font-size:14.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .vw-eps{font-size:12px; color:var(--muted); font-weight:600; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .vw-eps .rate{color:var(--star); font-weight:800}
+  .vw-side{display:flex; flex-direction:column; align-items:flex-end; gap:7px; flex:0 0 auto}
+  .vw-playb{width:42px; height:42px; border-radius:50%; border:none; cursor:pointer; flex:0 0 auto;
+    background:linear-gradient(135deg,#3b8cff,#7b5cff); display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 16px rgba(70,110,255,.35)}
+  .vw-playb:active{transform:scale(.92)}
+  .vw-playb svg{width:16px; height:16px; fill:#fff}
+  .vw-qb{font-size:10.5px; font-weight:800; color:#8dbcff; background:rgba(77,163,255,.14);
+    border:1px solid rgba(77,163,255,.35); padding:3px 8px; border-radius:7px; white-space:nowrap}
+  .vw-prog{height:3px; border-radius:2px; background:rgba(255,255,255,.10); margin-top:8px; overflow:hidden}
+  .vw-prog i{display:block; height:100%; background:linear-gradient(90deg,#3b8cff,#7b5cff); border-radius:2px}
+  .vw-done{color:#7ee2a8; font-size:12px; font-weight:800}
+  .vw-voice{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+    padding:15px 16px; border-radius:16px; cursor:pointer; text-align:left;
+    border:1px solid rgba(255,255,255,.09); background:var(--card); color:#fff; font:inherit; font-size:14px; font-weight:700}
+  .vw-voice:active{transform:scale(.98)}
+  .vw-voice .vs{font-size:12px; color:var(--muted); font-weight:600; margin-top:2px}
+  .vw-voice .pl{width:36px; height:36px; flex:0 0 auto; border-radius:50%;
+    background:linear-gradient(135deg,#3b8cff,#7b5cff); display:flex; align-items:center; justify-content:center}
+  .vw-voice .pl svg{width:15px; height:15px; fill:#fff}
+  .vw-load{text-align:center; color:var(--muted); padding:34px 18px; font-size:14px; line-height:1.7}
+  .vw-backline{display:inline-flex; align-items:center; gap:6px; margin:0 0 12px; padding:9px 15px;
     border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
     color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer}
-  .onl-back:active{transform:scale(.97)}
-  .onl-crumb{font-size:12.5px; color:var(--muted); font-weight:700; margin:0 0 10px; display:block}
-  .onl-list{display:flex; flex-direction:column; gap:8px}
-  .onl-row{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
-    padding:14px 16px; border-radius:16px; cursor:pointer; text-align:left;
-    border:1px solid rgba(255,255,255,.09); background:var(--card); color:#fff;
-    font:inherit; font-size:14px; font-weight:700}
-  .onl-row:active{transform:scale(.98)}
-  .onl-row .go{color:var(--muted); font-size:18px; line-height:1}
-  .onl-row .pl{width:34px; height:34px; flex:0 0 auto; border-radius:50%;
-    background:linear-gradient(135deg,#3b8cff,#7b5cff); display:flex; align-items:center; justify-content:center}
-  .onl-row .pl svg{width:15px; height:15px; fill:#fff}
-  .onl-sub{font-size:12px; color:var(--muted); font-weight:600; margin-top:2px}
+  .vw-backline:active{transform:scale(.97)}
+  .opt-row{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+    padding:14px 16px; border-radius:14px; cursor:pointer; text-align:left;
+    border:1px solid rgba(255,255,255,.08); background:var(--card); color:var(--text);
+    font:inherit; font-size:14px; font-weight:700; margin-bottom:8px}
+  .opt-row:active{transform:scale(.98)}
+  .opt-row.on{border-color:rgba(77,163,255,.55); background:rgba(77,163,255,.12)}
+  .opt-row .chk{color:var(--accent2); font-weight:800; opacity:0}
+  .opt-row.on .chk{opacity:1}
+  .opt-row small{display:block; font-size:11.5px; color:var(--muted); font-weight:600; margin-top:2px}
   @media (max-width:600px){
     .rz-head{height:230px}
     .rz-info{left:16px; right:16px; bottom:16px}
@@ -502,12 +565,6 @@
     box-shadow:0 10px 28px rgba(90,110,255,.38), inset 0 1px 0 rgba(255,255,255,.25)}
   .tor-find:active{transform:scale(.98)}
   .tor-find svg{width:19px; height:19px; flex:0 0 auto}
-  .tor-bar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 2px 12px}
-  .tor-count{font-size:12.5px; color:var(--muted); font-weight:700; white-space:nowrap}
-  .tor-chips{display:flex; gap:6px}
-  .tor-chip{padding:8px 13px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
-    background:var(--card); color:var(--muted); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer}
-  .tor-chip.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
   .tor-pills{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px}
   .tpill{display:inline-block; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:800; letter-spacing:.3px}
   .tpill.res{background:rgba(77,163,255,.16); color:#8dbcff; border:1px solid rgba(77,163,255,.35)}
@@ -522,16 +579,6 @@
   .tor-m{display:flex; gap:12px; align-items:center; font-size:12px; color:var(--muted); margin-top:7px; flex-wrap:wrap}
   .tor-m .seeds{color:#7ee2a8; font-weight:800}
   .tor-m .trk{margin-left:auto; opacity:.75; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .tor-load{text-align:center; color:var(--muted); padding:18px; font-size:13.5px}
-  .tor-qmode{display:flex; align-items:center; gap:8px; margin:12px 2px 0; font-size:13px; color:var(--muted); cursor:pointer; padding:6px 2px}
-  .tor-qmode b{color:var(--accent2); font-weight:800}
-  .tor-qmode .qc{opacity:.6; font-size:11px}
-  .tor-q{font-size:11.5px; color:var(--muted); margin:8px 2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .tor-q b{color:var(--text); font-weight:700}
-  .qm-opt{display:flex; align-items:center; justify-content:space-between; width:100%; background:none; border:none; color:var(--text); font:inherit; font-size:15px; font-weight:700; padding:14px 6px; cursor:pointer; border-top:1px solid rgba(255,255,255,.07)}
-  .qm-opt .chk{color:var(--accent2); font-size:18px; font-weight:800; opacity:0}
-  .qm-opt.on{color:var(--accent2)}
-  .qm-opt.on .chk{opacity:1}
   /* ---------- player (свой, blackroom) ---------- */
   #scr-player{background:#000; padding-bottom:0; overflow:hidden}
   .tabbar.hide{display:none}
@@ -788,6 +835,7 @@
   <div class="screen" id="scr-movie"></div>
   <div class="screen" id="scr-person"></div>
   <div class="screen" id="scr-rezka"></div>
+  <div class="screen" id="scr-view"></div>
   <div class="screen" id="scr-player">
     <div class="pl-stage" id="plStage">
       <video id="plVideo" playsinline preload="metadata"></video>
@@ -841,7 +889,7 @@
       Профиль</button>
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
-  <div class="sheet-veil" id="qmodeVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title">Режим поиска</div><div id="qmodeList"></div></div></div>
+  <div class="sheet-veil" id="optVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title" id="optTitle"></div><div id="optList"></div></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
     <div class="sheet-title">Фильтры · Мне повезёт</div>
@@ -1573,6 +1621,9 @@ function showScreen(id, restore){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', 'scr-'+t.dataset.tab===id));
   const tb = document.querySelector('.tabbar'); if(tb) tb.classList.toggle('hide', id==='scr-player');
   const sc = document.getElementById(id); if(sc) sc.scrollTop = restore ? (scrollMem[id]||0) : 0;
+  if(restore && id==='scr-view' && vw && typeof vw.render==='function'){
+    try{ vw.render(); }catch(e){}
+  }
   if(restore && id==='scr-home'){
     document.querySelectorAll('#scr-home .hrow').forEach((r,i)=>{ if(hrowMem[i]) r.scrollLeft = hrowMem[i]; });
   }
@@ -1724,8 +1775,6 @@ function renderMovie(m){
           <button class="wcard" id="fxFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg><span>Filmix 4k</span></button>
           <button class="wcard" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Комментарии</span></button>
         </div>
-        <div class="tor-qmode" id="torQmode">Запрос: <b id="torQmodeName"></b><span class="qc">▾</span></div>
-        <div id="actBox"></div>
       </div>
       <div class="mv-sec"><h3>${m.media==='tv'?'О сериале':'О фильме'}</h3><p class="mv-desc clamp" id="mvDesc">${m.desc}</p><button class="desc-more" id="descMore">Читать полностью ▾</button></div>
       ${facts.length?`<div class="mv-sec"><div class="facts">${facts.map(f=>f[2]
@@ -1762,12 +1811,10 @@ function renderMovie(m){
   box.querySelectorAll('.fact.link').forEach(f=>f.onclick=()=>openCategory({type:f.dataset.kind, coId:f.dataset.id, title:f.dataset.name}));
   animBars();
   loadKpRating(m);
-  const tf = $('#torFind'); if(tf) tf.onclick = ()=>findTorrents(m);
+  const tf = $('#torFind'); if(tf) tf.onclick = ()=>openView('tor', m);
   const rzo = $('#rzOpen'); if(rzo) rzo.onclick = ()=>openRezka(m);
-  const onf = $('#onlFind'); if(onf) onf.onclick = ()=>onlFind(m);
-  const fxf = $('#fxFind'); if(fxf) fxf.onclick = ()=>fxFind(m);
-  const tqn = $('#torQmodeName'); if(tqn) tqn.textContent = torQmodeName();
-  const tqm = $('#torQmode'); if(tqm) tqm.onclick = openQmodeSheet;
+  const onf = $('#onlFind'); if(onf) onf.onclick = ()=>openView('lumio', m);
+  const fxf = $('#fxFind'); if(fxf) fxf.onclick = ()=>openView('fx', m);
 }
 
 /* =================== REZKA COMMENTS =================== */
@@ -2141,54 +2188,6 @@ function torYearOK(title, year){
   if(!years.length) return true;
   return years.includes(year);
 }
-function openQmodeSheet(){
-  $('#qmodeList').innerHTML = TOR_QMODES.map(o=>
-    `<button class="qm-opt ${state.torQ===o.id?'on':''}" data-m="${o.id}"><span>${o.t}</span><span class="chk">✓</span></button>`
-  ).join('');
-  $('#qmodeVeil').classList.add('show');
-  $('#qmodeList').querySelectorAll('.qm-opt').forEach(b=>b.onclick=()=>{
-    state.torQ = b.dataset.m; LS.set('tor_qmode', state.torQ);
-    const n = $('#torQmodeName'); if(n) n.textContent = torQmodeName();
-    $('#qmodeVeil').classList.remove('show');
-  });
-}
-$('#qmodeVeil').addEventListener('click', e=>{ if(e.target.id==='qmodeVeil') e.target.classList.remove('show'); });
-
-function torBarHTML(n){
-  const c = (k,label)=>{
-    const on = torSort.key===k ? ' on' : '';
-    const arrow = (k==='size' && torSort.key==='size') ? (torSort.dir===-1 ? ' ↓' : ' ↑') : '';
-    return `<button class="tor-chip${on}" data-s="${k}">${label}${arrow}</button>`;
-  };
-  return `<div class="tor-bar"><span class="tor-count">${n} ${plural(n,'раздача','раздачи','раздач')}</span><div class="tor-chips">${c('top','Топ')}${c('seeds','Сиды')}${c('quality','Качество')}${c('size','Размер')}</div></div>${torLastQ?`<div class="tor-q">Запрос: <b>${escTx(torLastQ)}</b></div>`:''}<div id="torList"></div>`;
-}
-function bindTorChips(box){
-  box.querySelectorAll('.tor-chip').forEach(el=>el.onclick=()=>{
-    const k = el.dataset.s;
-    if(k==='size' && torSort.key==='size') torSort.dir *= -1;
-    else torSort = {key:k, dir:-1};
-    box.innerHTML = torBarHTML(torCache.length);
-    bindTorChips(box); renderTorList();
-  });
-}
-function renderTorList(){
-  const list = $('#torList'); if(!list) return;
-  const arr = torSorted();
-  let topIdx = -1, topScore = -1;
-  if(arr.length){
-    arr.forEach(t=>{ const s = torScore(t); if(s>topScore){ topScore = s; topIdx = torCache.indexOf(t); } });
-  }
-  list.innerHTML = arr.map(t=>{
-    const i = torCache.indexOf(t);
-    return `<div class="tor-item" data-i="${i}">
-      <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
-      ${torPills(t, i===topIdx)}
-      <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
-    </div>`;
-  }).join('');
-  list.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>playTorrent(torCache[+el.dataset.i], torMovie));
-}
-
 function jacQueryURL(base, key, q){
   return base.replace(/\/+$/,'') + '/api/v2.0/indexers/all/results?Query=' + encodeURIComponent(q)
     + (key ? '&apikey=' + encodeURIComponent(key) : '');
@@ -2211,9 +2210,95 @@ async function jacSearch(q){
   throw lastErr || new Error('noresults');
 }
 
-/* ---------- онлайн (Lumio / mitsu.tv) ---------- */
+/* =================== ЭКРАН ПРОСМОТРА =================== */
 const MITSU = 'https://beta.mitsu.tv/api';
-let onlMovie = null, onlStack = [];
+const VW_NAMES = {tor:'Торренты', lumio:'Lumio', fx:'Filmix 4k'};
+let vw = null;
+
+/* --- просмотренные серии --- */
+function vwGetW(){ return LS.get('vw', {}); }
+function vwMarkW(mid, key){
+  const w = vwGetW(); const a = w[mid] || [];
+  if(a.indexOf(key)===-1){ a.push(key); w[mid] = a; LS.set('vw', w); }
+}
+function vwIsW(mid, key){ const w = vwGetW(); return (w[mid]||[]).indexOf(key)!==-1; }
+function vwCountW(mid, total){ const w = vwGetW(); return Math.min((w[mid]||[]).length, total||0); }
+
+/* --- общая шторка выбора --- */
+let optCb = null;
+function openOptSheet(title, opts, cur, cb){
+  const t = $('#optTitle'), l = $('#optList');
+  if(!t || !l) return;
+  t.textContent = title;
+  l.innerHTML = opts.map((o,i)=>
+    `<button class="opt-row${i===cur?' on':''}" data-i="${i}"><span>${escTx(o.t)}${o.s?`<small>${escTx(o.s)}</small>`:''}</span><span class="chk">✓</span></button>`
+  ).join('');
+  optCb = cb;
+  $('#optVeil').classList.add('show');
+  l.querySelectorAll('.opt-row').forEach(b=>b.onclick=()=>{
+    $('#optVeil').classList.remove('show');
+    if(optCb) optCb(+b.dataset.i);
+  });
+}
+$('#optVeil').addEventListener('click', e=>{ if(e.target.id==='optVeil') e.target.classList.remove('show'); });
+
+/* --- каркас экрана --- */
+function vwShellHTML(){
+  const m = vw.m;
+  return `
+  <div class="vw-hero">
+    ${m.backdrop?`<img class="vw-bd" src="${IMG}w780${m.backdrop}" alt="">`:''}
+    <div class="vw-shade"></div>
+    <div class="vw-top">
+      <button class="vw-btn" id="vwBack">‹</button>
+      <button class="vw-btn" id="vwX">✕</button>
+    </div>
+    <div class="vw-info">
+      <div class="vw-kicker">${VW_NAMES[vw.kind]||''}</div>
+      <div class="vw-title">${escTx(m.title)}</div>
+      <div class="vw-badges">
+        <span class="vw-q" id="vwQ" style="display:none"></span>
+        <span class="vw-meta"><span class="rate">★ ${m.rating||'—'}</span> · ${m.year||''}${m.runtime?` · ${m.runtime} мин`:''}${m.seasons?` · ${m.seasons} ${plural(m.seasons,'сезон','сезона','сезонов')}`:''}</span>
+      </div>
+      <button class="vw-watch" id="vwWatch" style="display:none"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span id="vwWatchT">Смотреть</span></button>
+      <div class="vw-sub" id="vwSub"></div>
+    </div>
+  </div>
+  <div class="vw-body">
+    <div class="vw-pills" id="vwPills"></div>
+    <div id="vwList"></div>
+  </div>`;
+}
+function openView(kind, m){
+  vw = {kind, m, token: Math.random()};
+  pushScreen('scr-view');
+  const sc = $('#scr-view');
+  sc.innerHTML = vwShellHTML();
+  $('#vwBack').onclick = goBack;
+  $('#vwX').onclick = goBack;
+  if(kind==='tor') vwTorInit();
+  else if(kind==='lumio') vwLumioInit();
+  else if(kind==='fx') vwFxInit();
+}
+function vwAlive(tok){ return vw && vw.token===tok; }
+function vwLoading(t){ const l = $('#vwList'); if(l) l.innerHTML = `<div class="vw-load">${t||'Загружаю…'}</div>`; }
+function vwEmpty(t){ const l = $('#vwList'); if(l) l.innerHTML = `<div class="vw-load">${t||'Ничего не нашлось 😕'}</div>`; }
+function vwPillsHTML(pills){
+  const el = $('#vwPills'); if(!el) return;
+  el.innerHTML = pills.map((p,i)=>`<button class="vw-pill" data-i="${i}">${escTx(p.label)} <span class="pv">${escTx(p.value)}</span><span class="pd">▾</span></button>`).join('');
+  el.querySelectorAll('.vw-pill').forEach(b=>b.onclick=()=>pills[+b.dataset.i].onPick());
+}
+function vwSetWatch(label, onclick){
+  const w = $('#vwWatch'); if(!w) return;
+  if(!label){ w.style.display='none'; w.onclick=null; return; }
+  w.style.display='flex';
+  $('#vwWatchT').textContent = label;
+  w.onclick = onclick;
+}
+function vwSetSub(html){ const s = $('#vwSub'); if(s) s.innerHTML = html||''; }
+function vwSetQ(q){ const e = $('#vwQ'); if(!e) return; if(q){ e.style.display=''; e.textContent=q; } else e.style.display='none'; }
+
+/* =================== LUMIO =================== */
 function onlCleanName(s){
   return String(s||'').replace(/<[^>]*>/g,'').trim();
 }
@@ -2227,25 +2312,6 @@ function onlParams(m){
   q.push('source=tmdb');
   q.push('rchtype=');
   return q.join('&');
-}
-function onlReset(){
-  onlMovie = null; onlStack = [];
-}
-async function onlFind(m){
-  const box = $('#actBox'); if(!box) return;
-  onlMovie = m; onlStack = [];
-  box.innerHTML = '<div class="rz-load">Ищу источники…</div>';
-  try{
-    const r = await fetch(MITSU + '/lite/events?life=false&' + onlParams(m));
-    if(!r.ok) throw new Error('http');
-    const arr = await r.json();
-    const srcs = (Array.isArray(arr)?arr:[]).filter(s=>s && s.show!==false && s.url);
-    if(!srcs.length){ box.innerHTML = '<div class="rz-empty">Источников не нашлось 😕</div>'; return; }
-    onlStack = [{kind:'srcs', title:'Источники', srcs}];
-    onlRenderSrcs(srcs);
-  }catch(e){
-    box.innerHTML = '<div class="rz-empty">Не получилось связаться с источником 😕</div>';
-  }
 }
 function onlParse(html){
   const dom = new DOMParser().parseFromString(html, 'text/html');
@@ -2264,75 +2330,150 @@ function onlParse(html){
   });
   return out;
 }
-async function onlDrill(url, title){
-  const box = $('#actBox'); if(!box) return;
-  box.innerHTML = '<div class="rz-load">Загружаю…</div>';
+async function vwLumioInit(){
+  const tok = vw.token, m = vw.m;
+  vw.srcs = []; vw.srcIdx = 0; vw.seasons = []; vw.seasonIdx = 0; vw.eps = [];
+  vwPillsHTML([]); vwSetWatch(null); vwSetSub(''); vwSetQ('');
+  vwLoading('Ищу источники…');
+  try{
+    const r = await fetch(MITSU + '/lite/events?life=false&' + onlParams(m));
+    if(!r.ok) throw new Error('http');
+    const arr = await r.json();
+    const srcs = (Array.isArray(arr)?arr:[]).filter(s=>s && s.show!==false && s.url);
+    if(!vwAlive(tok)) return;
+    if(!srcs.length){ vwEmpty('Источников не нашлось 😕'); return; }
+    vw.srcs = srcs;
+    vwLumioLoad(0, tok);
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Не получилось связаться с источником 😕'); }
+}
+async function vwLumioLoad(srcIdx, tok){
+  vw.srcIdx = srcIdx;
+  const s = vw.srcs[srcIdx];
+  const url = s.url + (s.url.includes('?')?'&':'?') + onlParams(vw.m);
+  vwLoading('Загружаю…');
   try{
     const r = await fetch(url);
     if(!r.ok) throw new Error('http');
     const items = onlParse(await r.text());
-    if(!items.length){ box.innerHTML = '<div class="rz-empty">Тут пусто 😕</div>'; return; }
-    onlStack.push({kind:'items', title, url, items});
-    onlRenderItems(items, title);
-  }catch(e){
-    box.innerHTML = '<div class="rz-empty">Ошибка загрузки 😕</div>';
+    if(!vwAlive(tok)) return;
+    if(!items.length){ vwEmpty('Тут пусто 😕'); return; }
+    if(items[0].method==='play'){ vw.voices = items; vwLumioRenderVoices(); }
+    else { vw.seasons = items; vw.seasonIdx = 0; vwLumioLoadSeason(0, tok); }
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Ошибка загрузки 😕'); }
+}
+async function vwLumioLoadSeason(si, tok){
+  vw.seasonIdx = si;
+  vwLoading('Загружаю серии…');
+  try{
+    const r = await fetch(vw.seasons[si].url);
+    if(!r.ok) throw new Error('http');
+    const items = onlParse(await r.text());
+    if(!vwAlive(tok)) return;
+    vw.eps = items;
+    vwLumioRenderEps();
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Ошибка загрузки 😕'); }
+}
+function vwSrcName(s, i){ return onlCleanName(s.name) || ('Источник '+(i+1)); }
+function vwSeasonName(sn, i){
+  const t = onlCleanName(sn.title||'');
+  const mm = t.match(/(\d+)/);
+  return mm ? mm[1]+' сезон' : (t || ((i+1)+' сезон'));
+}
+function vwEpName(ep, i){
+  const t = onlCleanName(ep.title||'');
+  const mm = t.match(/(\d+)/);
+  return {num: mm?mm[1]:String(i+1), title: t||('Серия '+(i+1))};
+}
+function vwLumioPills(){
+  const pills = [];
+  pills.push({label:'Источник', value: vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx),
+    onPick: ()=>openOptSheet('Источник', vw.srcs.map((x,i)=>({t: vwSrcName(x,i), s: onlCleanName(x.balanser||'')})), vw.srcIdx,
+      i=>{ if(i!==vw.srcIdx) vwLumioLoad(i, vw.token); })});
+  if(vw.seasons && vw.seasons.length){
+    pills.push({label:'Сезон', value: vwSeasonName(vw.seasons[vw.seasonIdx], vw.seasonIdx),
+      onPick: ()=>openOptSheet('Сезон', vw.seasons.map((x,i)=>({t: vwSeasonName(x,i)})), vw.seasonIdx,
+        i=>{ if(i!==vw.seasonIdx) vwLumioLoadSeason(i, vw.token); })});
   }
+  vwPillsHTML(pills);
 }
-function onlBack(){
-  onlStack.pop();
-  const top = onlStack[onlStack.length-1];
-  if(!top){ onlReset(); const box = $('#actBox'); if(box) box.innerHTML=''; return; }
-  if(top.kind==='srcs') onlRenderSrcs(top.srcs);
-  else onlRenderItems(top.items, top.title);
+function vwLumioRenderEps(){
+  if(!vw || vw.kind!=='lumio') return;
+  vwLumioPills();
+  const m = vw.m, sNum = vw.seasonIdx;
+  const total = vw.eps.length;
+  const watched = vwCountW('l'+m.id, total);
+  let target = vw.eps.findIndex((e,i)=>!vwIsW('l'+m.id, 's'+sNum+'e'+i));
+  if(target===-1) target = 0;
+  const epT = vw.eps.length ? vwEpName(vw.eps[target], target) : null;
+  vwSetWatch(epT ? 'Смотреть · '+epT.num+' серия' : null, epT ? ()=>vwLumioPlayEp(target) : null);
+  vwSetSub(`<b>${escTx(vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx))}</b> · ${escTx(vwSeasonName(vw.seasons[vw.seasonIdx], vw.seasonIdx))}<br>Просмотрено ${watched} из ${total} · осталось ${total-watched}`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Серии · ${total}</div><div class="vw-list">` + vw.eps.map((e,i)=>{
+    const et = vwEpName(e, i);
+    const w = vwIsW('l'+m.id, 's'+sNum+'e'+i);
+    return `<button class="vw-ep" data-i="${i}">
+      <span class="vw-thumb"><span class="vw-num">${escTx(et.num)}</span></span>
+      <span class="vw-epbody">
+        <span class="vw-ept">${escTx(et.title)}</span>
+        <span class="vw-eps">${e.voice?escTx(e.voice):(e.method==='play'?'смотреть':'')}</span>
+        <span class="vw-prog"><i style="width:${w?100:0}%"></i></span>
+      </span>
+      <span class="vw-side">
+        <span class="vw-playb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        ${w?'<span class="vw-done">✓</span>':''}
+      </span>
+    </button>`;
+  }).join('') + '</div>';
+  el.querySelectorAll('.vw-ep').forEach(b=>b.onclick=()=>vwLumioPlayEp(+b.dataset.i));
+  vw.render = vwLumioRenderEps;
 }
-function onlHead(){
-  return onlStack.length > 1
-    ? `<button class="onl-back" id="onlBack">‹ Назад</button>`
-    : `<button class="onl-back" id="onlBack">‹ Закрыть</button>`;
+async function vwLumioPlayEp(ei){
+  const tok = vw.token;
+  const ep = vw.eps[ei]; if(!ep) return;
+  vwLoading('Загружаю озвучки…');
+  try{
+    let voices;
+    if(ep.method==='play') voices = [{title: ep.title, voice: ep.voice, url: ep.url}];
+    else {
+      const r = await fetch(ep.url);
+      if(!r.ok) throw new Error('http');
+      voices = onlParse(await r.text()).filter(i=>i.method==='play');
+    }
+    if(!vwAlive(tok)) return;
+    if(!voices.length){ vwEmpty('Озвучек не нашлось 😕'); setTimeout(()=>{ if(vwAlive(tok)) vwLumioRenderEps(); }, 1200); return; }
+    if(voices.length===1){ vwLumioPlay(voices[0], ei); return; }
+    vw.voices = voices; vw.epIdx = ei;
+    vwLumioRenderVoices();
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Ошибка загрузки 😕'); }
 }
-function onlBindBack(){
-  const b = $('#onlBack'); if(b) b.onclick = onlBack;
-}
-function onlRenderSrcs(srcs){
-  const box = $('#actBox'); if(!box) return;
-  box.innerHTML = '<div class="onl-list">' + srcs.map((s,i)=>
-    `<button class="onl-row" data-i="${i}"><span>${escTx(onlCleanName(s.name)||('Источник '+(i+1)))}${s.balanser?`<div class="onl-sub">${escTx(s.balanser)}</div>`:''}</span><span class="go">›</span></button>`
-  ).join('') + '</div>';
-  box.querySelectorAll('.onl-row').forEach(btn=>{
-    btn.onclick = ()=>{
-      const s = srcs[+btn.dataset.i];
-      const url = s.url + (s.url.includes('?')?'&':'?') + onlParams(onlMovie);
-      onlStack = [{kind:'srcs', title:'Источники', srcs}];
-      onlDrill(url, s.name);
-    };
-  });
-}
-function onlRenderItems(items, title){
-  const box = $('#actBox'); if(!box) return;
-  box.innerHTML = onlHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">'` +
+function vwLumioRenderVoices(){
+  if(!vw || vw.kind!=='lumio') return;
+  vwLumioPills();
+  const items = vw.voices, m = vw.m;
+  const isTv = m.media==='tv';
+  const epT = (isTv && vw.eps && vw.eps[vw.epIdx]) ? vwEpName(vw.eps[vw.epIdx], vw.epIdx) : null;
+  vwSetWatch(isTv?null:'Смотреть', isTv?null:()=>vwLumioPlay(items[0], -1));
+  vwSetSub(`<b>${escTx(vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx))}</b>` +
+    (isTv && epT ? ` · ${escTx(vwSeasonName(vw.seasons[vw.seasonIdx], vw.seasonIdx))} · серия ${escTx(epT.num)}` : ''));
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = (isTv?`<button class="vw-backline" id="vwToEps">‹ Серии</button>`:'') +
+    `<div class="vw-sec-t">Озвучка${epT?' · серия '+escTx(epT.num):''}</div><div class="vw-list">` +
     items.map((it,i)=>{
-      if(it.method==='play'){
-        const sub = it.voice && it.voice!==it.title ? `<div class="onl-sub">${escTx(it.voice)}</div>` : '';
-        return `<button class="onl-row" data-i="${i}"><span>${escTx(it.title)}${sub}</span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`;
-      }
-      return `<button class="onl-row" data-i="${i}"><span>${escTx(it.title)}</span><span class="go">›</span></button>`;
+      const sub = it.voice && it.voice!==it.title ? `<div class="vs">${escTx(it.voice)}</div>` : '';
+      return `<button class="vw-voice" data-i="${i}"><span>${escTx(it.title)}${sub}</span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`;
     }).join('') + '</div>';
-  onlBindBack();
-  box.querySelectorAll('.onl-row').forEach(btn=>{
-    btn.onclick = ()=>{
-      const it = items[+btn.dataset.i];
-      if(it.method==='play') onlPlay(it.url, it, title);
-      else onlDrill(it.url, it.title);
-    };
-  });
+  const back = $('#vwToEps'); if(back) back.onclick = ()=>vwLumioRenderEps();
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwLumioPlay(items[+b.dataset.i], isTv?vw.epIdx:-1));
+  vw.render = isTv ? vwLumioRenderEps : vwLumioRenderVoices;
 }
-function onlPlay(url, it, srcTitle){
-  const m = onlMovie || {};
-  it = it || {};
-  const title = (m.title||'Онлайн') + (it.title ? ' · ' + it.title : '');
-  openPlayer(url, title, [], m, {
+function vwLumioPlay(it, ei){
+  const m = vw.m;
+  if(m.media==='tv' && ei>=0) vwMarkW('l'+m.id, 's'+vw.seasonIdx+'e'+ei);
+  const epT = (ei>=0 && vw.eps && vw.eps[ei]) ? vwEpName(vw.eps[ei], ei) : null;
+  const title = m.title + (epT ? ' · серия '+epT.num : '') + (it.title ? ' · '+it.title : '');
+  openPlayer(it.url, title, [], m, {
     file: it.title || '',
-    source: 'Lumio' + (srcTitle ? ' · ' + srcTitle : ''),
+    source: 'Lumio · ' + vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx),
     voice: it.voice || '',
   });
 }
@@ -2389,11 +2530,12 @@ function fxBlocked(name){ return typeof name==='string' && name.toLowerCase().in
 function fxIsSerial(pl){
   return pl && pl.playlist && typeof pl.playlist==='object' && !Array.isArray(pl.playlist) && Object.keys(pl.playlist).length>0;
 }
-async function fxFind(m){
-  const box = $('#actBox'); if(!box) return;
-  fxMovie = m; fxStack = [];
-  if(!state.fxToken){ box.innerHTML = '<div class="rz-empty">Вставь токен Filmix в Профиле 🙂</div>'; return; }
-  box.innerHTML = '<div class="rz-load">Проверяю подписку…</div>';
+/* =================== FILMIX =================== */
+async function vwFxInit(){
+  const tok = vw.token, m = vw.m;
+  vwPillsHTML([]); vwSetWatch(null); vwSetSub(''); vwSetQ('');
+  if(!state.fxToken){ vwEmpty('Вставь токен Filmix в Профиле 🙂'); return; }
+  vwLoading('Проверяю подписку…');
   try{
     fxMaxQ = 720;
     try{
@@ -2401,73 +2543,42 @@ async function fxFind(m){
       const ud = prof && prof.user_data;
       if(ud){ if(ud.is_pro_plus) fxMaxQ = 2160; else if(ud.is_pro) fxMaxQ = 1080; }
     }catch(_){}
-    box.innerHTML = '<div class="rz-load">Ищу на Filmix…</div>';
+    if(!vwAlive(tok)) return;
+    vwLoading('Ищу на Filmix…');
     const res = await fxGet('search', 'story=' + encodeURIComponent(m.orig || m.title || ''));
+    if(!vwAlive(tok)) return;
     const card = fxMatch(res, m);
-    if(card){ await fxOpenCard(card.id, card.title || card.original_title || m.title); }
-    else if(Array.isArray(res) && res.length){ fxRenderSimilars(res); }
-    else { box.innerHTML = '<div class="rz-empty">Ничего не нашлось 😕</div>'; }
-  }catch(e){
-    box.innerHTML = '<div class="rz-empty">Не получилось связаться с Filmix 😕</div>';
-  }
+    if(card) vwFxOpenCard(card.id, card.title || card.original_title || m.title, tok);
+    else if(Array.isArray(res) && res.length) vwFxSimilars(res, tok);
+    else vwEmpty('Ничего не нашлось 😕');
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Не получилось связаться с Filmix 😕'); }
 }
-function fxMatch(json, m){
-  if(!Array.isArray(json) || !json.length) return null;
-  const year = parseInt(String(m.date||'').slice(0,4)) || 0;
-  const orig = m.orig || '';
-  const cards = json.filter(c=>{
-    const y = parseInt(c.year || String(c.alt_name||'').split('-').pop());
-    return y > year-2 && y < year+2;
+function vwFxSimilars(res, tok){
+  if(!vw || vw.kind!=='fx') return;
+  vwPillsHTML([]); vwSetWatch(null); vwSetQ('');
+  vwSetSub('Уточни, что именно:');
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Похожие названия</div><div class="vw-list">` +
+    res.slice(0,12).map((c,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(c.title||c.original_title||('Вариант '+(i+1)))}<div class="vs">${escTx(c.year||'')}</div></span><span class="go" style="color:var(--muted);font-size:18px">›</span></button>`).join('') + '</div>';
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>{
+    const c = res[+b.dataset.i];
+    vwFxOpenCard(c.id, c.title || c.original_title, tok);
   });
-  let card = cards.find(c=>c.year==year && fxNorm(c.original_title)===fxNorm(orig));
-  if(!card) card = cards.find(c=>fxNorm(c.original_title)===fxNorm(orig));
-  if(!card && cards.length===1) card = cards[0];
-  return card || null;
+  vw.render = ()=>vwFxSimilars(res, tok);
 }
-function fxBack(){
-  fxStack.pop();
-  const top = fxStack[fxStack.length-1];
-  if(!top){ const box = $('#actBox'); if(box) box.innerHTML=''; return; }
-  top.render();
-}
-function fxHead(){
-  return fxStack.length > 1
-    ? `<button class="onl-back" id="fxBack">‹ Назад</button>`
-    : `<button class="onl-back" id="fxBack">‹ Закрыть</button>`;
-}
-function fxBindBack(){
-  const b = $('#fxBack'); if(b) b.onclick = fxBack;
-}
-function fxPush(entry){
-  fxStack.push(entry);
-  entry.render();
-}
-function fxRenderSimilars(res){
-  const box = $('#actBox');
-  const render = ()=>{
-    box.innerHTML = fxHead() + '<div class="onl-crumb">Уточни, что именно:</div><div class="onl-list">' +
-      res.slice(0,12).map((c,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(c.title||c.original_title||('Вариант '+(i+1)))}<div class="onl-sub">${escTx(c.year||'')}</div></span><span class="go">›</span></button>`).join('') + '</div>';
-    fxBindBack();
-    box.querySelectorAll('.onl-row').forEach(btn=>{
-      btn.onclick = ()=>{ const c = res[+btn.dataset.i]; fxOpenCard(c.id, c.title || c.original_title); };
-    });
-  };
-  fxPush({render});
-}
-async function fxOpenCard(fid, title){
-  const box = $('#actBox'); if(!box) return;
-  box.innerHTML = '<div class="rz-load">Загружаю…</div>';
+async function vwFxOpenCard(fid, title, tok){
+  vwLoading('Загружаю…');
   try{
     const data = await fxGet('post/' + fid);
+    if(!vwAlive(tok)) return;
     const pl = data && data.player_links;
-    if(pl && pl.movie && pl.movie.length){ fxRenderMovie(pl.movie, title); }
-    else if(fxIsSerial(pl)){ fxRenderSeasons(pl.playlist, title); }
-    else { box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; }
-  }catch(e){
-    box.innerHTML = '<div class="rz-empty">Ошибка загрузки 😕</div>';
-  }
+    if(pl && pl.movie && pl.movie.length) vwFxMovie(pl.movie);
+    else if(fxIsSerial(pl)) vwFxSeasons(pl.playlist);
+    else vwEmpty('Видео не найдено 😕');
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Ошибка загрузки 😕'); }
 }
-function fxRenderMovie(list, title){
+function vwFxMovie(list){
+  if(!vw || vw.kind!=='fx') return;
   const items = [];
   list.forEach(f=>{
     if(!f || !f.link || fxBlocked(f.translation)) return;
@@ -2476,48 +2587,30 @@ function fxRenderMovie(list, title){
     const q = Math.max.apply(null, qs);
     items.push({voice: f.translation || 'Озвучка', q, url: fxFileUrl(f.link, q)});
   });
-  const render = ()=>{
-    const box = $('#actBox');
-    if(!items.length){ box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; return; }
-    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">` +
-      items.map((it,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(it.voice)}<div class="onl-sub">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
-    fxBindBack();
-    box.querySelectorAll('.onl-row').forEach(btn=>{
-      btn.onclick = ()=>{
-        const it = items[+btn.dataset.i];
-        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · ' + it.voice + ' ' + it.q + 'p', [], fxMovie, fxInfo(it));
-      };
-    });
-  };
-  fxPush({render});
+  if(!items.length){ vwEmpty('Видео не найдено 😕'); return; }
+  vwPillsHTML([]);
+  const best = Math.max.apply(null, items.map(i=>i.q));
+  vwSetQ(best+'p');
+  vwSetWatch('Смотреть', ()=>vwFxPlay(items[0], 0, 0));
+  vwSetSub(`Filmix 4k · ${items.length} ${plural(items.length,'озвучка','озвучки','озвучек')} · до ${best}p`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Озвучка</div><div class="vw-list">` +
+    items.map((it,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwFxPlay(items[+b.dataset.i], 0, 0));
+  vw.render = ()=>vwFxMovie(list);
 }
-function fxRenderSeasons(playlist, title){
-  const seasons = Object.keys(playlist).sort((a,b)=>parseInt(a)-parseInt(b));
-  const render = ()=>{
-    const box = $('#actBox');
-    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')}</div><div class="onl-list">` +
-      seasons.map((s,i)=>`<button class="onl-row" data-i="${i}"><span>${+s} сезон</span><span class="go">›</span></button>`).join('') + '</div>';
-    fxBindBack();
-    box.querySelectorAll('.onl-row').forEach(btn=>{
-      btn.onclick = ()=>fxRenderEpisodes(playlist[seasons[+btn.dataset.i]], +seasons[+btn.dataset.i], title);
-    });
-  };
-  fxPush({render});
+function vwFxSeasons(playlist){
+  vw.seasons = Object.keys(playlist).sort((a,b)=>parseInt(a)-parseInt(b));
+  vw.playlist = playlist;
+  vw.seasonIdx = 0; vw.voice = null;
+  vwFxRenderEps();
 }
-function fxRenderEpisodes(seasonObj, sNum, title){
-  const eps = Object.keys(seasonObj).sort((a,b)=>parseInt(a)-parseInt(b));
-  const render = ()=>{
-    const box = $('#actBox');
-    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')} · ${sNum} сезон</div><div class="onl-list">` +
-      eps.map((e,i)=>`<button class="onl-row" data-i="${i}"><span>${+e} серия</span><span class="go">›</span></button>`).join('') + '</div>';
-    fxBindBack();
-    box.querySelectorAll('.onl-row').forEach(btn=>{
-      btn.onclick = ()=>fxRenderVoices(seasonObj[eps[+btn.dataset.i]], sNum, +eps[+btn.dataset.i], title);
-    });
-  };
-  fxPush({render});
+function vwFxSeasonEps(){
+  const sNum = vw.seasons[vw.seasonIdx];
+  const so = vw.playlist[sNum] || {};
+  return Object.keys(so).sort((a,b)=>parseInt(a)-parseInt(b)).map(eNum=>({eNum, obj: so[eNum]}));
 }
-function fxRenderVoices(epObj, sNum, eNum, title){
+function vwFxVoicesOf(epObj){
   const voices = [];
   Object.keys(epObj||{}).forEach(vName=>{
     if(fxBlocked(vName)) return;
@@ -2532,38 +2625,130 @@ function fxRenderVoices(epObj, sNum, eNum, title){
       voices.push({voice: vName, q, url: fxFileUrl(f.link, q)});
     });
   });
-  const render = ()=>{
-    const box = $('#actBox');
-    if(!voices.length){ box.innerHTML = '<div class="rz-empty">Видео не найдено 😕</div>'; return; }
-    box.innerHTML = fxHead() + `<div class="onl-crumb">${escTx(title||'')} · S${sNum}E${eNum}</div><div class="onl-list">` +
-      voices.map((it,i)=>`<button class="onl-row" data-i="${i}"><span>${escTx(it.voice)}<div class="onl-sub">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
-    fxBindBack();
-    box.querySelectorAll('.onl-row').forEach(btn=>{
-      btn.onclick = ()=>{
-        const it = voices[+btn.dataset.i];
-        openPlayer(it.url, (fxMovie&&fxMovie.title||'Filmix') + ' · S' + sNum + 'E' + eNum + ' ' + it.voice + ' ' + it.q + 'p', [], fxMovie, fxInfo(it));
-      };
-    });
-  };
-  fxPush({render});
+  return voices;
+}
+function vwFxVoicePill(eps){
+  const seen = [];
+  eps.forEach(e=>vwFxVoicesOf(e.obj).forEach(v=>{ if(seen.indexOf(v.voice)===-1) seen.push(v.voice); }));
+  if(!seen.length) return [];
+  let cur = vw.voice ? seen.indexOf(vw.voice) : 0;
+  if(cur<0) cur = 0;
+  return [{label:'Озвучка', value: seen[cur],
+    onPick: ()=>openOptSheet('Озвучка', seen.map(s=>({t:s})), cur, i=>{ vw.voice = seen[i]; vwFxRenderEps(); })}];
+}
+function vwFxRenderEps(){
+  if(!vw || vw.kind!=='fx') return;
+  const m = vw.m;
+  const eps = vwFxSeasonEps();
+  const sNum = vw.seasons[vw.seasonIdx];
+  vwPillsHTML([
+    {label:'Сезон', value: sNum+' сезон',
+      onPick: ()=>openOptSheet('Сезон', vw.seasons.map(s=>({t: s+' сезон'})), vw.seasonIdx, i=>{ vw.seasonIdx=i; vwFxRenderEps(); })},
+    ...vwFxVoicePill(eps)
+  ]);
+  const total = eps.length;
+  const watched = vwCountW('f'+m.id, total);
+  let target = eps.findIndex(e=>!vwIsW('f'+m.id, 's'+sNum+'e'+e.eNum));
+  if(target===-1) target = 0;
+  vwSetWatch(eps.length ? 'Смотреть · S'+sNum+' E'+eps[target].eNum : null, eps.length ? ()=>vwFxPlayEp(target) : null);
+  vwSetSub(`Filmix 4k · ${sNum} сезон<br>Просмотрено ${watched} из ${total} · осталось ${total-watched}`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Серии · ${total}</div><div class="vw-list">` + eps.map((e,i)=>{
+    const w = vwIsW('f'+m.id, 's'+sNum+'e'+e.eNum);
+    const vs = vwFxVoicesOf(e.obj);
+    const vn = vs.slice(0,2).map(v=>v.voice).join(' · ');
+    return `<button class="vw-ep" data-i="${i}">
+      <span class="vw-thumb"><span class="vw-num">${+e.eNum}</span></span>
+      <span class="vw-epbody">
+        <span class="vw-ept">${+e.eNum} серия</span>
+        <span class="vw-eps">${escTx(vn)}${vs.length>2?' · …':''}</span>
+        <span class="vw-prog"><i style="width:${w?100:0}%"></i></span>
+      </span>
+      <span class="vw-side">
+        <span class="vw-playb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        ${w?'<span class="vw-done">✓</span>':''}
+      </span>
+    </button>`;
+  }).join('') + '</div>';
+  el.querySelectorAll('.vw-ep').forEach(b=>b.onclick=()=>vwFxPlayEp(+b.dataset.i));
+  vw.render = vwFxRenderEps;
+}
+function vwFxPlayEp(i){
+  const eps = vwFxSeasonEps();
+  const e = eps[i]; if(!e) return;
+  const sNum = vw.seasons[vw.seasonIdx];
+  const voices = vwFxVoicesOf(e.obj);
+  if(!voices.length){ toast('Озвучек не нашлось'); return; }
+  let pick = vw.voice ? voices.find(v=>v.voice===vw.voice) : null;
+  if(!pick && voices.length===1) pick = voices[0];
+  if(pick){ vwFxPlay(pick, sNum, e.eNum); return; }
+  vwSetWatch(null);
+  vwSetSub(`Filmix 4k · S${sNum}E${e.eNum}`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<button class="vw-backline" id="vwToEps">‹ Серии</button>
+    <div class="vw-sec-t">Озвучка · серия ${+e.eNum}</div><div class="vw-list">` +
+    voices.map((it,j)=>`<button class="vw-voice" data-j="${j}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+  $('#vwToEps').onclick = ()=>vwFxRenderEps();
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>{ vw.voice = voices[+b.dataset.j].voice; vwFxPlay(voices[+b.dataset.j], sNum, e.eNum); });
+  vw.render = vwFxRenderEps;
+}
+function vwFxPlay(it, sNum, eNum){
+  const m = vw.m;
+  if(sNum) vwMarkW('f'+m.id, 's'+sNum+'e'+eNum);
+  const se = sNum ? ' · S'+sNum+'E'+eNum : '';
+  openPlayer(it.url, (m.title||'Filmix') + se + ' · ' + it.voice + ' ' + it.q + 'p', [], m, fxInfo(it));
 }
 
-async function findTorrents(m){
-  const box = $('#actBox'); if(!box) return;
-  torMovie = m || null;
-  box.innerHTML = '<div class="tor-load">Ищу раздачи…</div>';
+/* =================== ТОРРЕНТЫ =================== */
+async function vwTorInit(){
+  const tok = vw.token, m = vw.m;
+  torMovie = m || null; torSort = {key:'top', dir:-1};
+  vwPillsHTML([]); vwSetWatch(null); vwSetSub(''); vwSetQ('');
+  vwLoading('Ищу раздачи…');
   const q = torQuery(m);
   torLastQ = q;
   try{
     let res = await jacSearch(q);
+    if(!vwAlive(tok)) return;
     if(m.media==='movie') res = res.filter(t=>!torIsSeriesTitle(t.Title||'') && torYearOK(t.Title||'', m.year));
-    torCache = res; torSort = {key:'top', dir:-1};
-    if(!res.length){ box.innerHTML = '<div class="tor-load">Ничего не нашлось 😕<br><span style="font-size:12px">попробуй другой режим запроса</span></div>'; return; }
-    box.innerHTML = torBarHTML(res.length);
-    bindTorChips(box); renderTorList();
-  }catch(e){
-    box.innerHTML = '<div class="tor-load">Парсеры не отвечают · проверь адреса в Профиле</div>';
-  }
+    torCache = res;
+    if(!res.length){ vwTorPills(); vwEmpty('Ничего не нашлось 😕<br><span style="font-size:12px">попробуй другой режим запроса</span>'); vw.render = vwTorRender; return; }
+    vwTorRender();
+  }catch(e){ if(vwAlive(tok)){ vwTorPills(); vwEmpty('Парсеры не отвечают · проверь адреса в Профиле'); } }
+}
+function vwTorPills(){
+  const names = {top:'Топ', seeds:'Сиды', quality:'Качество', size:'Размер'};
+  const keys = ['top','seeds','quality','size'];
+  vwPillsHTML([
+    {label:'Сортировка', value: names[torSort.key],
+      onPick: ()=>openOptSheet('Сортировка', keys.map(k=>({t:names[k]})), keys.indexOf(torSort.key),
+        i=>{ torSort = {key:keys[i], dir:-1}; vwTorRender(); })},
+    {label:'Запрос', value: torQmodeName(),
+      onPick: ()=>openOptSheet('Режим поиска', TOR_QMODES.map(o=>({t:o.t})), TOR_QMODES.findIndex(o=>o.id===state.torQ),
+        i=>{ state.torQ = TOR_QMODES[i].id; LS.set('tor_qmode', state.torQ); vwTorInit(); })},
+  ]);
+}
+function vwTorRender(){
+  if(!vw || vw.kind!=='tor') return;
+  const m = vw.m;
+  vwTorPills();
+  const arr = torSorted();
+  let topIdx = -1, topScore = -1;
+  arr.forEach(t=>{ const s = torScore(t); if(s>topScore){ topScore = s; topIdx = torCache.indexOf(t); } });
+  const best = topIdx>=0 ? torCache[topIdx] : null;
+  vwSetWatch(best ? 'Лучшая раздача · VLC' : null, best ? ()=>playTorrent(best, m) : null);
+  vwSetSub(`${arr.length} ${plural(arr.length,'раздача','раздачи','раздач')}${torLastQ?` · <b>${escTx(torLastQ)}</b>`:''}`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-list">` + arr.map(t=>{
+    const i = torCache.indexOf(t);
+    return `<div class="tor-item" data-i="${i}" style="margin-bottom:0">
+      <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
+      ${torPills(t, i===topIdx)}
+      <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
+    </div>`;
+  }).join('') + '</div>';
+  el.querySelectorAll('.tor-item').forEach(x=>x.onclick=()=>playTorrent(torCache[+x.dataset.i], m));
+  vw.render = vwTorRender;
 }
 
 async function tsAPI(body){
@@ -2594,7 +2779,6 @@ function openExternal(url){
 
 async function playTorrent(t, m){
   const ts = (state.tsUrl||'').replace(/\/+$/,'') || 'http://127.0.0.1:8090';
-  const box = $('#actBox');
   toast('Подключаюсь к TorrServer…');
   try{ const e = await fetch(ts+'/echo', {cache:'no-store'}); if(!e.ok) throw 0; }
   catch(err){ toast('TorrServer не отвечает · проверь адрес в Профиле'); return; }
@@ -2625,12 +2809,18 @@ async function playTorrent(t, m){
   if(files && files.length>1){
     torSubsCache = subs;
     const sorted = files.slice().sort((a,b)=>b.size-a.size);
-    box.innerHTML = '<div class="tor-load" style="text-align:left;padding:2px 2px 10px">Выбери файл · '+sorted.length+'</div>' +
-      sorted.map(f=>'<div class="tor-item" data-f="'+f.id+'"><div class="tor-t">'+escTx(shortName(f.path))+'</div><div class="tor-m"><span>'+fmtSize(f.size)+'</span></div></div>').join('');
-    box.querySelectorAll('.tor-item').forEach(el=>el.onclick=()=>{
-      openExternal(tsStreamURL(ts, hash, el.dataset.f, t.Title));
-    });
-    return;
+    const el = $('#vwList');
+    if(el && vw && vw.kind==='tor'){
+      vw.render = vwTorRender;
+      el.innerHTML = `<button class="vw-backline" id="vwToTor">‹ Раздачи</button>
+        <div class="vw-sec-t">Выбери файл · ${sorted.length}</div><div class="vw-list">` +
+        sorted.map(f=>`<button class="vw-voice" data-f="${f.id}"><span>${escTx(shortName(f.path))}<div class="vs">${fmtSize(f.size)}</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+      $('#vwToTor').onclick = ()=>vwTorRender();
+      el.querySelectorAll('.vw-voice').forEach(x=>x.onclick=()=>{
+        openExternal(tsStreamURL(ts, hash, x.dataset.f, t.Title));
+      });
+      return;
+    }
   }
   // Фолбэк без чтения API: стрим первого файла напрямую по magnet
   openExternal(tsStreamURL(ts, t.MagnetUri, 1, t.Title));
