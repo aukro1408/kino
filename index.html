@@ -555,9 +555,11 @@
   .pl-buf{position:absolute; left:0; height:5px; border-radius:3px; background:rgba(255,255,255,.38); width:0}
   .pl-fill{position:absolute; left:0; height:5px; border-radius:3px; background:linear-gradient(90deg,#3b8cff,#7b5cff); width:0; box-shadow:0 0 12px rgba(80,130,255,.55)}
   .pl-knob{position:absolute; width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 0 12px rgba(90,140,255,.9), 0 1px 8px rgba(0,0,0,.6); left:0; transform:translateX(-50%)}
-  .pl-row{display:flex; align-items:center; gap:6px; margin-top:8px}
+  .pl-row{display:flex; align-items:center; gap:6px; margin-top:8px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; padding-bottom:2px}
+  .pl-row::-webkit-scrollbar{display:none}
+  .pl-row>*{flex:none}
+  .pl-spacer{flex:1 0 8px}
   .pl-time{margin-left:6px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,.85); font-variant-numeric:tabular-nums; white-space:nowrap}
-  .pl-spacer{flex:1}
   .pl-err{position:absolute; inset:0; z-index:5; display:none; align-items:center; justify-content:center; text-align:center; padding:30px; color:var(--muted); font-size:14px; line-height:1.6}
   .pl-menu{position:absolute; z-index:6; right:12px; bottom:96px; min-width:210px; max-width:78%; background:rgba(14,22,42,.96); border:1px solid rgba(99,150,255,.28); border-radius:16px; padding:8px; box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 24px rgba(59,140,255,.12); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
   .pl-menu .pm-t{font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); padding:8px 12px 4px}
@@ -2566,11 +2568,10 @@ $('#plBack').onclick = ()=>{ stopPlayer(); goBack(); };
 let plInfoData = null, plQ = '';
 function plQLabel(w, h){
   if(!w || !h) return '';
-  if(h >= 2100 || w >= 3800) return '4K';
-  if(h >= 1400) return '1440p';
-  if(h >= 1050) return '1080p';
-  if(h >= 700) return '720p';
-  if(h >= 470) return '480p';
+  if(w >= 3800 || h >= 2100) return '4K';
+  if(w >= 1900 || h >= 1050) return '1080p';
+  if(w >= 1400 || h >= 700) return '720p';
+  if(w >= 1100 || h >= 470) return '480p';
   return h + 'p';
 }
 function plSetQ(label){
