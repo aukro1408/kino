@@ -2660,31 +2660,41 @@ function vwFxSeasons(playlist){
   vw.seasonIdx = 0; vw.voice = null;
   vwFxRenderEps();
 }
+function vwFxSeasonLabel(sKey){ return String(sKey)==='-1' ? '1' : String(sKey); }
+/* Filmix: playlist[сезон][озвучка][id серии] = файл — как в оригинальном плагине */
 function vwFxSeasonEps(){
-  const sNum = vw.seasons[vw.seasonIdx];
-  const so = vw.playlist[sNum] || {};
-  return Object.keys(so).sort((a,b)=>parseInt(a)-parseInt(b)).map(eNum=>({eNum, obj: so[eNum]}));
-}
-function vwFxVoicesOf(epObj){
-  const voices = [];
-  Object.keys(epObj||{}).forEach(vName=>{
+  const sKey = vw.seasons[vw.seasonIdx];
+  const seasonObj = vw.playlist[sKey] || {};
+  const eps = {};
+  Object.keys(seasonObj).forEach(vName=>{
     if(fxBlocked(vName)) return;
-    let vm = epObj[vName];
+    let vm = seasonObj[vName];
     if(Array.isArray(vm)){ const m2 = {}; vm.forEach((v,i)=>{ m2[String(i+1)] = v; }); vm = m2; }
     Object.keys(vm).forEach(id=>{
       const f = vm[id];
       if(!f || !f.link) return;
-      const qs = (Array.isArray(f.qualities)?f.qualities:[]).map(q=>parseInt(q,10)).filter(q=>q>0 && q<=fxMaxQ);
+      const qArr = (Array.isArray(f.qualities) && f.qualities.length) ? f.qualities : fxQualities(f.link);
+      const qs = qArr.map(q=>parseInt(q,10)).filter(q=>q>0 && q<=fxMaxQ);
       if(!qs.length) return;
       const q = Math.max.apply(null, qs);
-      voices.push({voice: vName, q, url: fxFileUrl(f.link, q)});
+      const url = fxFileUrl(f.link, q);
+      let sNum = vwFxSeasonLabel(sKey), eNum = parseInt(id, 10);
+      const mSe = url.match(/s(\d+)e(\d+?)_\d+\.mp4/i);
+      if(mSe){ sNum = mSe[1]; eNum = parseInt(mSe[2], 10); }
+      if(isNaN(eNum)) return;
+      const key = sNum + 'x' + eNum;
+      if(!eps[key]) eps[key] = {sNum, eNum, voices: []};
+      eps[key].voices.push({voice: vName, q, url});
     });
   });
-  return voices;
+  return Object.keys(eps).sort((a,b)=>{
+    const pa = a.split('x').map(Number), pb = b.split('x').map(Number);
+    return (pa[0]-pb[0]) || (pa[1]-pb[1]);
+  }).map(k=>eps[k]);
 }
 function vwFxVoicePill(eps){
   const seen = [];
-  eps.forEach(e=>vwFxVoicesOf(e.obj).forEach(v=>{ if(seen.indexOf(v.voice)===-1) seen.push(v.voice); }));
+  eps.forEach(e=>(e.voices||[]).forEach(v=>{ if(seen.indexOf(v.voice)===-1) seen.push(v.voice); }));
   if(!seen.length) return [];
   let cur = vw.voice ? seen.indexOf(vw.voice) : 0;
   if(cur<0) cur = 0;
@@ -2695,22 +2705,22 @@ function vwFxRenderEps(){
   if(!vw || vw.kind!=='fx') return;
   const m = vw.m;
   const eps = vwFxSeasonEps();
-  const sNum = vw.seasons[vw.seasonIdx];
+  const sNum = vwFxSeasonLabel(vw.seasons[vw.seasonIdx]);
   vwPillsHTML([
     {label:'Сезон', value: sNum+' сезон',
-      onPick: ()=>openOptSheet('Сезон', vw.seasons.map(s=>({t: s+' сезон'})), vw.seasonIdx, i=>{ vw.seasonIdx=i; vwFxRenderEps(); })},
+      onPick: ()=>openOptSheet('Сезон', vw.seasons.map(s=>({t: vwFxSeasonLabel(s)+' сезон'})), vw.seasonIdx, i=>{ vw.seasonIdx=i; vwFxRenderEps(); })},
     ...vwFxVoicePill(eps)
   ]);
   const total = eps.length;
   const watched = vwCountW('f'+m.id, total);
-  let target = eps.findIndex(e=>!vwIsW('f'+m.id, 's'+sNum+'e'+e.eNum));
+  let target = eps.findIndex(e=>!vwIsW('f'+m.id, 's'+e.sNum+'e'+e.eNum));
   if(target===-1) target = 0;
-  vwSetWatch(eps.length ? 'Смотреть · S'+sNum+' E'+eps[target].eNum : null, eps.length ? ()=>vwFxPlayEp(target) : null);
+  vwSetWatch(eps.length ? 'Смотреть · S'+eps[target].sNum+'E'+eps[target].eNum : null, eps.length ? ()=>vwFxPlayEp(target) : null);
   vwSetSub(`Filmix 4k · ${sNum} сезон<br>Просмотрено ${watched} из ${total} · осталось ${total-watched}`);
   const el = $('#vwList'); if(!el) return;
   el.innerHTML = `<div class="vw-sec-t">Серии · ${total}</div><div class="vw-list">` + eps.map((e,i)=>{
-    const w = vwIsW('f'+m.id, 's'+sNum+'e'+e.eNum);
-    const vs = vwFxVoicesOf(e.obj);
+    const w = vwIsW('f'+m.id, 's'+e.sNum+'e'+e.eNum);
+    const vs = e.voices||[];
     const vn = vs.slice(0,2).map(v=>v.voice).join(' · ');
     return `<button class="vw-ep" data-i="${i}">
       <span class="vw-thumb"><span class="vw-num">${+e.eNum}</span></span>
@@ -2731,20 +2741,19 @@ function vwFxRenderEps(){
 function vwFxPlayEp(i){
   const eps = vwFxSeasonEps();
   const e = eps[i]; if(!e) return;
-  const sNum = vw.seasons[vw.seasonIdx];
-  const voices = vwFxVoicesOf(e.obj);
+  const voices = e.voices||[];
   if(!voices.length){ toast('Озвучек не нашлось'); return; }
   let pick = vw.voice ? voices.find(v=>v.voice===vw.voice) : null;
   if(!pick && voices.length===1) pick = voices[0];
-  if(pick){ vwFxPlay(pick, sNum, e.eNum); return; }
+  if(pick){ vwFxPlay(pick, e.sNum, e.eNum); return; }
   vwSetWatch(null);
-  vwSetSub(`Filmix 4k · S${sNum}E${e.eNum}`);
+  vwSetSub(`Filmix 4k · S${e.sNum}E${e.eNum}`);
   const el = $('#vwList'); if(!el) return;
   el.innerHTML = `<button class="vw-backline" id="vwToEps">‹ Серии</button>
     <div class="vw-sec-t">Озвучка · серия ${+e.eNum}</div><div class="vw-list">` +
     voices.map((it,j)=>`<button class="vw-voice" data-j="${j}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
   $('#vwToEps').onclick = ()=>vwFxRenderEps();
-  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>{ vw.voice = voices[+b.dataset.j].voice; vwFxPlay(voices[+b.dataset.j], sNum, e.eNum); });
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>{ vw.voice = voices[+b.dataset.j].voice; vwFxPlay(voices[+b.dataset.j], e.sNum, e.eNum); });
   vw.render = vwFxRenderEps;
 }
 function vwFxPlay(it, sNum, eNum){
