@@ -2569,6 +2569,16 @@ function alpacBestQ(q){
   });
   return best || q[Object.keys(q||{})[0]] || '';
 }
+function alpacSaveToken(j){
+  const t = j && (j.token || j.access_token || j.auth_token || (j.data && j.data.token));
+  if(typeof t==='string' && t.trim()){ LS.set('alpac_token', t.trim()); return true; }
+  return false;
+}
+async function alpacFetchEvents(m){
+  const r = await fetch(ALPAC+'/lite/events?life=true&'+alpacParams(m)+'&'+alpacAuthQS());
+  if(!r.ok) throw new Error('http');
+  return r.json();
+}
 async function vwAlpacInit(){
   try{ if(vw && vw.alpacPoll) clearInterval(vw.alpacPoll); }catch(_){}
   const tok = vw.token, m = vw.m;
@@ -2586,9 +2596,8 @@ async function vwAlpacInit(){
   }catch(e){ if(vwAlive(tok)) vwEmpty('Не получилось связаться с Alpac 😕'); }
 }
 async function alpacEvents(m, tok){
-  const r = await fetch(ALPAC+'/lite/events?life=true&'+alpacParams(m)+'&'+alpacAuthQS());
-  if(!r.ok) throw new Error('http');
-  let j = await r.json();
+  let j = await alpacFetchEvents(m);
+  if(j && j.accsdb && alpacSaveToken(j)) j = await alpacFetchEvents(m);
   if(j && j.accsdb) return {auth:j};
   if(j && j.life && j.memkey){
     for(let i=0;i<24;i++){
@@ -2599,7 +2608,7 @@ async function alpacEvents(m, tok){
       if(!r3.ok) continue;
       const j3 = await r3.json().catch(()=>null);
       if(!j3) continue;
-      if(j3.accsdb) return {auth:j3};
+      if(j3.accsdb){ alpacSaveToken(j3); return {auth:j3}; }
       if(!j3.life){ j = j3; break; }
     }
   }
@@ -2616,6 +2625,7 @@ async function alpacEvents(m, tok){
 function vwAlpacAuth(er, tok){
   if(!vw || vw.kind!=='alpac') return;
   try{ if(vw.alpacPoll) clearInterval(vw.alpacPoll); }catch(_){}
+  alpacSaveToken(er);
   vwPillsHTML([]); vwSetWatch(null);
   vwSetSub('Вход через Telegram');
   const el = $('#vwList'); if(!el) return;
@@ -2627,17 +2637,30 @@ function vwAlpacAuth(er, tok){
     <button class="alp-refresh" id="alpRefresh">Обновить код</button>
   </div>`;
   $('#alpRefresh').onclick = ()=>vwAlpacInit();
+  vw.alpacAuthed = false;
   vw.alpacPoll = setInterval(async ()=>{
     if(!vwAlive(tok)){ try{ clearInterval(vw.alpacPoll); }catch(_){} return; }
     try{
       const r = await fetch(ALPAC+'/tg/auth/status?uid='+encodeURIComponent(alpacUid()));
       if(!r.ok) return;
       const j = await r.json();
-      if(j && j.authorized){
+      if(j && j.authorized && !vw.alpacAuthed){
+        vw.alpacAuthed = true;
         try{ clearInterval(vw.alpacPoll); }catch(_){}
-        if(j.token) LS.set('alpac_token', j.token);
-        toast('Alpac подключён ✅');
-        if(vwAlive(tok)) vwAlpacInit();
+        alpacSaveToken(j);
+        if(alpacToken()){
+          toast('Alpac подключён ✅');
+          if(vwAlive(tok)) vwAlpacInit();
+        }else{
+          vw.alpacRetries = (vw.alpacRetries||0)+1;
+          const st = $('#alpStatus');
+          if(vw.alpacRetries>2){
+            if(st) st.innerHTML = '<span class="alp-dot"></span>Не получилось получить доступ — нажми «Обновить код»';
+          }else{
+            if(st) st.innerHTML = '<span class="alp-dot"></span>Код принят, получаю доступ…';
+            if(vwAlive(tok)) vwAlpacInit();
+          }
+        }
       }
     }catch(_){}
   }, 3000);
