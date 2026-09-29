@@ -315,7 +315,7 @@
   .mv-load{padding:90px 20px; text-align:center; color:var(--muted); font-weight:700}
   .mv-backdrop{position:relative; height:240px; overflow:hidden; background:var(--card2)}
   .mv-backdrop img{width:100%; height:100%; object-fit:cover; filter:blur(4px) saturate(1.15); transform:scale(1.12)}
-  .mv-shade{position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,18,32,.10) 25%,rgba(52,30,10,.42) 68%,var(--bg) 100%)}
+  .mv-shade{position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,18,32,.10) 25%,rgba(18,38,88,.48) 68%,var(--bg) 100%)}
   .back-btn{position:absolute; top:14px; left:14px; width:42px; height:42px; border-radius:50%;
     background:rgba(10,16,28,.55); border:1px solid rgba(255,255,255,.16); color:#fff; font-size:19px;
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
@@ -342,22 +342,22 @@
   .fact{background:var(--card2); border-radius:12px; padding:10px 12px; min-width:0}
   .fact span{display:block; font-size:11px; color:var(--muted); margin-bottom:2px}
   .fact b{display:block; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .fact.link{cursor:pointer; width:100%; font:inherit; color:inherit; text-align:left; border:1px solid rgba(245,185,66,.18); background:linear-gradient(180deg,rgba(245,185,66,.09),rgba(245,185,66,.02))}
+  .fact.link{cursor:pointer; width:100%; font:inherit; color:inherit; text-align:left; border:1px solid rgba(124,196,255,.25); background:linear-gradient(180deg,rgba(77,163,255,.12),rgba(77,163,255,.03))}
   .fact.link:active{transform:scale(.97)}
   .fact.link b{padding-right:20px}
-  .fact-go{position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#ffcf7a; font-size:17px; font-weight:800; pointer-events:none}
+  .fact-go{position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8dbcff; font-size:17px; font-weight:800; pointer-events:none}
   .fact{position:relative}
   .rates{display:grid; grid-template-columns:1fr 1fr; gap:8px}
-  .rate-card{background:linear-gradient(180deg,rgba(245,185,66,.12),rgba(245,185,66,.04)); border:1px solid rgba(245,185,66,.24); border-radius:16px; padding:14px; min-width:0; box-shadow:0 8px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08)}
+  .rate-card{background:linear-gradient(180deg,rgba(77,163,255,.13),rgba(77,163,255,.04)); border:1px solid rgba(124,196,255,.25); border-radius:18px; padding:14px; min-width:0; box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
   .rate-top{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px}
-  .rate-brand{font-size:11px; font-weight:800; letter-spacing:.8px; color:#ffcf7a}
+  .rate-brand{font-size:11px; font-weight:800; letter-spacing:.8px; color:#8dbcff}
   .rate-q{font-size:11px; color:var(--muted); white-space:nowrap}
-  .rate-score{font-size:28px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(245,185,66,.25)}
-  .rate-score small{font-size:13px; color:#d8a94e; font-weight:700}
+  .rate-score{font-size:28px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(77,163,255,.35)}
+  .rate-score small{font-size:13px; color:#8dbcff; font-weight:700}
   .rate-votes{font-size:11px; color:var(--muted); margin-top:5px}
   .rate-votes b{color:var(--text)}
   .rate-bar{height:6px; background:rgba(0,0,0,.35); border-radius:4px; margin-top:10px; overflow:hidden}
-  .rate-bar i{display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#e8930c,#ffd98a); box-shadow:0 0 10px rgba(245,185,66,.65); transition:width .8s cubic-bezier(.22,.61,.36,1)}
+  .rate-bar i{display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#3b8cff,#9fd0ff); box-shadow:0 0 10px rgba(77,163,255,.65); transition:width .8s cubic-bezier(.22,.61,.36,1)}
   .rate-card.kp .rate-bar i{background:#ff5500}
   .rate-card.tmdb .rate-bar i{background:#4da3ff}
   .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
@@ -390,28 +390,35 @@
   .mv-watched{width:100%; margin-top:24px; padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,.13);
     background:var(--card); color:var(--text); font:inherit; font-size:15px; font-weight:800; cursor:pointer}
   .mv-watched.on{background:rgba(77,163,255,.16); border-color:rgba(77,163,255,.55); color:var(--accent2)}
-/* ---------- movie page · golden ---------- */
+/* ---------- movie page · blue glass ---------- */
 .watch-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:0}
-.wcard{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:17px 8px 15px; border-radius:18px; cursor:pointer;
+.wcard{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:17px 8px 15px; border-radius:20px; cursor:pointer;
   font:inherit; color:var(--text);
-  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
-  border:1px solid rgba(245,185,66,.24);
-  box-shadow:0 8px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.09);}
+  background:linear-gradient(180deg,rgba(77,163,255,.14),rgba(77,163,255,.04));
+  border:1px solid rgba(124,196,255,.25);
+  box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
 .wcard:active{transform:scale(.96)}
-.wcard svg{width:28px; height:28px; color:#ffcf7a}
+.wcard svg{width:28px; height:28px; color:#8dbcff; filter:drop-shadow(0 2px 8px rgba(77,163,255,.45))}
 .wcard span{font-size:13px; font-weight:700}
-.mv-genres i{border:1px solid rgba(245,185,66,.45); color:#ffcf7a; background:rgba(245,185,66,.08)}
-.mv-trailer{border-radius:20px; border:1px solid rgba(245,185,66,.18)}
-.mv-play span{background:rgba(20,12,4,.55); border:1.5px solid rgba(245,185,66,.65); backdrop-filter:blur(4px)}
-.fact{background:linear-gradient(180deg,rgba(245,185,66,.10),rgba(245,185,66,.03)); border:1px solid rgba(245,185,66,.20); border-radius:16px; padding:12px}
-.fact .fic{display:flex; align-items:center; gap:7px; color:#ffcf7a; margin-bottom:6px}
+.mv-genres i{border:1px solid rgba(124,196,255,.35); color:#a9cdff; background:rgba(77,163,255,.10);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+.mv-trailer{border-radius:20px; border:1px solid rgba(124,196,255,.22);
+  box-shadow:0 12px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08)}
+.mv-play span{background:rgba(10,20,40,.55); border:1.5px solid rgba(124,196,255,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  box-shadow:0 8px 24px rgba(77,163,255,.35)}
+.fact{background:linear-gradient(180deg,rgba(77,163,255,.12),rgba(77,163,255,.03)); border:1px solid rgba(124,196,255,.22); border-radius:18px; padding:12px;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 8px 22px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.09)}
+.fact .fic{display:flex; align-items:center; gap:7px; color:#8dbcff; margin-bottom:6px}
 .fact .fic svg{width:15px; height:15px; flex:none}
 .fact .fic span{font-size:11px; font-weight:700}
 .fact b{font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block}
 .mv-desc.clamp{display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden}
-.desc-more{background:none; border:none; color:#f5b942; font:inherit; font-size:13.5px; font-weight:800; margin-top:9px; cursor:pointer; padding:0}
-.mv-watched{border:1px solid rgba(245,185,66,.35); color:#ffcf7a; background:rgba(245,185,66,.05)}
-.mv-watched.on{background:rgba(245,185,66,.16); border-color:#f5b942; color:#ffdf9e}
+.desc-more{background:none; border:none; color:var(--accent2); font:inherit; font-size:13.5px; font-weight:800; margin-top:9px; cursor:pointer; padding:0}
+.mv-watched{border:1px solid rgba(124,196,255,.3); color:#a9cdff; background:rgba(77,163,255,.07);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px)}
+.mv-watched.on{background:rgba(77,163,255,.18); border-color:rgba(124,196,255,.6); color:#cfe6ff}
   /* ---------- rezka comments ---------- */
   #scr-rezka{background:#151718}
   .rz-page{min-height:100%; background:#151718; color:#fff; padding-bottom:90px}
@@ -1771,7 +1778,7 @@ function renderMovie(m){
       <div class="mv-sec watch">
         <div class="watch-grid">
           <button class="wcard" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg><span>Найти раздачи</span></button>
-          <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffdf9e"/><stop offset="1" stop-color="#e8930c"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#3a2200"/></svg><span>Lumio</span></button>
+          <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe0ff"/><stop offset="1" stop-color="#3b8cff"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#0a1c33"/></svg><span>Lumio</span></button>
           <button class="wcard" id="fxFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg><span>Filmix 4k</span></button>
           <button class="wcard" id="rzOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Комментарии</span></button>
         </div>
