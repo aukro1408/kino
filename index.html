@@ -263,6 +263,11 @@
   .sheet-grip{width:40px; height:4px; border-radius:99px; background:rgba(255,255,255,.2); margin:4px auto 12px}
   .sheet-title{font-size:16px; font-weight:800; text-align:center; margin-bottom:10px; padding:0 10px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .sheet-head{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+  .sheet-head .sheet-title{flex:1; margin:0; min-width:0}
+  .sheet-x{width:34px; height:34px; flex:0 0 auto; border-radius:50%; border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.06); color:#fff; font-size:14px; cursor:pointer}
+  .sheet-x:active{transform:scale(.92)}
   .fav-opt{display:flex; align-items:center; gap:14px; width:100%; background:none; border:none; color:var(--text);
     font:inherit; font-size:15px; font-weight:700; padding:13px 6px; cursor:pointer; border-top:1px solid rgba(255,255,255,.07)}
   .fav-opt-ic{width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.07); color:rgba(255,255,255,.42)}
@@ -282,6 +287,13 @@
   .fav-sec-h.mark{color:#7db9ff}
   .fav-sec-h.mark svg{fill:#4da3ff; color:#4da3ff}
   .fav-empty{padding:12px 18px 4px; color:var(--muted); font-size:13.5px; line-height:1.5}
+  button.fav-sec-h{width:100%; background:none; border:0; font:inherit; cursor:pointer; text-align:left}
+  button.fav-sec-h:active{opacity:.65}
+  .fav-sec-h .fav-go{color:var(--muted); font-size:19px; font-weight:700; line-height:1}
+  .fav-more{width:calc(100% - 36px); margin:12px 18px 0; padding:14px; border-radius:16px; cursor:pointer;
+    background:var(--card); border:1px solid rgba(255,255,255,.1); color:var(--text);
+    font:inherit; font-size:14px; font-weight:800}
+  .fav-more:active{transform:scale(.98)}
   /* ---------- AI ---------- */
   .ai-wrap{padding:8px 18px 4px}
   .ai-title{font-size:21px; font-weight:800; margin:6px 0 4px}
@@ -919,7 +931,7 @@
       Профиль</button>
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
-  <div class="sheet-veil" id="optVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-title" id="optTitle"></div><div id="optList"></div></div></div>
+  <div class="sheet-veil" id="optVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-head"><div class="sheet-title" id="optTitle"></div><button class="sheet-x" id="optX" aria-label="Закрыть">✕</button></div><div id="optList"></div></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
     <div class="sheet-title">Фильтры · Мне повезёт</div>
@@ -1006,10 +1018,17 @@ function renderFav(){
   const box = $('#favLists');
   box.innerHTML = FAV_LISTS.map(l=>{
     const items = state.favs[l.id];
-    return `<div class="fav-sec"><div class="fav-sec-h ${l.id}">${l.icon()}<span>${l.name}</span><b>${items.length}</b></div>
-      ${items.length ? `<div class="grid3">${items.map(cardHTML).join('')}</div>` : `<div class="fav-empty">${l.empty}</div>`}</div>`;
+    const shown = items.slice(0,6);
+    return `<div class="fav-sec"><button class="fav-sec-h ${l.id}" data-fav="${l.id}">${l.icon()}<span>${l.name}</span><b>${items.length}</b><span class="fav-go">›</span></button>
+      ${items.length ? `<div class="grid3">${shown.map(cardHTML).join('')}</div>` : `<div class="fav-empty">${l.empty}</div>`}
+      ${items.length>6 ? `<button class="fav-more" data-fav="${l.id}">Ещё · все ${items.length} ›</button>` : ''}</div>`;
   }).join('');
   bindCards(box);
+  const openFavCat = id=>{
+    const l = FAV_LISTS.find(x=>x.id===id);
+    openCategory({type:'fav', favId:l.id, title:l.name});
+  };
+  box.querySelectorAll('[data-fav]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); openFavCat(b.dataset.fav); });
 }
 let favSheetMovie = null;
 function openFavSheet(m){
@@ -1058,6 +1077,7 @@ const GENRE_CHIPS = [
   {id:'all', name:'Все'},
   {id:28, name:'Боевик'}, {id:18, name:'Драма'}, {id:35, name:'Комедия'},
   {id:878, name:'Фантастика'}, {id:53, name:'Триллер'}, {id:27, name:'Ужасы'},
+  {id:16, name:'Мультики'},
 ];
 const RU_GENRE = {28:'Боевик',12:'Приключения',16:'Анимация',35:'Комедия',80:'Криминал',18:'Драма',14:'Фэнтези',27:'Ужасы',10749:'Мелодрама',878:'Фантастика',53:'Триллер',36:'История',10402:'Музыка',10759:'Боевик',10765:'Фантастика'};
 const GENRE_ID_BY_RU = {};
@@ -1467,7 +1487,9 @@ async function renderRows(){
   const box = $('#rows');
   let sections = state.sections;
   if(state.genre!=='all'){
-    const gname = GENRE_CHIPS.find(c=>c.id==state.genre).name;
+    const chip = GENRE_CHIPS.find(c=>c.id==state.genre);
+    const gname = chip.name;
+    const poolName = RU_GENRE[chip.id] || gname;
     let items = [], tvItems = [];
     if(state.live){
       try{
@@ -1480,7 +1502,7 @@ async function renderRows(){
         items.concat(tvItems).forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
       }catch(e){}
     } else {
-      items = state.pool.filter(m=>m.genres.includes(gname));
+      items = state.pool.filter(m=>m.genres.includes(poolName));
     }
     sections = [{id:'g', title:gname, items:items.slice(0,14),
       more:{type:'genre', genreId:state.genre, title:gname}},
@@ -1595,6 +1617,19 @@ async function openCategory(more){
     grid.classList.toggle('grid3', !isColList);
     grid.style.display = isColList ? 'block' : '';
   };
+  if(more.type==='fav'){
+    lastCat = null;
+    $('#scr-cat').scrollTop = 0;
+    catMore = more; catPage = 0; catDone = true; catLoading = false;
+    renderStudioChips();
+    setGridMode();
+    const items = state.favs[more.favId]||[];
+    grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Пока пусто</div>';
+    bindCards(grid);
+    if(catObs){ catObs.disconnect(); catObs = null; }
+    const sens = $('#catSens'); if(sens) sens.remove();
+    return;
+  }
   if(lastCat && lastCat.html && JSON.stringify(lastCat.more)===JSON.stringify(more)){
     grid.innerHTML = lastCat.html;
     setGridMode();
@@ -2274,11 +2309,14 @@ function openOptSheet(title, opts, cur, cb){
   ).join('');
   optCb = cb;
   $('#optVeil').classList.add('show');
+  const on = l.querySelector('.opt-row.on');
+  if(on) requestAnimationFrame(()=>{ try{ on.scrollIntoView({block:'center'}); }catch(_){} });
   l.querySelectorAll('.opt-row').forEach(b=>b.onclick=()=>{
     $('#optVeil').classList.remove('show');
     if(optCb) optCb(+b.dataset.i);
   });
 }
+$('#optX').onclick = ()=>$('#optVeil').classList.remove('show');
 $('#optVeil').addEventListener('click', e=>{ if(e.target.id==='optVeil') e.target.classList.remove('show'); });
 
 /* --- каркас экрана --- */
@@ -3647,7 +3685,7 @@ async function openPerson(pid, pname, role){
 
 /* =================== TABS =================== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
-$('#catBack').onclick = ()=>goto('home');
+$('#catBack').onclick = ()=>goto(catMore && catMore.type==='fav' ? 'fav' : 'home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
   stopPlayer();
