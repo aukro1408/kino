@@ -531,11 +531,6 @@
   .vw-eps{font-size:12px; color:var(--muted); font-weight:600; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .vw-eps .rate{color:var(--star); font-weight:800}
   .vw-side{display:flex; flex-direction:column; align-items:flex-end; gap:7px; flex:0 0 auto}
-  .vw-playb{width:42px; height:42px; border-radius:50%; border:none; cursor:pointer; flex:0 0 auto;
-    background:linear-gradient(135deg,#3b8cff,#7b5cff); display:flex; align-items:center; justify-content:center;
-    box-shadow:0 6px 16px rgba(70,110,255,.35)}
-  .vw-playb:active{transform:scale(.92)}
-  .vw-playb svg{width:16px; height:16px; fill:#fff}
   .vw-qb{font-size:10.5px; font-weight:800; color:#8dbcff; background:rgba(77,163,255,.14);
     border:1px solid rgba(77,163,255,.35); padding:3px 8px; border-radius:7px; white-space:nowrap}
   .vw-prog{height:3px; border-radius:2px; background:rgba(255,255,255,.10); margin-top:8px; overflow:hidden}
@@ -546,9 +541,6 @@
     border:1px solid rgba(255,255,255,.09); background:var(--card); color:#fff; font:inherit; font-size:14px; font-weight:700}
   .vw-voice:active{transform:scale(.98)}
   .vw-voice .vs{font-size:12px; color:var(--muted); font-weight:600; margin-top:2px}
-  .vw-voice .pl{width:36px; height:36px; flex:0 0 auto; border-radius:50%;
-    background:linear-gradient(135deg,#3b8cff,#7b5cff); display:flex; align-items:center; justify-content:center}
-  .vw-voice .pl svg{width:15px; height:15px; fill:#fff}
   .vw-load{text-align:center; color:var(--muted); padding:34px 18px; font-size:14px; line-height:1.7}
   .vw-backline{display:inline-flex; align-items:center; gap:6px; margin:0 0 12px; padding:9px 15px;
     border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
@@ -2445,19 +2437,17 @@ function vwLumioRenderEps(){
     const et = vwEpName(e, i);
     const w = vwIsW('l'+m.id, 's'+sNum+'e'+i);
     return `<button class="vw-ep" data-i="${i}">
-      <span class="vw-thumb"><span class="vw-num">${escTx(et.num)}</span></span>
+      <span class="vw-thumb" data-ep="${escTx(et.num)}"><span class="vw-num">${escTx(et.num)}</span></span>
       <span class="vw-epbody">
         <span class="vw-ept">${escTx(et.title)}</span>
         <span class="vw-eps">${e.voice?escTx(e.voice):(e.method==='play'?'смотреть':'')}</span>
         <span class="vw-prog"><i style="width:${w?100:0}%"></i></span>
       </span>
-      <span class="vw-side">
-        <span class="vw-playb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-        ${w?'<span class="vw-done">✓</span>':''}
-      </span>
+      ${w?'<span class="vw-side"><span class="vw-done">✓</span></span>':''}
     </button>`;
   }).join('') + '</div>';
   el.querySelectorAll('.vw-ep').forEach(b=>b.onclick=()=>vwLumioPlayEp(+b.dataset.i));
+  vwEpStills(m, vwLumioSeasonNum(), el, false);
   vw.render = vwLumioRenderEps;
 }
 async function vwLumioPlayEp(ei){
@@ -2493,7 +2483,7 @@ function vwLumioRenderVoices(){
     `<div class="vw-sec-t">Озвучка${epT?' · серия '+escTx(epT.num):''}</div><div class="vw-list">` +
     items.map((it,i)=>{
       const sub = it.voice && it.voice!==it.title ? `<div class="vs">${escTx(it.voice)}</div>` : '';
-      return `<button class="vw-voice" data-i="${i}"><span>${escTx(it.title)}${sub}</span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`;
+      return `<button class="vw-voice" data-i="${i}"><span>${escTx(it.title)}${sub}</span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`;
     }).join('') + '</div>';
   const back = $('#vwToEps'); if(back) back.onclick = ()=>vwLumioRenderEps();
   el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwLumioPlay(items[+b.dataset.i], isTv?vw.epIdx:-1));
@@ -2650,7 +2640,7 @@ function vwFxMovie(list){
   vwSetSub(`Filmix 4k · ${items.length} ${plural(items.length,'озвучка','озвучки','озвучек')} · до ${best}p`);
   const el = $('#vwList'); if(!el) return;
   el.innerHTML = `<div class="vw-sec-t">Озвучка</div><div class="vw-list">` +
-    items.map((it,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+    items.map((it,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`).join('') + '</div>';
   el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwFxPlay(items[+b.dataset.i], 0, 0));
   vw.render = ()=>vwFxMovie(list);
 }
@@ -2723,19 +2713,17 @@ function vwFxRenderEps(){
     const vs = e.voices||[];
     const vn = vs.slice(0,2).map(v=>v.voice).join(' · ');
     return `<button class="vw-ep" data-i="${i}">
-      <span class="vw-thumb"><span class="vw-num">${+e.eNum}</span></span>
+      <span class="vw-thumb" data-ep="${+e.eNum}"><span class="vw-num">${+e.eNum}</span></span>
       <span class="vw-epbody">
-        <span class="vw-ept">${+e.eNum} серия</span>
+        <span class="vw-ept" data-ept="${+e.eNum}">${+e.eNum} серия</span>
         <span class="vw-eps">${escTx(vn)}${vs.length>2?' · …':''}</span>
         <span class="vw-prog"><i style="width:${w?100:0}%"></i></span>
       </span>
-      <span class="vw-side">
-        <span class="vw-playb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-        ${w?'<span class="vw-done">✓</span>':''}
-      </span>
+      ${w?'<span class="vw-side"><span class="vw-done">✓</span></span>':''}
     </button>`;
   }).join('') + '</div>';
   el.querySelectorAll('.vw-ep').forEach(b=>b.onclick=()=>vwFxPlayEp(+b.dataset.i));
+  vwEpStills(m, sNum, el, true);
   vw.render = vwFxRenderEps;
 }
 function vwFxPlayEp(i){
@@ -2751,7 +2739,7 @@ function vwFxPlayEp(i){
   const el = $('#vwList'); if(!el) return;
   el.innerHTML = `<button class="vw-backline" id="vwToEps">‹ Серии</button>
     <div class="vw-sec-t">Озвучка · серия ${+e.eNum}</div><div class="vw-list">` +
-    voices.map((it,j)=>`<button class="vw-voice" data-j="${j}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+    voices.map((it,j)=>`<button class="vw-voice" data-j="${j}"><span>${escTx(it.voice)}<div class="vs">${it.q}p</div></span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`).join('') + '</div>';
   $('#vwToEps').onclick = ()=>vwFxRenderEps();
   el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>{ vw.voice = voices[+b.dataset.j].voice; vwFxPlay(voices[+b.dataset.j], e.sNum, e.eNum); });
   vw.render = vwFxRenderEps;
@@ -2761,6 +2749,45 @@ function vwFxPlay(it, sNum, eNum){
   if(sNum) vwMarkW('f'+m.id, 's'+sNum+'e'+eNum);
   const se = sNum ? ' · S'+sNum+'E'+eNum : '';
   vwAskPlayer(it.url, (m.title||'Filmix') + se + ' · ' + it.voice + ' ' + it.q + 'p', [], m, fxInfo(it));
+}
+
+/* ---------- кадры серий (TMDB stills) ---------- */
+const vwEpMetaCache = {};
+async function vwEpMeta(tmdbId, season){
+  const key = tmdbId + ':' + season;
+  if(vwEpMetaCache[key] !== undefined) return vwEpMetaCache[key];
+  try{
+    const d = await tmdb('/tv/' + tmdbId + '/season/' + season);
+    const map = {};
+    (d.episodes||[]).forEach(e=>{ map[e.episode_number] = {still: e.still_path, name: e.name}; });
+    vwEpMetaCache[key] = map;
+  }catch(e){ vwEpMetaCache[key] = null; }
+  return vwEpMetaCache[key];
+}
+function vwLumioSeasonNum(){
+  const t = onlCleanName(((vw.seasons||[])[vw.seasonIdx]||{}).title||'');
+  const mm = t.match(/(\d+)/);
+  return mm ? mm[1] : String(vw.seasonIdx+1);
+}
+function vwEpStills(m, seasonNum, el, withNames){
+  if(!state.tmdbKey || !el || !/^\d+$/.test(String((m&&m.id)||''))) return;
+  vwEpMeta(m.id, seasonNum).then(map=>{
+    if(!map || !el.isConnected) return;
+    el.querySelectorAll('.vw-thumb[data-ep]').forEach(th=>{
+      const meta = map[th.dataset.ep];
+      if(meta && meta.still && !th.querySelector('img')){
+        const img = document.createElement('img');
+        img.src = 'https://image.tmdb.org/t/p/w300' + meta.still;
+        img.alt = ''; img.loading = 'lazy';
+        img.onload = ()=>{ const n = th.querySelector('.vw-num'); if(n) n.style.display = 'none'; };
+        th.insertBefore(img, th.firstChild);
+      }
+    });
+    if(withNames) el.querySelectorAll('[data-ept]').forEach(t=>{
+      const meta = map[t.dataset.ept];
+      if(meta && meta.name) t.textContent = meta.name;
+    });
+  });
 }
 
 /* =================== ТОРРЕНТЫ =================== */
@@ -2878,7 +2905,7 @@ async function playTorrent(t, m){
       vw.render = vwTorRender;
       el.innerHTML = `<button class="vw-backline" id="vwToTor">‹ Раздачи</button>
         <div class="vw-sec-t">Выбери файл · ${sorted.length}</div><div class="vw-list">` +
-        sorted.map(f=>`<button class="vw-voice" data-f="${f.id}"><span>${escTx(shortName(f.path))}<div class="vs">${fmtSize(f.size)}</div></span><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>`).join('') + '</div>';
+        sorted.map(f=>`<button class="vw-voice" data-f="${f.id}"><span>${escTx(shortName(f.path))}<div class="vs">${fmtSize(f.size)}</div></span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`).join('') + '</div>';
       $('#vwToTor').onclick = ()=>vwTorRender();
       el.querySelectorAll('.vw-voice').forEach(x=>x.onclick=()=>{
         openExternal(tsStreamURL(ts, hash, x.dataset.f, t.Title));
