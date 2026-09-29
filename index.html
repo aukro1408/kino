@@ -748,6 +748,7 @@
       <div class="logo" id="catTitle" style="font-size:16px; letter-spacing:3px">КАТЕГОРИЯ</div>
       <div style="width:42px"></div>
     </div>
+    <div id="catChips"></div>
     <div class="grid3" id="catGrid" style="margin-top:8px"></div>
   </div>
 
@@ -1270,18 +1271,23 @@ function colChipsHTML(active){
   return `<div class="col-chips">${COL_CATS.map(c=>
     `<button class="chip${c.id===active?' on':''}" data-colcat="${c.id}">${c.name}</button>`).join('')}</div>`;
 }
-function studioChipsHTML(active){
-  return `<div class="col-chips"><button class="chip${active!=='tv'?' on':''}" data-stsub="movie">Фильмы</button><button class="chip${active==='tv'?' on':''}" data-stsub="tv">Сериалы</button></div>`;
-}
-function bindStudioChips(grid){
-  grid.querySelectorAll('[data-stsub]').forEach(ch=>{
-    ch.onclick = ()=>{
-      catMore = {...catMore, sub: ch.dataset.stsub};
-      catPage = 0; catDone = false; catLoading = false; lastCat = null;
-      grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
-      catLoadMore().then(()=>attachCatSentinel());
-    };
-  });
+function renderStudioChips(){
+  const box = $('#catChips');
+  if(!box) return;
+  if(catMore && catMore.type==='studio'){
+    box.innerHTML = `<div class="col-chips"><button class="chip${catMore.sub!=='tv'?' on':''}" data-stsub="movie">Фильмы</button><button class="chip${catMore.sub==='tv'?' on':''}" data-stsub="tv">Сериалы</button></div>`;
+    box.querySelectorAll('[data-stsub]').forEach(ch=>{
+      ch.onclick = ()=>{
+        if(catMore.sub === ch.dataset.stsub) return;
+        catMore = {...catMore, sub: ch.dataset.stsub};
+        catPage = 0; catDone = false; catLoading = false; lastCat = null;
+        renderStudioChips();
+        const grid = $('#catGrid');
+        grid.innerHTML = '<div class="search-hint">Загружаю…</div>';
+        catLoadMore().then(()=>attachCatSentinel());
+      };
+    });
+  } else box.innerHTML = '';
 }
 function bindColCards(root){
   root.querySelectorAll('.col-card').forEach(c=>{
@@ -1442,8 +1448,7 @@ async function catLoadMore(){
       const gotN = (d.results||[]).length;
       if(!gotN || gotN < 20 || catPage >= 60) catDone = true;
     } else {
-      const isStudio = catMore.type==='studio';
-      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv' || catMore.type==='network' || (isStudio && catMore.sub==='tv');
+      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv' || catMore.type==='network' || (catMore.type==='studio' && catMore.sub==='tv');
       const d = isCol ? await cubGet(`view/${catMore.colId}?page=${catPage+1}`) : await tmdb(catURL(catMore, catPage+1));
       const seen = new Set();
       const items = [];
@@ -1452,11 +1457,10 @@ async function catLoadMore(){
         if(n && !seen.has(n.id)){ seen.add(n.id); items.push(n); }
       });
       items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
-      if(catPage===0) grid.innerHTML = isStudio ? studioChipsHTML(catMore.sub) : '';
-      const html = visible(items).map(cardHTML).join('');
+      if(catPage===0) grid.innerHTML = '';
+      const html = visible(items.filter(m=>m.poster)).map(cardHTML).join('');
       if(html) grid.insertAdjacentHTML('beforeend', html);
       bindCards(grid);
-      if(catPage===0 && isStudio) bindStudioChips(grid);
       catPage++;
       if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
     }
@@ -1498,6 +1502,7 @@ async function openCategory(more){
     setGridMode();
     bindCards(grid); bindColCards(grid);
     catMore = lastCat.more; catPage = lastCat.page; catDone = lastCat.done; catLoading = false;
+    renderStudioChips();
     attachCatSentinel();
     const st = lastCat.scroll||0;
     requestAnimationFrame(()=>{ const sc = document.getElementById('scr-cat'); if(sc) sc.scrollTop = st; });
@@ -1506,6 +1511,7 @@ async function openCategory(more){
   lastCat = null;
   $('#scr-cat').scrollTop = 0;
   catMore = more; catPage = 0; catDone = false; catLoading = false;
+  renderStudioChips();
   setGridMode();
   if(!state.live && !isCol){
     const items = state.pool.slice(0,30);
