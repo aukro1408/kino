@@ -2574,8 +2574,12 @@ function alpacSaveToken(j){
   if(typeof t==='string' && t.trim()){ LS.set('alpac_token', t.trim()); return true; }
   return false;
 }
+function alpacHeaders(){
+  const t = alpacToken();
+  return t ? {'X-Alpac-Token': t, 'X-Lampac-Token': t} : {};
+}
 async function alpacFetchEvents(m){
-  const r = await fetch(ALPAC+'/lite/events?life=true&'+alpacParams(m)+'&'+alpacAuthQS());
+  const r = await fetch(ALPAC+'/lite/events?life=true&'+alpacParams(m)+'&'+alpacAuthQS(), {headers: alpacHeaders()});
   if(!r.ok) throw new Error('http');
   return r.json();
 }
@@ -2604,7 +2608,7 @@ async function alpacEvents(m, tok){
       await new Promise(r2=>setTimeout(r2, 1500));
       if(!vwAlive(tok)) throw new Error('gone');
       let r3 = null;
-      try{ r3 = await fetch(ALPAC+'/lifeevents?memkey='+encodeURIComponent(j.memkey)); }catch(_){ continue; }
+      try{ r3 = await fetch(ALPAC+'/lifeevents?memkey='+encodeURIComponent(j.memkey), {headers: alpacHeaders()}); }catch(_){ continue; }
       if(!r3.ok) continue;
       const j3 = await r3.json().catch(()=>null);
       if(!j3) continue;
@@ -2616,7 +2620,7 @@ async function alpacEvents(m, tok){
   const arr = Array.isArray(j) ? j : [];
   if(arr.length){
     try{
-      const r4 = await fetch(ALPAC+'/tg/auth/status?uid='+encodeURIComponent(alpacUid()));
+      const r4 = await fetch(ALPAC+'/tg/auth/status?uid='+encodeURIComponent(alpacUid()), {headers: alpacHeaders()});
       if(r4.ok){ const j4 = await r4.json(); if(j4 && j4.authorized && j4.token) LS.set('alpac_token', j4.token); }
     }catch(_){}
   }
@@ -2688,7 +2692,7 @@ async function vwAlpacLoad(si, tok){
   vwLoading('Загружаю…');
   try{
     const url = alpacAbs(s.url) + (String(s.url).includes('?')?'&':'?') + alpacParams(vw.m) + '&' + alpacAuthQS();
-    const r = await fetch(url);
+    const r = await fetch(url, {headers: alpacHeaders()});
     if(!r.ok) throw new Error('http');
     const html = await r.text();
     if(!vwAlive(tok)) return;
@@ -2700,7 +2704,7 @@ async function vwAlpacFollow(url, tok, fromVoice){
   vwLoading('Загружаю…');
   try{
     const u = alpacAbs(url) + (String(url).includes('?')?'&':'?') + alpacParams(vw.m) + '&' + alpacAuthQS();
-    const r = await fetch(u);
+    const r = await fetch(u, {headers: alpacHeaders()});
     if(!r.ok) throw new Error('http');
     if(!vwAlive(tok)) return;
     const text = await r.text();
@@ -2850,7 +2854,7 @@ async function vwAlpacResolve(it){
   }
   if(it.method==='iframe') return {iframe: it.url};
   const u = alpacAbs(it.url) + (String(it.url).includes('?')?'&':'?') + alpacAuthQS();
-  const r = await fetch(u);
+  const r = await fetch(u, {headers: alpacHeaders()});
   if(!r.ok) throw new Error('http');
   const j = await r.json();
   if(j && j.accsdb) throw {auth: j};
