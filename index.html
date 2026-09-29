@@ -462,6 +462,10 @@
     font:inherit; font-size:14px; font-weight:700}
   .rz-more:active{transform:scale(.98)}
   .rz-more:disabled{opacity:.6}
+  .rz-retry{margin-top:14px; padding:12px 22px; border-radius:14px; cursor:pointer;
+    border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:#fff;
+    font:inherit; font-size:14px; font-weight:700}
+  .rz-retry:active{transform:scale(.97)}
 
   /* ---------- онлайн (Lumio) ---------- */
   .onl-back{display:inline-flex; align-items:center; gap:6px; margin:0 0 10px; padding:8px 14px;
@@ -1799,11 +1803,22 @@ async function rzSearchId(name, year){
 async function rzCommentsHtml(found, cstart){
   const t = Date.now();
   const host = (found && found.host) || RZ_HOST;
-  const txt = await rzFetch(host + '/ajax/get_comments/?t=' + t + '&news_id=' + found.id + '&cstart=' + (cstart||1) + '&type=0&comment_id=0&skin=hdrezka', found.url);
-  if(rzBotCheck(txt)) throw new Error('bot');
-  const j = JSON.parse(txt);
-  if(!j || !j.comments) throw new Error('empty');
-  return j;
+  const path = host + '/ajax/get_comments/?t=' + t + '&news_id=' + found.id + '&cstart=' + (cstart||1) + '&type=0&comment_id=0&skin=hdrezka';
+  let lastErr = null;
+  for(let a=0; a<2; a++){
+    try{
+      const txt = await rzFetch(path, found.url);
+      if(rzBotCheck(txt)) throw new Error('bot');
+      const j = JSON.parse(txt);
+      if(!j || !j.comments) throw new Error('empty');
+      return j;
+    }catch(e){
+      if(e.message==='bot') throw e;
+      lastErr = e;
+      await new Promise(r=>setTimeout(r, 900));
+    }
+  }
+  throw lastErr;
 }
 function rzTotalPages(navHtml){
   // навигация вида: sof.comments.loadComments(770, 2, false, 0)
@@ -1975,9 +1990,13 @@ async function rzLoadComments(m){
     }
   }catch(e){
     if(currentScreenId()!=='scr-rezka') return;
-    list.innerHTML = e.message==='bot'
-      ? '<div class="rz-empty">Rezka включила проверку «ты не бот».<br>Вставь свой Cookie с hdrezka в Профиле → Rezka.</div>'
-      : '<div class="rz-empty">Не получилось загрузить комментарии<br><span style="opacity:.45;font-size:12px">'+escTx(e.message||'unknown')+'</span></div>';
+    if(e.message==='bot'){
+      list.innerHTML = '<div class="rz-empty">Rezka включила проверку «ты не бот».<br>Вставь свой Cookie с hdrezka в Профиле → Rezka.</div>';
+    }else{
+      list.innerHTML = '<div class="rz-empty">Не получилось загрузить комментарии<br><span style="opacity:.45;font-size:12px">'+escTx(e.message||'unknown')+'</span><br><button class="rz-retry" id="rzRetry">Попробовать снова</button></div>';
+      const rb = document.getElementById('rzRetry');
+      if(rb) rb.onclick = ()=>{ list.innerHTML = '<div class="rz-load">Загружаю комментарии…</div>'; rzLoadComments(m); };
+    }
   }
 }
 
