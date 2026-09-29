@@ -410,6 +410,27 @@
 .wcard:active{transform:scale(.96)}
 .wcard svg{width:28px; height:28px; color:#8dbcff; filter:drop-shadow(0 2px 8px rgba(77,163,255,.45))}
 .wcard span{font-size:13px; font-weight:700}
+.wcard-wide{grid-column:1/-1; flex-direction:row; justify-content:flex-start; align-items:center; gap:13px; padding:10px 16px 10px 11px; text-align:left}
+.alpac-ico{width:46px; height:46px; border-radius:13px; mix-blend-mode:screen; flex:none}
+.alpac-tx{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; align-items:flex-start}
+.alpac-tx b{font-size:16.5px; font-weight:800; letter-spacing:.4px}
+.alpac-tx small{font-size:11.5px; color:var(--muted); font-weight:600}
+.alpac-go{font-size:24px; color:var(--muted); font-weight:300; line-height:1; flex:none}
+.alp-auth{max-width:340px; margin:26px auto 0; padding:26px 22px 22px; text-align:center; border-radius:24px;
+  background:linear-gradient(180deg,rgba(77,163,255,.13),rgba(77,163,255,.04));
+  border:1px solid rgba(124,196,255,.25); box-shadow:0 14px 34px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12)}
+.alp-qr{width:200px; height:200px; border-radius:16px; background:#fff; padding:10px; display:block; margin:0 auto 18px;
+  box-shadow:0 0 34px rgba(77,163,255,.35)}
+.alp-code{font-size:34px; font-weight:800; letter-spacing:8px; margin-bottom:12px; text-indent:8px;
+  font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif}
+.alp-msg{font-size:13.5px; line-height:1.6; color:var(--muted); font-weight:600; margin-bottom:16px}
+.alp-msg b{color:var(--text)}
+.alp-status{display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px; font-weight:700; color:#8dbcff; margin-bottom:16px}
+.alp-dot{width:9px; height:9px; border-radius:50%; background:#3b82f6; box-shadow:0 0 10px #3b82f6; animation:alp-blink 1.2s ease-in-out infinite}
+@keyframes alp-blink{50%{opacity:.35}}
+.alp-refresh{padding:11px 22px; border-radius:14px; border:1px solid rgba(124,196,255,.3); cursor:pointer;
+  font:inherit; font-size:13.5px; font-weight:700; color:var(--text); background:rgba(77,163,255,.1)}
+.alp-refresh:active{transform:scale(.96)}
 .mv-genres i{border:1px solid rgba(124,196,255,.35); color:#a9cdff; background:rgba(77,163,255,.10);
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
 .mv-trailer{border-radius:20px; border:1px solid rgba(124,196,255,.22);
@@ -1779,6 +1800,7 @@ function renderMovie(m){
       </div></div>`:''}
       <div class="mv-sec watch">
         <div class="watch-grid">
+          <button class="wcard wcard-wide" id="alpacFind"><img class="alpac-ico" src="alpac.jpg" alt=""><span class="alpac-tx"><b>Alpac</b><small id="alpacState">Онлайн · вход по QR</small></span><span class="alpac-go">›</span></button>
           <button class="wcard" id="torFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0V4z"/><path d="M5 9h4M15 9h4"/></svg><span>Найти раздачи</span></button>
           <button class="wcard" id="onlFind"><svg viewBox="0 0 64 64" style="width:30px;height:30px"><defs><linearGradient id="lumg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe0ff"/><stop offset="1" stop-color="#3b8cff"/></linearGradient></defs><path d="M32 4 58 18v28L32 60 6 46V18L32 4Z" fill="url(#lumg2)"/><path d="M25 21v22l18-11-18-11z" fill="#0a1c33"/></svg><span>Lumio</span></button>
           <button class="wcard" id="fxFind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><text x="12" y="15" text-anchor="middle" font-size="8.5" font-weight="800" fill="currentColor" stroke="none" font-family="inherit">4K</text></svg><span>Filmix 4k</span></button>
@@ -1826,6 +1848,8 @@ function renderMovie(m){
   animBars();
   loadKpRating(m);
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>openView('tor', m);
+  const af = $('#alpacFind'); if(af) af.onclick = ()=>openView('alpac', m);
+  const as = $('#alpacState'); if(as) as.textContent = alpacToken() ? 'Онлайн · подключено' : 'Онлайн · вход по QR';
   const rzo = $('#rzOpen'); if(rzo) rzo.onclick = ()=>openRezka(m);
   const onf = $('#onlFind'); if(onf) onf.onclick = ()=>openView('lumio', m);
   const fxf = $('#fxFind'); if(fxf) fxf.onclick = ()=>openView('fx', m);
@@ -2226,7 +2250,7 @@ async function jacSearch(q){
 
 /* =================== ЭКРАН ПРОСМОТРА =================== */
 const MITSU = 'https://beta.mitsu.tv/api';
-const VW_NAMES = {tor:'Торренты', lumio:'Lumio', fx:'Filmix 4k'};
+const VW_NAMES = {tor:'Торренты', lumio:'Lumio', fx:'Filmix 4k', alpac:'Alpac'};
 let vw = null;
 
 /* --- просмотренные серии --- */
@@ -2284,6 +2308,7 @@ function vwShellHTML(){
   </div>`;
 }
 function openView(kind, m){
+  try{ if(vw && vw.alpacPoll) clearInterval(vw.alpacPoll); }catch(_){}
   vw = {kind, m, token: Math.random()};
   pushScreen('scr-view');
   const sc = $('#scr-view');
@@ -2293,6 +2318,7 @@ function openView(kind, m){
   if(kind==='tor') vwTorInit();
   else if(kind==='lumio') vwLumioInit();
   else if(kind==='fx') vwFxInit();
+  else if(kind==='alpac') vwAlpacInit();
 }
 function vwAlive(tok){ return vw && vw.token===tok; }
 function vwLoading(t){ const l = $('#vwList'); if(l) l.innerHTML = `<div class="vw-load">${t||'Загружаю…'}</div>`; }
@@ -2499,6 +2525,336 @@ function vwLumioPlay(it, ei){
     source: 'Lumio · ' + vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx),
     voice: it.voice || '',
   });
+}
+
+/* =================== ALPAC =================== */
+const ALPAC = 'https://beta.l-vid.online';
+function alpacUid(){
+  let u = LS.get('alpac_uid','');
+  if(!/^[0-9a-f]{12}$/.test(u||'')){
+    try{
+      const a = new Uint8Array(6);
+      if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+      else for(let i=0;i<6;i++) a[i] = Math.floor(Math.random()*256);
+      u = Array.from(a).map(b=>('0'+b.toString(16)).slice(-2)).join('');
+    }catch(_){ u = (Math.random().toString(16).slice(2)+Date.now().toString(16)).slice(0,12); }
+    LS.set('alpac_uid', u);
+  }
+  return u;
+}
+function alpacToken(){ return String(LS.get('alpac_token','')||'').trim(); }
+function alpacAbs(u){ u = String(u||''); return /^https?:\/\//i.test(u) ? u : ALPAC + (u.charAt(0)==='/' ? u : '/'+u); }
+function alpacParams(m){
+  const q = [];
+  q.push('id='+encodeURIComponent(String(m.id||'').replace(/^tv/,'')));
+  q.push('title='+encodeURIComponent(m.title||''));
+  q.push('original_title='+encodeURIComponent(m.orig||''));
+  q.push('serial='+(m.media==='tv'?1:0));
+  q.push('year='+String(m.date||'').slice(0,4));
+  q.push('source=tmdb'); q.push('rchtype=');
+  return q.join('&');
+}
+function alpacAuthQS(){
+  let q = 'uid='+encodeURIComponent(alpacUid());
+  const t = alpacToken();
+  if(t) q += '&token='+encodeURIComponent(t);
+  return q;
+}
+function alpacBestQ(q){
+  let best = '', bestN = -1;
+  Object.keys(q||{}).forEach(k=>{
+    const mm = String(k).match(/(\d{3,4})/);
+    const n = mm ? +mm[1] : 0;
+    if(n >= bestN){ bestN = n; best = q[k]; }
+  });
+  return best || q[Object.keys(q||{})[0]] || '';
+}
+async function vwAlpacInit(){
+  try{ if(vw && vw.alpacPoll) clearInterval(vw.alpacPoll); }catch(_){}
+  const tok = vw.token, m = vw.m;
+  vw.srcs = []; vw.srcIdx = 0; vw.seasons = []; vw.seasonIdx = 0; vw.eps = []; vw.voices = [];
+  vwPillsHTML([]); vwSetWatch(null); vwSetSub(''); vwSetQ('');
+  vwLoading('Подключаюсь к Alpac…');
+  try{
+    const ev = await alpacEvents(m, tok);
+    if(!vwAlive(tok)) return;
+    if(ev.auth){ vwAlpacAuth(ev.auth, tok); return; }
+    if(!ev.sources.length){ vwEmpty('Источников не нашлось 😕'); return; }
+    vw.srcs = ev.sources;
+    if(ev.sources.length===1) vwAlpacLoad(0, tok);
+    else vwAlpacRenderSources(tok);
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Не получилось связаться с Alpac 😕'); }
+}
+async function alpacEvents(m, tok){
+  const r = await fetch(ALPAC+'/lite/events?life=true&'+alpacParams(m)+'&'+alpacAuthQS());
+  if(!r.ok) throw new Error('http');
+  let j = await r.json();
+  if(j && j.accsdb) return {auth:j};
+  if(j && j.life && j.memkey){
+    for(let i=0;i<24;i++){
+      await new Promise(r2=>setTimeout(r2, 1500));
+      if(!vwAlive(tok)) throw new Error('gone');
+      let r3 = null;
+      try{ r3 = await fetch(ALPAC+'/lifeevents?memkey='+encodeURIComponent(j.memkey)); }catch(_){ continue; }
+      if(!r3.ok) continue;
+      const j3 = await r3.json().catch(()=>null);
+      if(!j3) continue;
+      if(j3.accsdb) return {auth:j3};
+      if(!j3.life){ j = j3; break; }
+    }
+  }
+  if(j && j.accsdb) return {auth:j};
+  const arr = Array.isArray(j) ? j : [];
+  if(arr.length){
+    try{
+      const r4 = await fetch(ALPAC+'/tg/auth/status?uid='+encodeURIComponent(alpacUid()));
+      if(r4.ok){ const j4 = await r4.json(); if(j4 && j4.authorized && j4.token) LS.set('alpac_token', j4.token); }
+    }catch(_){}
+  }
+  return {sources: arr.filter(s=>s && s.show!==false && s.url)};
+}
+function vwAlpacAuth(er, tok){
+  if(!vw || vw.kind!=='alpac') return;
+  try{ if(vw.alpacPoll) clearInterval(vw.alpacPoll); }catch(_){}
+  vwPillsHTML([]); vwSetWatch(null);
+  vwSetSub('Вход через Telegram');
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="alp-auth">
+    ${er.qr?`<img class="alp-qr" src="${er.qr}" alt="QR">`:''}
+    <div class="alp-code">${escTx(er.code||'')}</div>
+    <div class="alp-msg">Отправь этот код боту <b>${escTx(er.bot||'@go_lampa_testbot')}</b> в Telegram<br>или просто сканируй QR</div>
+    <div class="alp-status" id="alpStatus"><span class="alp-dot"></span>Жду подтверждения…</div>
+    <button class="alp-refresh" id="alpRefresh">Обновить код</button>
+  </div>`;
+  $('#alpRefresh').onclick = ()=>vwAlpacInit();
+  vw.alpacPoll = setInterval(async ()=>{
+    if(!vwAlive(tok)){ try{ clearInterval(vw.alpacPoll); }catch(_){} return; }
+    try{
+      const r = await fetch(ALPAC+'/tg/auth/status?uid='+encodeURIComponent(alpacUid()));
+      if(!r.ok) return;
+      const j = await r.json();
+      if(j && j.authorized){
+        try{ clearInterval(vw.alpacPoll); }catch(_){}
+        if(j.token) LS.set('alpac_token', j.token);
+        toast('Alpac подключён ✅');
+        if(vwAlive(tok)) vwAlpacInit();
+      }
+    }catch(_){}
+  }, 3000);
+  vw.render = ()=>vwAlpacAuth(er, tok);
+}
+function vwAlpacRenderSources(tok){
+  if(!vw || vw.kind!=='alpac') return;
+  vwPillsHTML([]);
+  vwSetWatch(null);
+  vwSetSub('Alpac · выбери источник');
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Источники · ${vw.srcs.length}</div><div class="vw-list">` +
+    vw.srcs.map((s,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(vwSrcName(s,i))}</span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`).join('') + '</div>';
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwAlpacLoad(+b.dataset.i, tok));
+  vw.render = ()=>vwAlpacRenderSources(tok);
+}
+function vwAlpacMaybeAuth(text, tok){
+  if(text.indexOf('"accsdb"')===-1) return false;
+  try{
+    const j = JSON.parse(text);
+    if(j && j.accsdb){ if(vwAlive(tok)) vwAlpacAuth(j, tok); return true; }
+  }catch(_){}
+  return false;
+}
+async function vwAlpacLoad(si, tok){
+  vw.srcIdx = si;
+  const s = vw.srcs[si];
+  vwLoading('Загружаю…');
+  try{
+    const url = alpacAbs(s.url) + (String(s.url).includes('?')?'&':'?') + alpacParams(vw.m) + '&' + alpacAuthQS();
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('http');
+    const html = await r.text();
+    if(!vwAlive(tok)) return;
+    if(vwAlpacMaybeAuth(html, tok)) return;
+    vwAlpacGot(html, tok, false);
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Ошибка загрузки 😕'); }
+}
+async function vwAlpacFollow(url, tok, fromVoice){
+  vwLoading('Загружаю…');
+  try{
+    const u = alpacAbs(url) + (String(url).includes('?')?'&':'?') + alpacParams(vw.m) + '&' + alpacAuthQS();
+    const r = await fetch(u);
+    if(!r.ok) throw new Error('http');
+    if(!vwAlive(tok)) return;
+    const text = await r.text();
+    if(vwAlpacMaybeAuth(text, tok)) return;
+    vwAlpacGot(text, tok, !!fromVoice);
+  }catch(e){ if(vwAlive(tok)) vwEmpty('Ошибка загрузки 😕'); }
+}
+function vwAlpacGot(html, tok, fromVoice){
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const items = [], buttons = [];
+  dom.querySelectorAll('.videos__item[data-json]').forEach(el=>{
+    let j = null;
+    try{ j = JSON.parse(el.getAttribute('data-json')); }catch(_){}
+    if(!j || !j.url) return;
+    const s = el.getAttribute('s'), e = el.getAttribute('e');
+    items.push({method: j.method||'play', url: String(j.url),
+      title: onlCleanName(el.textContent).slice(0,140) || j.title || 'Смотреть',
+      season: s!==null ? +s : null, episode: e!==null ? +e : null,
+      quality: (j.quality && typeof j.quality==='object') ? j.quality : null,
+      voice: j.translate || ''});
+  });
+  dom.querySelectorAll('.videos__button[data-json]').forEach(el=>{
+    let j = null;
+    try{ j = JSON.parse(el.getAttribute('data-json')); }catch(_){}
+    if(!j || !j.url) return;
+    buttons.push({title: onlCleanName(el.textContent).slice(0,90) || '—', url: String(j.url), active: el.classList.contains('active')});
+  });
+  const videos = items.filter(i=>i.method==='play' || i.method==='call' || i.method==='iframe');
+  if(videos.length){
+    if(buttons.length && !fromVoice){ vw.voices = buttons; vwAlpacRenderVoices(tok); }
+    else if(vw.m.media==='tv'){ vw.eps = videos; vwAlpacRenderEps(tok); }
+    else { vw.voices = videos; vwAlpacRenderMovieVoices(tok); }
+  } else if(items.length){
+    if(items.length===1 && items[0].method==='link'){ vwAlpacFollow(items[0].url, tok, false); }
+    else { vw.seasons = items; vwAlpacRenderSeasons(tok); }
+  } else {
+    vwEmpty('Тут пусто 😕');
+  }
+}
+function vwAlpacPills(){
+  const pills = [];
+  pills.push({label:'Источник', value: vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx),
+    onPick: ()=>openOptSheet('Источник', vw.srcs.map((x,i)=>({t: vwSrcName(x,i), s: onlCleanName(x.balanser||'')})), vw.srcIdx,
+      i=>{ if(i!==vw.srcIdx) vwAlpacLoad(i, vw.token); })});
+  vwPillsHTML(pills);
+}
+function vwAlpacRenderSeasons(tok){
+  if(!vw || vw.kind!=='alpac') return;
+  vwAlpacPills();
+  vwSetWatch(null);
+  vwSetSub(`<b>${escTx(vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx))}</b> · сезоны`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Сезоны · ${vw.seasons.length}</div><div class="vw-list">` +
+    vw.seasons.map((s,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(vwSeasonName(s,i))}</span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`).join('') + '</div>';
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>{ vw.seasonIdx = +b.dataset.i; vwAlpacFollow(vw.seasons[+b.dataset.i].url, tok, false); });
+  vw.render = ()=>vwAlpacRenderSeasons(tok);
+}
+function vwAlpacRenderVoices(tok){
+  if(!vw || vw.kind!=='alpac') return;
+  vwAlpacPills();
+  vwSetWatch(null);
+  vwSetSub(`<b>${escTx(vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx))}</b> · озвучка`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Озвучка</div><div class="vw-list">` +
+    vw.voices.map((v,i)=>`<button class="vw-voice" data-i="${i}"><span>${escTx(v.title)}${v.active?' ✓':''}</span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`).join('') + '</div>';
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwAlpacFollow(vw.voices[+b.dataset.i].url, tok, true));
+  vw.render = ()=>vwAlpacRenderVoices(tok);
+}
+function vwAlpacRenderMovieVoices(tok){
+  if(!vw || vw.kind!=='alpac') return;
+  vwAlpacPills();
+  const m = vw.m, items = vw.voices;
+  vwSetWatch(items.length?'Смотреть':null, items.length?()=>vwAlpacPlay(items[0], -1, tok):null);
+  vwSetSub(`<b>${escTx(vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx))}</b> · озвучка`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = `<div class="vw-sec-t">Озвучка · ${items.length}</div><div class="vw-list">` +
+    items.map((it,i)=>{
+      const sub = it.voice && it.voice!==it.title ? `<div class="vs">${escTx(it.voice)}</div>` : '';
+      return `<button class="vw-voice" data-i="${i}"><span>${escTx(it.title)}${sub}</span><span style="color:var(--muted);font-size:19px;flex:0 0 auto">›</span></button>`;
+    }).join('') + '</div>';
+  el.querySelectorAll('.vw-voice').forEach(b=>b.onclick=()=>vwAlpacPlay(items[+b.dataset.i], -1, tok));
+  vw.render = ()=>vwAlpacRenderMovieVoices(tok);
+}
+function vwAlpacEpNum(e, i){ return (e.episode!=null && e.episode>0) ? String(e.episode) : String(i+1); }
+function vwAlpacRenderEps(tok){
+  if(!vw || vw.kind!=='alpac') return;
+  vwAlpacPills();
+  const m = vw.m, eps = vw.eps;
+  const sNum = (eps.length && eps[0].season!=null) ? eps[0].season : (vw.seasonIdx+1);
+  const total = eps.length;
+  const watched = vwCountW('a'+m.id, total);
+  let target = eps.findIndex((e,i)=>!vwIsW('a'+m.id, 's'+sNum+'e'+vwAlpacEpNum(e,i)));
+  if(target===-1) target = 0;
+  const epT = eps.length ? vwAlpacEpNum(eps[target], target) : null;
+  vwSetWatch(epT ? 'Смотреть · '+epT+' серия' : null, epT ? ()=>vwAlpacPlay(eps[target], target, tok) : null);
+  vwSetSub(`<b>${escTx(vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx))}</b> · ${sNum} сезон<br>Просмотрено ${watched} из ${total} · осталось ${total-watched}`);
+  const el = $('#vwList'); if(!el) return;
+  el.innerHTML = (vw.voices && vw.voices.length ? `<button class="vw-backline" id="vwToVoices">‹ Озвучки</button>` : '') +
+    `<div class="vw-sec-t">Серии · ${total}</div><div class="vw-list">` + eps.map((e,i)=>{
+    const num = vwAlpacEpNum(e, i);
+    const w = vwIsW('a'+m.id, 's'+sNum+'e'+num);
+    const sub = (e.voice && e.voice!==e.title) ? e.voice : (e.title && !/^\d+\s*серия/i.test(e.title) ? e.title : '');
+    return `<button class="vw-ep" data-i="${i}">
+      <span class="vw-thumb" data-ep="${escAttr(num)}"><span class="vw-num">${escTx(num)}</span></span>
+      <span class="vw-epbody">
+        <span class="vw-ept">${num} серия</span>
+        <span class="vw-eps">${escTx(sub)}</span>
+        <span class="vw-prog"><i style="width:${w?100:0}%"></i></span>
+      </span>
+      ${w?'<span class="vw-side"><span class="vw-done">✓</span></span>':''}
+    </button>`;
+  }).join('') + '</div>';
+  el.querySelectorAll('.vw-ep').forEach(b=>b.onclick=()=>vwAlpacPlay(eps[+b.dataset.i], +b.dataset.i, tok));
+  const bv = $('#vwToVoices'); if(bv) bv.onclick = ()=>vwAlpacRenderVoices(tok);
+  vwEpStills(m, sNum, el, false);
+  vw.render = ()=>vwAlpacRenderEps(tok);
+}
+async function vwAlpacPlay(it, ei, tok){
+  const m = vw.m;
+  vwLoading('Получаю ссылку…');
+  try{
+    const res = await vwAlpacResolve(it);
+    if(!vwAlive(tok)) return;
+    if(res.iframe){ vwAlpacIframe(res.iframe); return; }
+    if(m.media==='tv' && ei>=0){
+      const sNum = (vw.eps[ei] && vw.eps[ei].season!=null) ? vw.eps[ei].season : (vw.seasonIdx+1);
+      vwMarkW('a'+m.id, 's'+sNum+'e'+vwAlpacEpNum(vw.eps[ei], ei));
+    }
+    const epT = (m.media==='tv' && ei>=0) ? vwAlpacEpNum(vw.eps[ei], ei) : null;
+    const title = m.title + (epT ? ' · серия '+epT : '') + (it.title ? ' · '+it.title : '');
+    vwAskPlayer(res.url, title, res.subs||[], m, {
+      file: it.title || '',
+      source: 'Alpac · ' + vwSrcName(vw.srcs[vw.srcIdx], vw.srcIdx),
+      voice: it.voice || '',
+    });
+  }catch(e){
+    if(!vwAlive(tok)) return;
+    if(e && e.auth){ vwAlpacAuth(e.auth, tok); return; }
+    vwEmpty('Не получилось получить ссылку 😕');
+    setTimeout(()=>{ if(vwAlive(tok) && vw.render) vw.render(); }, 1400);
+  }
+}
+async function vwAlpacResolve(it){
+  if(it.method==='play'){
+    const u = (it.quality ? alpacBestQ(it.quality) : '') || it.url;
+    return {url: u};
+  }
+  if(it.method==='iframe') return {iframe: it.url};
+  const u = alpacAbs(it.url) + (String(it.url).includes('?')?'&':'?') + alpacAuthQS();
+  const r = await fetch(u);
+  if(!r.ok) throw new Error('http');
+  const j = await r.json();
+  if(j && j.accsdb) throw {auth: j};
+  if(j && j.method==='iframe' && j.url) return {iframe: j.url};
+  if(j && j.url){
+    const qq = (j.quality && typeof j.quality==='object') ? j.quality : ((j.qualitys && typeof j.qualitys==='object') ? j.qualitys : null);
+    return {url: (qq ? alpacBestQ(qq) : '') || j.url, subs: j.subtitles || []};
+  }
+  throw new Error('nolink');
+}
+function vwAlpacIframe(url){
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000';
+  const fr = document.createElement('iframe');
+  fr.setAttribute('src', url);
+  fr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;background:#000';
+  fr.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+  fr.setAttribute('allowfullscreen', '');
+  const x = document.createElement('button');
+  x.textContent = '✕';
+  x.style.cssText = 'position:absolute;top:14px;left:14px;z-index:2;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.55);color:#fff;font-size:17px;cursor:pointer';
+  x.onclick = ()=>ov.remove();
+  ov.appendChild(fr); ov.appendChild(x);
+  document.body.appendChild(ov);
 }
 
 /* ---------- Студии (ряд на главной) ---------- */
