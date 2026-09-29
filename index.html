@@ -2535,8 +2535,9 @@ async function vwFxInit(){
   const tok = vw.token, m = vw.m;
   vwPillsHTML([]); vwSetWatch(null); vwSetSub(''); vwSetQ('');
   if(!state.fxToken){ vwEmpty('Вставь токен Filmix в Профиле 🙂'); return; }
-  vwLoading('Проверяю подписку…');
+  let step = 'подписка';
   try{
+    vwLoading('Проверяю подписку…');
     fxMaxQ = 720;
     try{
       const prof = await fxGet('user_profile');
@@ -2544,6 +2545,7 @@ async function vwFxInit(){
       if(ud){ if(ud.is_pro_plus) fxMaxQ = 2160; else if(ud.is_pro) fxMaxQ = 1080; }
     }catch(_){}
     if(!vwAlive(tok)) return;
+    step = 'поиск';
     vwLoading('Ищу на Filmix…');
     const res = await fxGet('search', 'story=' + encodeURIComponent(m.orig || m.title || ''));
     if(!vwAlive(tok)) return;
@@ -2551,7 +2553,14 @@ async function vwFxInit(){
     if(card) vwFxOpenCard(card.id, card.title || card.original_title || m.title, tok);
     else if(Array.isArray(res) && res.length) vwFxSimilars(res, tok);
     else vwEmpty('Ничего не нашлось 😕');
-  }catch(e){ if(vwAlive(tok)) vwEmpty('Не получилось связаться с Filmix 😕'); }
+  }catch(e){ if(vwAlive(tok)) vwFxErr(step, e); }
+}
+function vwFxErr(step, e){
+  const el = $('#vwList'); if(!el) return;
+  const msg = (e && e.message) ? String(e.message) : 'неизвестная ошибка';
+  el.innerHTML = `<div class="vw-load">Не получилось связаться с Filmix 😕<br><span style="font-size:12px;opacity:.7">${escTx(step)}: ${escTx(msg)}</span><br><br><button class="vw-pill" id="vwRetry" style="margin:0 auto">Попробовать снова</button></div>`;
+  const rb = $('#vwRetry'); if(rb) rb.onclick = ()=>vwFxInit();
+  vw.render = ()=>vwFxInit();
 }
 function vwFxSimilars(res, tok){
   if(!vw || vw.kind!=='fx') return;
