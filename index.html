@@ -4408,7 +4408,7 @@ $('#aiBuddy').onclick = ()=>{
   const b = $('#aiBlob');
   const toImg = (src)=>{ const i=document.createElement('img'); i.className='ai-blob'; i.id='aiBlob'; i.alt='AI-помощник'; i.src=src;
     i.onerror=()=>{ i.onerror=null; i.src='ai-bot.png'; }; b.replaceWith(i); };
-  b.addEventListener('error', ()=>toImg('ai-bot.gif'), {once:true});
+  b.addEventListener('error', ()=>toImg('ai-bot.png'), {once:true});
   if(matchMedia('(prefers-reduced-motion: reduce)').matches) toImg('ai-bot.png');
 })();
 
