@@ -4088,20 +4088,11 @@ $('#fldSave').onclick = ()=>{
 };
 tsRefreshUI();
 $('#jacUrl').value = state.jacUrl;
-/* сворачивание категорий настроек */
-let setClosed = {};
-try{ setClosed = JSON.parse(LS.get('set_closed','{}')||'{}'); }catch(e){ setClosed = {}; }
+/* категории настроек: при старте всегда закрыты, тап открывает/закрывает */
 document.querySelectorAll('.set-group[data-cat]').forEach(g=>{
-  const c = g.dataset.cat;
-  /* по умолчанию все закрыты; запоминаем только то, что Denis открыл сам */
-  const closed = (c in setClosed) ? !!setClosed[c] : true;
-  g.classList.toggle('closed', closed);
+  g.classList.add('closed');
   const h = g.querySelector('.set-cat');
-  if(h) h.onclick = ()=>{
-    g.classList.toggle('closed');
-    setClosed[c] = g.classList.contains('closed') ? 1 : 0;
-    try{ LS.set('set_closed', JSON.stringify(setClosed)); }catch(e){}
-  };
+  if(h) h.onclick = ()=>g.classList.toggle('closed');
 });
 $('#jacUrl').addEventListener('change', e=>{
   state.jacUrl = e.target.value.trim().replace(/\/+$/,'') || 'https://jac.red';
