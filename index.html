@@ -398,7 +398,7 @@
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
   .back-btn:active{transform:scale(.93)}
   .mv-body{padding:0 16px 26px; position:relative}
-  .mv-poster-c{width:200px; margin:-120px auto 0; aspect-ratio:2/3; border-radius:18px; overflow:hidden;
+  .mv-poster-c{width:250px; margin:-120px auto 0; aspect-ratio:2/3; border-radius:18px; overflow:hidden;
     background:var(--card); box-shadow:0 18px 44px rgba(0,0,0,.6); position:relative; z-index:2}
   .mv-poster-c img{width:100%; height:100%; object-fit:cover}
   .mv-poster-c .demo-art{width:100%; height:100%}
@@ -410,7 +410,7 @@
   .mv-meta{display:flex; align-items:center; gap:10px; margin-top:14px; font-size:13.5px; color:var(--muted); font-weight:600; flex-wrap:wrap}
   .mv-meta .rate{color:var(--star); font-weight:800; font-size:15px}
   .mv-genres{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
-  .mv-genres i{font-style:normal; font-size:12px; font-weight:700; padding:7px 13px; border-radius:999px;
+  .mv-genres i{font-style:normal; font-size:12px; font-weight:700; padding:8px 14px; border-radius:10px;
     background:rgba(120,160,220,.13); color:#c4d2e8}
   .mv-sec{margin-top:22px}
   .mv-sec h3{font-size:15px; font-weight:800; margin-bottom:10px; letter-spacing:.3px}
@@ -423,19 +423,21 @@
   .fact.link b{padding-right:20px}
   .fact-go{position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8dbcff; font-size:17px; font-weight:800; pointer-events:none}
   .fact{position:relative}
-  .rates{display:grid; grid-template-columns:1fr 1fr; gap:8px}
-  .rate-card{background:linear-gradient(180deg,rgba(77,163,255,.13),rgba(77,163,255,.04)); border:1px solid rgba(124,196,255,.25); border-radius:18px; padding:14px; min-width:0; box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+  .rates{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  .rate-card{background:linear-gradient(180deg,rgba(77,163,255,.13),rgba(77,163,255,.04)); border:1px solid rgba(124,196,255,.25); border-radius:18px; padding:12px 10px; min-width:0; box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
   .rate-top{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px}
   .rate-brand{font-size:11px; font-weight:800; letter-spacing:.8px; color:#8dbcff}
   .rate-q{font-size:11px; color:var(--muted); white-space:nowrap}
-  .rate-score{font-size:28px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(77,163,255,.35)}
-  .rate-score small{font-size:13px; color:#8dbcff; font-weight:700}
+  .rate-score{font-size:24px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(77,163,255,.35)}
+  .rate-score small{font-size:12px; color:#8dbcff; font-weight:700}
   .rate-votes{font-size:11px; color:var(--muted); margin-top:5px}
   .rate-votes b{color:var(--text)}
   .rate-bar{height:6px; background:rgba(0,0,0,.35); border-radius:4px; margin-top:10px; overflow:hidden}
   .rate-bar i{display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#3b8cff,#9fd0ff); box-shadow:0 0 10px rgba(77,163,255,.65); transition:width .8s cubic-bezier(.22,.61,.36,1)}
   .rate-card.kp .rate-bar i{background:#ff5500}
   .rate-card.tmdb .rate-bar i{background:#4da3ff}
+  .rate-card.imdb .rate-bar i{background:#f5c518}
+  .rate-card.imdb .rate-brand{color:#f5c518}
   .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
   .mv-trailer{position:relative; border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:var(--card); cursor:pointer}
   .mv-trailer img{width:100%; height:100%; object-fit:cover}
@@ -1281,6 +1283,9 @@ function kpCardHTML(kp, votes){
   const v = kpVotesFmt(votes);
   return `<div class="rate-card kp"><div class="rate-top"><span class="rate-brand">КИНОПОИСК</span><span class="rate-q">${kpQuality(kp)}</span></div><div class="rate-score">${kp.toFixed(1)}<small>/10</small></div>${v?`<div class="rate-votes"><b>${v}</b> оценок</div>`:''}<div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,kp*10))}"></i></div></div>`;
 }
+function imdbCardHTML(imdb){
+  return `<div class="rate-card imdb"><div class="rate-top"><span class="rate-brand">IMDB</span><span class="rate-q">${kpQuality(imdb)}</span></div><div class="rate-score">${Number(imdb).toFixed(1)}<small>/10</small></div><div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,imdb*10))}"></i></div></div>`;
+}
 function tmdbCardHTML(m){
   const v = kpVotesFmt(m.votes);
   return `<div class="rate-card tmdb"><div class="rate-top"><span class="rate-brand">TMDB</span><span class="rate-q">${kpQuality(m.rating)}</span></div><div class="rate-score">${Number(m.rating).toFixed(1)}<small>/10</small></div>${v?`<div class="rate-votes"><b>${v}</b> голосов</div>`:''}<div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,m.rating*10))}"></i></div></div>`;
@@ -1331,7 +1336,8 @@ async function loadKpRating(m){
   try{
     const d = await kpFilmDetail(m);
     if(!d){ kpHideIfEmpty(); return; }
-    slot.outerHTML = kpCardHTML(d.kp, d.votes); animBars();
+    slot.outerHTML = kpCardHTML(d.kp, d.votes) + (d.imdb>0 ? imdbCardHTML(d.imdb) : '');
+    animBars();
   }catch(e){ kpHideIfEmpty(); }
 }
 function visible(list){
