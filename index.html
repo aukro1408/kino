@@ -357,8 +357,8 @@
   .ai-go:disabled{opacity:.55; animation:none}
   /* помощник */
   .ai-buddy{display:flex; flex-direction:column; align-items:center; margin:4px 0 2px; cursor:pointer; -webkit-tap-highlight-color:transparent}
-  .ai-blob{width:140px; height:auto; position:relative; display:block;
-    filter:drop-shadow(0 14px 30px rgba(124,92,255,.35));
+  .ai-blob{width:150px; height:auto; position:relative; display:block;
+    mix-blend-mode:screen;
     animation:blobFloat 4.5s ease-in-out infinite}
   @keyframes blobFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
   .ai-blob.boing{animation:boing .55s ease}
@@ -952,7 +952,7 @@
     </div>
     <div class="ai-wrap">
       <div class="ai-buddy" id="aiBuddy">
-        <img class="ai-blob" id="aiBlob" src="ai-bot.gif" alt="AI-помощник" onerror="this.onerror=null;this.src='ai-bot.png'">
+        <video class="ai-blob" id="aiBlob" src="ai-bot.webm" autoplay loop muted playsinline poster="ai-bot.png"></video>
       </div>
       <div class="ai-say" id="aiSay">Чем я могу тебе помочь? ✨</div>
       <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
@@ -4401,9 +4401,16 @@ $('#aiBuddy').onclick = ()=>{
   const b = $('#aiBlob');
   b.classList.remove('boing'); void b.offsetWidth; b.classList.add('boing');
   clearTimeout(b._bt); b._bt = setTimeout(()=>b.classList.remove('boing'), 600);
-  if(/\.gif(\?|$)/.test(b.src)) b.src = b.src.split('?')[0] + '?r=' + Date.now();
+  if(b.tagName==='VIDEO'){ b.currentTime=0; b.play().catch(()=>{}); }
+  else if(/\.gif(\?|$)/.test(b.src)) b.src = b.src.split('?')[0] + '?r=' + Date.now();
 };
-if(matchMedia('(prefers-reduced-motion: reduce)').matches){ const b=$('#aiBlob'); if(b) b.src='ai-bot.png'; }
+(function(){
+  const b = $('#aiBlob');
+  const toImg = (src)=>{ const i=document.createElement('img'); i.className='ai-blob'; i.id='aiBlob'; i.alt='AI-помощник'; i.src=src;
+    i.onerror=()=>{ i.onerror=null; i.src='ai-bot.png'; }; b.replaceWith(i); };
+  b.addEventListener('error', ()=>toImg('ai-bot.gif'), {once:true});
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) toImg('ai-bot.png');
+})();
 
 /* =================== BOOT =================== */
 (async function(){
