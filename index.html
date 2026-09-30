@@ -1238,6 +1238,8 @@ function money(n){
   return '$' + Math.round(n).toLocaleString('ru-RU');
 }
 const LANG_RU = {en:'Английский',ru:'Русский',uk:'Украинский',fr:'Французский',de:'Немецкий',es:'Испанский',it:'Итальянский',ja:'Японский',ko:'Корейский',zh:'Китайский',hi:'Хинди',pt:'Португальский',pl:'Польский',tr:'Турецкий'};
+const COUNTRY_RU = {'United States of America':'США','United Kingdom':'Великобритания','Russia':'Россия','Soviet Union':'СССР','Germany':'Германия','France':'Франция','Italy':'Италия','Spain':'Испания','Canada':'Канада','Australia':'Австралия','Japan':'Япония','South Korea':'Южная Корея','China':'Китай','India':'Индия','Ukraine':'Украина','Belarus':'Беларусь','Kazakhstan':'Казахстан','Poland':'Польша','Czech Republic':'Чехия','Sweden':'Швеция','Norway':'Норвегия','Denmark':'Дания','Finland':'Финляндия','Netherlands':'Нидерланды','Belgium':'Бельгия','Ireland':'Ирландия','Austria':'Австрия','Switzerland':'Швейцария','Mexico':'Мексика','Brazil':'Бразилия','Argentina':'Аргентина','Turkey':'Турция','Israel':'Израиль','New Zealand':'Новая Зеландия','Hungary':'Венгрия','Romania':'Румыния','Greece':'Греция','Portugal':'Португалия'};
+const countryRU = n => COUNTRY_RU[n] || n;
 const STATUS_RU = {'Released':'Выпущен','In Production':'В производстве','Post Production':'Постпродакшн','Planned':'Запланирован','Rumored':'По слухам','Canceled':'Отменён','Returning Series':'Выходит','Ended':'Завершён'};
 
 /* =================== KP RATINGS =================== */
@@ -1883,7 +1885,7 @@ async function openMovie(id){
         episodes: isTv ? (d.number_of_episodes || null) : null,
         budget: d.budget || null,
         revenue: d.revenue || null,
-        countries: (d.production_countries||[]).map(c=>c.name),
+        countries: (d.production_countries||[]).map(c=>countryRU(c.name)),
         lang: d.original_language || null,
         status: d.status || null,
         studio: (d.production_companies||[])[0] ? d.production_companies[0].name : null,
@@ -1920,12 +1922,8 @@ function factIcon(n){
   return P[n] || `<svg viewBox="0 0 24 24" ${s}><circle cx="12" cy="12" r="9"/></svg>`;
 }
 function mvInfoChips(m){
-  const out = [];
   const c = (m.countries||[]).filter(Boolean);
-  if(c.length) out.push(`<i class="gi"><span>Страна</span>${escTx(c.slice(0,2).join(', '))}</i>`);
-  const pm = String(m.date||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if(pm) out.push(`<i class="gi"><span>Премьера</span>${pm[3]}.${pm[2]}.${pm[1]}</i>`);
-  return out.join('');
+  return c.length ? `<i class="gi"><span>Страна</span>${escTx(c[0])}</i>` : '';
 }
 function renderMovie(m){
   const box = $('#scr-movie');
