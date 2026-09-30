@@ -243,6 +243,35 @@ html[data-theme="lumiere"] .mv-watched.on{background:rgba(212,175,105,.14); bord
 html[data-theme="lumiere"] .cast .ph{border-radius:50%}
 html[data-theme="lumiere"] .fav-star.on{color:#e8c877}
 html[data-theme="lumiere"] .fav-star.on svg{fill:#e8c877}
+/* ============ ТЕМА «РУБИН» · постер на всю ширину, красные акценты ============ */
+html[data-theme="rubin"] #scr-movie{background:#0a0a0c}
+html[data-theme="rubin"] .mv-ambient{display:none}
+html[data-theme="rubin"] .mv-backdrop{height:480px; -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 99%); mask-image:linear-gradient(180deg,#000 55%,transparent 99%)}
+html[data-theme="rubin"] .mv-backdrop img{filter:none; transform:scale(1.03)}
+html[data-theme="rubin"] .mv-shade{background:linear-gradient(180deg,rgba(5,5,8,.35) 0%,rgba(5,5,8,0) 30%,rgba(10,10,12,.45) 62%,#0a0a0c 96%)}
+html[data-theme="rubin"] .mv-poster-c{display:none}
+html[data-theme="rubin"] .mv-body{background:transparent; margin:-170px 0 0; padding:0 20px 30px; position:relative; z-index:2}
+html[data-theme="rubin"] .mv-title-c{margin-top:8px; text-align:left; padding:0}
+html[data-theme="rubin"] .mv-title-t{font-size:32px; font-weight:800}
+html[data-theme="rubin"] .mv-orig-c{color:#b9b9c0}
+html[data-theme="rubin"] .mv-meta{justify-content:flex-start}
+html[data-theme="rubin"] .mv-meta .rate{color:#ff5252}
+html[data-theme="rubin"] .mv-genres{justify-content:flex-start}
+html[data-theme="rubin"] .mv-genres i{background:rgba(229,57,53,.12); border:1px solid rgba(229,57,53,.40); color:#ff8a80}
+html[data-theme="rubin"] .wcard{background:linear-gradient(180deg,rgba(229,57,53,.12),rgba(229,57,53,.04)); border-color:rgba(229,57,53,.30)}
+html[data-theme="rubin"] .wcard svg{color:#ff8a80; filter:drop-shadow(0 2px 8px rgba(229,57,53,.40))}
+html[data-theme="rubin"] .mv-trailer{border-color:rgba(229,57,53,.30)}
+html[data-theme="rubin"] .mv-watched.on{background:rgba(229,57,53,.15); border-color:rgba(229,57,53,.55); color:#ff8a80}
+html[data-theme="rubin"] .fav-star.on{color:#ff5252}
+html[data-theme="rubin"] .fav-star.on svg{fill:#ff5252}
+/* переключатель тем */
+.seg{display:flex; gap:8px}
+.seg button{flex:1; padding:12px 6px; border-radius:14px; border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.05); color:var(--text); font:inherit; font-size:13.5px; font-weight:800; cursor:pointer}
+.seg button:active{transform:scale(.96)}
+.seg button[data-th="blackroom"].on{background:rgba(77,163,255,.18); border-color:rgba(77,163,255,.60); color:#8dbcff}
+.seg button[data-th="lumiere"].on{background:rgba(212,175,105,.14); border-color:rgba(212,175,105,.55); color:#e8c877}
+.seg button[data-th="rubin"].on{background:rgba(229,57,53,.14); border-color:rgba(229,57,53,.55); color:#ff8a80}
   .set-row .t{font-size:14px; font-weight:700}
   .set-row .d{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
   .set-cat{display:flex; align-items:center; gap:12px; width:100%; background:none; border:none; border-bottom:1px solid rgba(255,255,255,.06); color:#fff; padding:13px 18px; cursor:pointer; text-align:left; font-family:inherit}
@@ -829,9 +858,14 @@ html[data-theme="lumiere"] .fav-star.on svg{fill:#e8c877}
     </div>
     <div class="set-group" data-cat="design">
       <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></svg></span><span class="n">Оформление</span><span class="ch">›</span></button>
-      <div class="set-row" id="rowTheme" style="cursor:pointer">
-        <div><div class="t">Тема</div><div class="d">Внешний вид карточки фильма · переключается мгновенно</div></div>
-        <div class="set-val" id="themeVal"></div>
+      <div class="set-row" style="display:block">
+        <div class="t" style="margin-bottom:10px">Тема</div>
+        <div class="seg" id="themeSeg">
+          <button data-th="blackroom">Blackroom</button>
+          <button data-th="lumiere">Люмьер</button>
+          <button data-th="rubin">Рубин</button>
+        </div>
+        <div class="d" style="margin-top:10px">Карточка фильма · переключается мгновенно</div>
       </div>
     </div>
     <div class="set-group" data-cat="keys">
@@ -4125,18 +4159,19 @@ $('#jacUrl').value = state.jacUrl;
 const THEMES = [
   {id:'blackroom', t:'Blackroom', s:'Наша тёмная тема'},
   {id:'lumiere', t:'Люмьер', s:'Карточка фильма в духе кинопостера'},
+  {id:'rubin', t:'Рубин', s:'Постер на всю ширину · красные акценты'},
 ];
 function applyTheme(){ document.documentElement.dataset.theme = state.theme || 'blackroom'; }
 function themeName(id){ const f = THEMES.find(t=>t.id===id); return f ? f.t : id; }
-function themeRefreshUI(){ const el = $('#themeVal'); if(el) el.textContent = themeName(state.theme); }
-$('#rowTheme').onclick = ()=>{
-  openOptSheet('Тема оформления', THEMES, Math.max(0, THEMES.findIndex(t=>t.id===state.theme)), (i)=>{
-    state.theme = THEMES[i].id; LS.set('theme', state.theme);
-    applyTheme(); themeRefreshUI();
-    toast('Тема: ' + THEMES[i].t);
-  });
-};
-applyTheme(); themeRefreshUI();
+function paintThemeSeg(){
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.th===state.theme));
+}
+document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>{
+  state.theme = b.dataset.th; LS.set('theme', state.theme);
+  applyTheme(); paintThemeSeg();
+  toast('Тема: ' + themeName(state.theme));
+});
+applyTheme(); paintThemeSeg();
 /* категории настроек: при старте всегда закрыты, тап открывает/закрывает */
 document.querySelectorAll('.set-group[data-cat]').forEach(g=>{
   g.classList.add('closed');
