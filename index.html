@@ -219,109 +219,19 @@
   .fld-btn{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:14px; padding:13px 18px; font-size:15px; font-weight:700; cursor:pointer}
   .fld-btn.pri{background:var(--accent); border:none}
   .set-cat[data-tint="gold"] .ic{color:#e8c877; background:rgba(212,175,105,.13)}
-/* ============ ТЕМЫ КАРТОЧКИ ФИЛЬМА · layout везде как в blackroom, меняется только карточка ============ */
-/* --- Люмьер · золото --- */
-html[data-theme="lumiere"] .mv-body{background:linear-gradient(180deg,rgba(36,30,22,.95),rgba(20,17,13,.96)); border:1px solid rgba(212,175,105,.38); border-radius:26px; margin:14px 12px 0; padding:22px 16px 28px; animation:lumiGlow 5s ease-in-out infinite}
-@keyframes lumiGlow{0%,100%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 22px rgba(212,175,105,.07),inset 0 1px 0 rgba(255,236,190,.14)}50%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 46px rgba(212,175,105,.18),inset 0 1px 0 rgba(255,236,190,.14)}}
-html[data-theme="lumiere"] .mv-title-t{font-family:Georgia,'Times New Roman',serif; letter-spacing:.5px; color:#f3e9d2}
-html[data-theme="lumiere"] .mv-meta .rate{color:#e8c877}
-html[data-theme="lumiere"] .mv-genres i{background:rgba(212,175,105,.10); border:1px solid rgba(212,175,105,.40); color:#e8c877}
-html[data-theme="lumiere"] .wcard{background:linear-gradient(180deg,rgba(212,175,105,.10),rgba(212,175,105,.03)); border-color:rgba(212,175,105,.30)}
-html[data-theme="lumiere"] .wcard svg{color:#e8c877; filter:drop-shadow(0 2px 8px rgba(212,175,105,.40))}
-html[data-theme="lumiere"] .wcard .alpac-tx b{color:#e8c877}
-html[data-theme="lumiere"] .mv-trailer{border-color:rgba(212,175,105,.30)}
-html[data-theme="lumiere"] .mv-watched{border-color:rgba(212,175,105,.35)}
-html[data-theme="lumiere"] .mv-watched.on{background:rgba(212,175,105,.15); border-color:rgba(212,175,105,.55); color:#e8c877}
-html[data-theme="lumiere"] .desc-more{color:#e8c877}
-html[data-theme="lumiere"] .fav-star.on{color:#e8c877}
-html[data-theme="lumiere"] .fav-star.on svg{fill:#e8c877}
-html[data-theme="lumiere"] .rate-card.tmdb .rate-bar i, html[data-theme="lumiere"] .rate-card.kp .rate-bar i{background:#e8c877; box-shadow:0 0 10px rgba(232,200,119,.6)}
-html[data-theme="lumiere"] .fact{border:1px solid rgba(212,175,105,.16)}
-html[data-theme="lumiere"] .fact.link{border-color:rgba(212,175,105,.35); background:linear-gradient(180deg,rgba(212,175,105,.10),rgba(212,175,105,.03))}
-html[data-theme="lumiere"] .fact.link .fact-go{color:#e8c877}
-html[data-theme="lumiere"] .fact .fic{color:#e8c877}
-html[data-theme="lumiere"] .fact b{color:#f3ecdd}
-html[data-theme="lumiere"] .mv-sec h3{color:#f3e9d2}
-/* --- Рубин · красный --- */
-html[data-theme="rubin"] .mv-body{background:linear-gradient(180deg,rgba(38,20,20,.95),rgba(20,12,12,.96)); border:1px solid rgba(229,57,53,.40); border-radius:26px; margin:14px 12px 0; padding:22px 16px 28px; animation:rubinGlow 4s ease-in-out infinite}
-@keyframes rubinGlow{0%,100%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 22px rgba(229,57,53,.08),inset 0 1px 0 rgba(255,255,255,.08)}50%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 48px rgba(229,57,53,.22),inset 0 1px 0 rgba(255,255,255,.08)}}
-html[data-theme="rubin"] .mv-title-t{text-shadow:0 0 24px rgba(229,57,53,.35)}
-html[data-theme="rubin"] .mv-meta .rate{color:#ff5252}
-html[data-theme="rubin"] .mv-genres i{background:rgba(229,57,53,.12); border:1px solid rgba(229,57,53,.40); color:#ff8a80}
-html[data-theme="rubin"] .wcard{background:linear-gradient(180deg,rgba(229,57,53,.12),rgba(229,57,53,.04)); border-color:rgba(229,57,53,.30)}
-html[data-theme="rubin"] .wcard svg{color:#ff8a80; filter:drop-shadow(0 2px 8px rgba(229,57,53,.40))}
-html[data-theme="rubin"] .wcard .alpac-tx b{color:#ff8a80}
-html[data-theme="rubin"] #lumg2 stop:first-child{stop-color:#ffc4bc}
-html[data-theme="rubin"] #lumg2 stop:last-child{stop-color:#e53935}
-html[data-theme="rubin"] .mv-trailer{border-color:rgba(229,57,53,.30)}
-html[data-theme="rubin"] .mv-watched{border-color:rgba(229,57,53,.35)}
-html[data-theme="rubin"] .mv-watched.on{background:rgba(229,57,53,.15); border-color:rgba(229,57,53,.55); color:#ff8a80}
-html[data-theme="rubin"] .desc-more{color:#ff8a80}
-html[data-theme="rubin"] .fav-star.on{color:#ff5252}
-html[data-theme="rubin"] .fav-star.on svg{fill:#ff5252}
-html[data-theme="rubin"] .rate-card.tmdb .rate-bar i, html[data-theme="rubin"] .rate-card.kp .rate-bar i{background:#ff5252; box-shadow:0 0 10px rgba(229,57,53,.65)}
-html[data-theme="rubin"] .fact{border:1px solid rgba(229,57,53,.16)}
-html[data-theme="rubin"] .fact.link{border-color:rgba(229,57,53,.35); background:linear-gradient(180deg,rgba(229,57,53,.10),rgba(229,57,53,.03))}
-html[data-theme="rubin"] .fact.link .fact-go{color:#ff8a80}
-html[data-theme="rubin"] .fact .fic{color:#ff8a80}
-html[data-theme="rubin"] .fact b{color:#f6f1ea}
-/* --- Неон · циан --- */
-html[data-theme="neon"] .mv-body{background:linear-gradient(180deg,rgba(13,28,34,.95),rgba(9,14,20,.96)); border:1px solid rgba(0,229,255,.42); border-radius:26px; margin:14px 12px 0; padding:22px 16px 28px; animation:neonGlow 3.6s ease-in-out infinite}
-@keyframes neonGlow{0%,100%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 20px rgba(0,229,255,.10),0 0 60px rgba(255,45,150,.04),inset 0 1px 0 rgba(160,240,255,.16)}50%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 44px rgba(0,229,255,.26),0 0 90px rgba(255,45,150,.10),inset 0 1px 0 rgba(160,240,255,.16)}}
-html[data-theme="neon"] .mv-title-t{text-shadow:0 0 22px rgba(0,229,255,.40)}
-html[data-theme="neon"] .mv-meta .rate{color:#4de1ff}
-html[data-theme="neon"] .mv-genres i{background:rgba(0,229,255,.10); border:1px solid rgba(0,229,255,.40); color:#7deeff}
-html[data-theme="neon"] .wcard{background:linear-gradient(180deg,rgba(0,229,255,.10),rgba(0,229,255,.03)); border-color:rgba(0,229,255,.30)}
-html[data-theme="neon"] .wcard svg{color:#7deeff; filter:drop-shadow(0 2px 8px rgba(0,229,255,.50))}
-html[data-theme="neon"] .wcard .alpac-tx b{color:#7deeff}
-html[data-theme="neon"] #lumg2 stop:first-child{stop-color:#b3f5ff}
-html[data-theme="neon"] #lumg2 stop:last-child{stop-color:#00b8d4}
-html[data-theme="neon"] .mv-trailer{border-color:rgba(0,229,255,.30)}
-html[data-theme="neon"] .mv-watched{border-color:rgba(0,229,255,.35)}
-html[data-theme="neon"] .mv-watched.on{background:rgba(0,229,255,.14); border-color:rgba(0,229,255,.55); color:#7deeff}
-html[data-theme="neon"] .desc-more{color:#7deeff}
-html[data-theme="neon"] .fav-star.on{color:#4de1ff}
-html[data-theme="neon"] .fav-star.on svg{fill:#4de1ff}
-html[data-theme="neon"] .rate-card.tmdb .rate-bar i, html[data-theme="neon"] .rate-card.kp .rate-bar i{background:#4de1ff; box-shadow:0 0 10px rgba(0,229,255,.60)}
-html[data-theme="neon"] .fact{border:1px solid rgba(0,229,255,.16)}
-html[data-theme="neon"] .fact.link{border-color:rgba(0,229,255,.35); background:linear-gradient(180deg,rgba(0,229,255,.10),rgba(0,229,255,.03))}
-html[data-theme="neon"] .fact.link .fact-go{color:#7deeff}
-html[data-theme="neon"] .fact .fic{color:#7deeff}
-html[data-theme="neon"] .fact b{color:#eafcff}
-/* --- Изумруд --- */
-html[data-theme="emerald"] .mv-body{background:linear-gradient(180deg,rgba(16,36,29,.95),rgba(10,20,16,.96)); border:1px solid rgba(46,230,168,.40); border-radius:26px; margin:14px 12px 0; padding:22px 16px 28px; animation:emerGlow 4.5s ease-in-out infinite}
-@keyframes emerGlow{0%,100%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 22px rgba(46,230,168,.08),inset 0 1px 0 rgba(180,255,220,.12)}50%{box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 46px rgba(46,230,168,.22),inset 0 1px 0 rgba(180,255,220,.12)}}
-html[data-theme="emerald"] .mv-title-t{text-shadow:0 0 22px rgba(46,230,168,.30)}
-html[data-theme="emerald"] .mv-meta .rate{color:#2ee6a8}
-html[data-theme="emerald"] .mv-genres i{background:rgba(46,230,168,.10); border:1px solid rgba(46,230,168,.40); color:#7dffc8}
-html[data-theme="emerald"] .wcard{background:linear-gradient(180deg,rgba(46,230,168,.10),rgba(46,230,168,.03)); border-color:rgba(46,230,168,.30)}
-html[data-theme="emerald"] .wcard svg{color:#7dffc8; filter:drop-shadow(0 2px 8px rgba(46,230,168,.45))}
-html[data-theme="emerald"] .wcard .alpac-tx b{color:#7dffc8}
-html[data-theme="emerald"] #lumg2 stop:first-child{stop-color:#b9ffe0}
-html[data-theme="emerald"] #lumg2 stop:last-child{stop-color:#10b981}
-html[data-theme="emerald"] .mv-trailer{border-color:rgba(46,230,168,.30)}
-html[data-theme="emerald"] .mv-watched{border-color:rgba(46,230,168,.35)}
-html[data-theme="emerald"] .mv-watched.on{background:rgba(46,230,168,.14); border-color:rgba(46,230,168,.55); color:#7dffc8}
-html[data-theme="emerald"] .desc-more{color:#7dffc8}
-html[data-theme="emerald"] .fav-star.on{color:#2ee6a8}
-html[data-theme="emerald"] .fav-star.on svg{fill:#2ee6a8}
-html[data-theme="emerald"] .rate-card.tmdb .rate-bar i, html[data-theme="emerald"] .rate-card.kp .rate-bar i{background:#2ee6a8; box-shadow:0 0 10px rgba(46,230,168,.60)}
-html[data-theme="emerald"] .fact{border:1px solid rgba(46,230,168,.16)}
-html[data-theme="emerald"] .fact.link{border-color:rgba(46,230,168,.35); background:linear-gradient(180deg,rgba(46,230,168,.10),rgba(46,230,168,.03))}
-html[data-theme="emerald"] .fact.link .fact-go{color:#7dffc8}
-html[data-theme="emerald"] .fact .fic{color:#7dffc8}
-html[data-theme="emerald"] .fact b{color:#eafbef}
-/* переключатель тем */
-.set-row.vstack{display:block}
-.seg{display:flex; gap:8px; flex-wrap:wrap}
-.seg button{flex:1 1 28%; padding:12px 4px; border-radius:14px; border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.05); color:var(--text); font:inherit; font-size:12.5px; font-weight:800; cursor:pointer}
-.seg button:active{transform:scale(.96)}
-.seg button[data-th="blackroom"].on{background:rgba(77,163,255,.18); border-color:rgba(77,163,255,.60); color:#8dbcff}
-.seg button[data-th="lumiere"].on{background:rgba(212,175,105,.14); border-color:rgba(212,175,105,.55); color:#e8c877}
-.seg button[data-th="rubin"].on{background:rgba(229,57,53,.14); border-color:rgba(229,57,53,.55); color:#ff8a80}
-.seg button[data-th="neon"].on{background:rgba(0,229,255,.13); border-color:rgba(0,229,255,.55); color:#7deeff}
-.seg button[data-th="emerald"].on{background:rgba(46,230,168,.13); border-color:rgba(46,230,168,.55); color:#7dffc8}
+/* ============ Появление карточки фильма ============ */
+@keyframes riseIn{from{opacity:0; transform:translateY(28px)} to{opacity:1; transform:translateY(0)}}
+#scr-movie .mv-backdrop{animation:riseIn .5s ease both}
+#scr-movie .mv-poster-c{animation:riseIn .55s .08s ease both}
+#scr-movie .mv-title-c{animation:riseIn .55s .16s ease both}
+#scr-movie .mv-meta-c{animation:riseIn .55s .24s ease both}
+#scr-movie .mv-genres{animation:riseIn .55s .32s ease both}
+.rv{opacity:0; transform:translateY(30px); transition:opacity .6s ease, transform .6s cubic-bezier(.22,.61,.36,1)}
+.rv.in{opacity:1; transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){
+  #scr-movie .mv-backdrop, #scr-movie .mv-poster-c, #scr-movie .mv-title-c, #scr-movie .mv-meta-c, #scr-movie .mv-genres{animation:none}
+  .rv{opacity:1; transform:none; transition:none}
+}
   .set-row .t{font-size:14px; font-weight:700}
   .set-row .d{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
   .set-cat{display:flex; align-items:center; gap:12px; width:100%; background:none; border:none; border-bottom:1px solid rgba(255,255,255,.06); color:#fff; padding:13px 18px; cursor:pointer; text-align:left; font-family:inherit}
@@ -906,20 +816,6 @@ html[data-theme="emerald"] .fact b{color:#eafbef}
       <div class="stat"><b id="stSaved">0</b><small>в избранном</small></div>
       <div class="stat" id="stAiCard" style="cursor:pointer"><b id="stAi">–</b><small>AI-режим</small></div>
     </div>
-    <div class="set-group" data-cat="design">
-      <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></svg></span><span class="n">Оформление</span><span class="ch">›</span></button>
-      <div class="set-row vstack">
-        <div class="t" style="margin-bottom:10px">Тема</div>
-        <div class="seg" id="themeSeg">
-          <button data-th="blackroom">Blackroom</button>
-          <button data-th="lumiere">Люмьер</button>
-          <button data-th="rubin">Рубин</button>
-          <button data-th="neon">Неон</button>
-          <button data-th="emerald">Изумруд</button>
-        </div>
-        <div class="d" style="margin-top:10px">Карточка фильма · переключается мгновенно</div>
-      </div>
-    </div>
     <div class="set-group" data-cat="keys">
       <button class="set-cat" data-tint="blue"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 20 3"/><path d="m16 7 3 3"/></svg></span><span class="n">API-ключи</span><span class="ch">›</span></button>
       <div class="set-row">
@@ -1139,7 +1035,6 @@ const state = {
   geminiKey: LS.get('gemini_key',''),
   tsUrl: LS.get('ts_url','http://127.0.0.1:8090'),
   tsUrlHttp: LS.get('ts_url_http',''),
-  theme: LS.get('theme','blackroom'),
   jacUrl: LS.get('jac_url','https://jac.red'),
   jacKey: LS.get('jac_key',''),
   jacUrl2: LS.get('jac_url2',''),
@@ -2076,6 +1971,16 @@ function renderMovie(m){
   const rzo = $('#rzOpen'); if(rzo) rzo.onclick = ()=>openRezka(m);
   const onf = $('#onlFind'); if(onf) onf.onclick = ()=>openView('lumio', m);
   const fxf = $('#fxFind'); if(fxf) fxf.onclick = ()=>openView('fx', m);
+  armReveals(box);
+}
+
+/* появление элементов карточки фильма при скролле */
+const rvObs = new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){ e.target.classList.add('in'); rvObs.unobserve(e.target); }
+}), {threshold:.1, rootMargin:'0px 0px -6% 0px'});
+function armReveals(box){
+  box.querySelectorAll('.mv-sec, .mv-watched, .facts, .mv-trailer, .rates').forEach(el=>{ el.classList.add('rv'); rvObs.observe(el); });
+  box.querySelectorAll('.wcard').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%4*70)+'ms'; rvObs.observe(el); });
 }
 
 /* =================== REZKA COMMENTS =================== */
@@ -4207,25 +4112,6 @@ $('#fldSave').onclick = ()=>{
 };
 tsRefreshUI();
 $('#jacUrl').value = state.jacUrl;
-/* темы оформления */
-const THEMES = [
-  {id:'blackroom', t:'Blackroom', s:'Наша тёмная тема'},
-  {id:'lumiere', t:'Люмьер', s:'Золотая карточка с мягким свечением'},
-  {id:'rubin', t:'Рубин', s:'Красная карточка с пульсирующим свечением'},
-  {id:'neon', t:'Неон', s:'Циановая карточка с неоновым свечением'},
-  {id:'emerald', t:'Изумруд', s:'Изумрудная карточка с мягким свечением'},
-];
-function applyTheme(){ document.documentElement.dataset.theme = state.theme || 'blackroom'; }
-function themeName(id){ const f = THEMES.find(t=>t.id===id); return f ? f.t : id; }
-function paintThemeSeg(){
-  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.th===state.theme));
-}
-document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>{
-  state.theme = b.dataset.th; LS.set('theme', state.theme);
-  applyTheme(); paintThemeSeg();
-  toast('Тема: ' + themeName(state.theme));
-});
-applyTheme(); paintThemeSeg();
 /* категории настроек: при старте всегда закрыты, тап открывает/закрывает */
 document.querySelectorAll('.set-group[data-cat]').forEach(g=>{
   g.classList.add('closed');
