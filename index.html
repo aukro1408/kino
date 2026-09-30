@@ -334,14 +334,15 @@
   .fav-more:active{transform:scale(.98)}
   /* ---------- AI ---------- */
   .ai-wrap{padding:8px 18px 4px}
-  .ai-title{font-size:21px; font-weight:800; margin:6px 0 4px}
-  .ai-sub{font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:14px}
+  .ai-name{margin-top:10px; font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif; font-size:18px; font-weight:800; letter-spacing:-.5px;
+    background:linear-gradient(110deg,#ffffff 30%,#c4b5fd 45%,#ffffff 60%); background-size:200% auto;
+    color:transparent; -webkit-background-clip:text; background-clip:text; animation:logo-shine 5s linear infinite}
   .ai-input{width:100%; box-sizing:border-box; background:var(--card); border:1px solid rgba(255,255,255,.1); border-radius:16px;
     color:var(--text); font:inherit; font-size:15px; line-height:1.5; padding:14px; resize:none; outline:none}
   .ai-input:focus{border-color:#7c5cff}
   .ai-go{position:relative; overflow:hidden; width:100%; margin-top:12px; padding:15px; border:none; border-radius:16px; font:inherit; font-size:16px; font-weight:800;
     color:#fff; cursor:pointer; background:linear-gradient(120deg,#7c5cff,#4da3ff,#c44dff,#7c5cff); background-size:300% 100%;
-    display:flex; align-items:center; justify-content:center; gap:8px;
+    display:flex; align-items:center; justify-content:center; gap:8px; text-align:center;
     animation:aiGoFlow 7s linear infinite, aiGoGlow 2.8s ease-in-out infinite}
   @keyframes aiGoFlow{to{background-position:300% 0}}
   @keyframes aiGoGlow{0%,100%{box-shadow:0 8px 26px rgba(124,92,255,.35)}50%{box-shadow:0 8px 40px rgba(124,92,255,.65),0 0 22px rgba(77,163,255,.45)}}
@@ -965,12 +966,11 @@
     <div class="ai-wrap">
       <div class="ai-buddy" id="aiBuddy">
         <div class="ai-blob" id="aiBlob"><div class="ai-eyes"><i></i><i></i></div></div>
+        <div class="ai-name">AI-ассистент</div>
         <div class="ai-say" id="aiSay">Привет! Я помогу выбрать кино ✨</div>
       </div>
-      <div class="ai-title">Что хочешь посмотреть?</div>
-      <div class="ai-sub">Опиши настроение, жанр или пример — AI подберёт фильмы и сериалы</div>
       <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
-      <button class="ai-go" id="aiGo"><span class="sp" style="left:12%;top:24%">✦</span><span class="sp" style="left:84%;top:58%;animation-delay:.8s">✦</span><span class="sp" style="left:70%;top:16%;animation-delay:1.5s">✧</span><span class="ai-go-t">✨ Подобрать</span></button>
+      <button class="ai-go" id="aiGo"><span class="sp" style="left:12%;top:24%">✦</span><span class="sp" style="left:84%;top:58%;animation-delay:.8s">✦</span><span class="sp" style="left:70%;top:16%;animation-delay:1.5s">✧</span><span class="ai-go-t">Подобрать</span></button>
       <div class="ai-chips" id="aiChips"></div>
     </div>
     <div id="aiResults"></div>
