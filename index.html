@@ -423,21 +423,19 @@
   .fact.link b{padding-right:20px}
   .fact-go{position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8dbcff; font-size:17px; font-weight:800; pointer-events:none}
   .fact{position:relative}
-  .rates{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
-  .rate-card{background:linear-gradient(180deg,rgba(77,163,255,.13),rgba(77,163,255,.04)); border:1px solid rgba(124,196,255,.25); border-radius:18px; padding:12px 10px; min-width:0; box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+  .rates{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .rate-card{background:linear-gradient(180deg,rgba(77,163,255,.13),rgba(77,163,255,.04)); border:1px solid rgba(124,196,255,.25); border-radius:18px; padding:14px; min-width:0; box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
   .rate-top{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px}
   .rate-brand{font-size:11px; font-weight:800; letter-spacing:.8px; color:#8dbcff}
   .rate-q{font-size:11px; color:var(--muted); white-space:nowrap}
-  .rate-score{font-size:24px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(77,163,255,.35)}
-  .rate-score small{font-size:12px; color:#8dbcff; font-weight:700}
+  .rate-score{font-size:28px; font-weight:800; line-height:1; color:#fff; text-shadow:0 2px 12px rgba(77,163,255,.35)}
+  .rate-score small{font-size:13px; color:#8dbcff; font-weight:700}
   .rate-votes{font-size:11px; color:var(--muted); margin-top:5px}
   .rate-votes b{color:var(--text)}
   .rate-bar{height:6px; background:rgba(0,0,0,.35); border-radius:4px; margin-top:10px; overflow:hidden}
   .rate-bar i{display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#3b8cff,#9fd0ff); box-shadow:0 0 10px rgba(77,163,255,.65); transition:width .8s cubic-bezier(.22,.61,.36,1)}
   .rate-card.kp .rate-bar i{background:#ff5500}
   .rate-card.tmdb .rate-bar i{background:#4da3ff}
-  .rate-card.imdb .rate-bar i{background:#f5c518}
-  .rate-card.imdb .rate-brand{color:#f5c518}
   .mv-desc{color:#c4cede; font-size:14px; line-height:1.6}
   .mv-trailer{position:relative; border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:var(--card); cursor:pointer}
   .mv-trailer img{width:100%; height:100%; object-fit:cover}
@@ -509,6 +507,7 @@
 .alp-refresh:active{transform:scale(.96)}
 .mv-genres i{border:1px solid rgba(124,196,255,.35); color:#a9cdff; background:rgba(77,163,255,.10);
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+.mv-genres .gi span{color:var(--muted); font-weight:600; margin-right:6px}
 .mv-trailer{border-radius:20px; border:1px solid rgba(124,196,255,.22);
   box-shadow:0 12px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08)}
 .mv-play span{background:rgba(10,20,40,.55); border:1.5px solid rgba(124,196,255,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
@@ -1283,9 +1282,6 @@ function kpCardHTML(kp, votes){
   const v = kpVotesFmt(votes);
   return `<div class="rate-card kp"><div class="rate-top"><span class="rate-brand">КИНОПОИСК</span><span class="rate-q">${kpQuality(kp)}</span></div><div class="rate-score">${kp.toFixed(1)}<small>/10</small></div>${v?`<div class="rate-votes"><b>${v}</b> оценок</div>`:''}<div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,kp*10))}"></i></div></div>`;
 }
-function imdbCardHTML(imdb){
-  return `<div class="rate-card imdb"><div class="rate-top"><span class="rate-brand">IMDB</span><span class="rate-q">${kpQuality(imdb)}</span></div><div class="rate-score">${Number(imdb).toFixed(1)}<small>/10</small></div><div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,imdb*10))}"></i></div></div>`;
-}
 function tmdbCardHTML(m){
   const v = kpVotesFmt(m.votes);
   return `<div class="rate-card tmdb"><div class="rate-top"><span class="rate-brand">TMDB</span><span class="rate-q">${kpQuality(m.rating)}</span></div><div class="rate-score">${Number(m.rating).toFixed(1)}<small>/10</small></div>${v?`<div class="rate-votes"><b>${v}</b> голосов</div>`:''}<div class="rate-bar"><i data-w="${Math.max(0,Math.min(100,m.rating*10))}"></i></div></div>`;
@@ -1336,8 +1332,7 @@ async function loadKpRating(m){
   try{
     const d = await kpFilmDetail(m);
     if(!d){ kpHideIfEmpty(); return; }
-    slot.outerHTML = kpCardHTML(d.kp, d.votes) + (d.imdb>0 ? imdbCardHTML(d.imdb) : '');
-    animBars();
+    slot.outerHTML = kpCardHTML(d.kp, d.votes); animBars();
   }catch(e){ kpHideIfEmpty(); }
 }
 function visible(list){
@@ -1924,6 +1919,14 @@ function factIcon(n){
   };
   return P[n] || `<svg viewBox="0 0 24 24" ${s}><circle cx="12" cy="12" r="9"/></svg>`;
 }
+function mvInfoChips(m){
+  const out = [];
+  const c = (m.countries||[]).filter(Boolean);
+  if(c.length) out.push(`<i class="gi"><span>Страна</span>${escTx(c.slice(0,2).join(', '))}</i>`);
+  const pm = String(m.date||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(pm) out.push(`<i class="gi"><span>Премьера</span>${pm[3]}.${pm[2]}.${pm[1]}</i>`);
+  return out.join('');
+}
 function renderMovie(m){
   const box = $('#scr-movie');
   const w = state.watched.includes(m.id);
@@ -1950,7 +1953,7 @@ function renderMovie(m){
         <div class="mv-orig-c">${m.year}</div>
       </div>
       <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}${m.seasons?`<span>${m.seasons} ${plural(m.seasons,'сезон','сезона','сезонов')}</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
-      <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}</div>
+      <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}${mvInfoChips(m)}</div>
       ${state.kpKey?`<div class="mv-sec"><h3>Рейтинги</h3><div class="rates" id="rateCards">${m.rating>0?tmdbCardHTML(m):''}<span id="kpCardSlot" style="display:contents"></span></div></div>`:''}
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
         <img src="https://i.ytimg.com/vi/${m.trailer}/hqdefault.jpg" alt="" loading="lazy">
