@@ -952,7 +952,7 @@
     </div>
     <div class="ai-wrap">
       <div class="ai-buddy" id="aiBuddy">
-        <video class="ai-blob" id="aiBlob" src="ai-bot.webm" autoplay loop muted playsinline poster="ai-bot.png"></video>
+        <video class="ai-blob" id="aiBlob" src="ai-bot.webm?v=2" autoplay loop muted playsinline poster="ai-bot.png?v=2"></video>
       </div>
       <div class="ai-say" id="aiSay">Чем я могу тебе помочь? ✨</div>
       <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
@@ -4407,9 +4407,9 @@ $('#aiBuddy').onclick = ()=>{
 (function(){
   const b = $('#aiBlob');
   const toImg = (src)=>{ const i=document.createElement('img'); i.className='ai-blob'; i.id='aiBlob'; i.alt='AI-помощник'; i.src=src;
-    i.onerror=()=>{ i.onerror=null; i.src='ai-bot.png'; }; b.replaceWith(i); };
-  b.addEventListener('error', ()=>toImg('ai-bot.png'), {once:true});
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches) toImg('ai-bot.png');
+    i.onerror=()=>{ i.onerror=null; i.src='ai-bot.png?v=2'; }; b.replaceWith(i); };
+  b.addEventListener('error', ()=>toImg('ai-bot.png?v=2'), {once:true});
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) toImg('ai-bot.png?v=2');
 })();
 
 /* =================== BOOT =================== */
