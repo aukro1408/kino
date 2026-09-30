@@ -220,6 +220,18 @@
   .fld-btn.pri{background:var(--accent); border:none}
   .set-row .t{font-size:14px; font-weight:700}
   .set-row .d{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
+  .set-cat{display:flex; align-items:center; gap:12px; width:100%; background:none; border:none; border-bottom:1px solid rgba(255,255,255,.06); color:#fff; padding:13px 18px; cursor:pointer; text-align:left; font-family:inherit}
+  .set-cat .ic{width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:17px; flex:none}
+  .set-cat[data-tint="blue"] .ic{background:rgba(77,163,255,.15)}
+  .set-cat[data-tint="orange"] .ic{background:rgba(255,170,60,.15)}
+  .set-cat[data-tint="purple"] .ic{background:rgba(150,120,255,.17)}
+  .set-cat[data-tint="red"] .ic{background:rgba(255,90,120,.15)}
+  .set-cat[data-tint="gray"] .ic{background:rgba(255,255,255,.08)}
+  .set-cat .n{font-size:14px; font-weight:800; flex:1}
+  .set-cat .ch{color:var(--muted); font-size:20px; line-height:1; transition:transform .25s; transform:rotate(90deg)}
+  .set-group.closed .set-cat{border-bottom:none}
+  .set-group.closed .set-cat .ch{transform:rotate(0deg)}
+  .set-group.closed .set-row, .set-group.closed .set-note{display:none}
   .key-input{width:150px; background:var(--bg2); border:1px solid rgba(255,255,255,.1); border-radius:10px;
     color:var(--text); padding:9px 12px; font-size:12px; font-family:inherit; outline:none}
   .key-input:focus{border-color:var(--accent)}
@@ -789,7 +801,8 @@
       <div class="stat"><b id="stSaved">0</b><small>в избранном</small></div>
       <div class="stat" id="stAiCard" style="cursor:pointer"><b id="stAi">–</b><small>AI-режим</small></div>
     </div>
-    <div class="set-group">
+    <div class="set-group" data-cat="keys">
+      <button class="set-cat" data-tint="blue"><span class="ic">🔑</span><span class="n">API-ключи</span><span class="ch">›</span></button>
       <div class="set-row">
         <div><div class="t">TMDB API ключ</div><div class="d">Живые данные: постеры, новинки, поиск</div></div>
         <div id="tmdbKeyWrap"><input class="key-input" id="tmdbKey" placeholder="вставить ключ" autocomplete="off"></div>
@@ -807,7 +820,8 @@
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="subdlKey" placeholder="вставить ключ" autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
-    <div class="set-group">
+    <div class="set-group" data-cat="tor">
+      <button class="set-cat" data-tint="orange"><span class="ic">🧲</span><span class="n">Торренты</span><span class="ch">›</span></button>
       <div class="set-row" id="rowTsHttps" style="cursor:pointer">
         <div><div class="t">TorrServer · https</div><div class="d">Прямой https-адрес сервера</div></div>
         <div class="set-val" id="tsHttpsVal"></div>
@@ -834,7 +848,8 @@
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacKey2" placeholder="sa0sk83d.." autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
-    <div class="set-group">
+    <div class="set-group" data-cat="rezka">
+      <button class="set-cat" data-tint="purple"><span class="ic">💬</span><span class="n">Комментарии Rezka</span><span class="ch">›</span></button>
       <div class="set-row">
         <div><div class="t">Прокси Rezka</div><div class="d">Обход CORS для hdrezka · комментарии · комментарии</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="rzProxy" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
@@ -844,7 +859,8 @@
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="rzCookie" placeholder="dle_user_id=…;" autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
-    <div class="set-group">
+    <div class="set-group" data-cat="filmix">
+      <button class="set-cat" data-tint="red"><span class="ic">🎞️</span><span class="n">Filmix</span><span class="ch">›</span></button>
       <div class="set-row">
         <div><div class="t">Токен Filmix</div><div class="d">user_dev_token · хранится только на этом устройстве</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxToken" placeholder="вставь токен" autocomplete="off" autocapitalize="off"></div>
@@ -854,7 +870,8 @@
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxProxy" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
-    <div class="set-group">
+    <div class="set-group" data-cat="app">
+      <button class="set-cat" data-tint="gray"><span class="ic">⚙️</span><span class="n">Приложение</span><span class="ch">›</span></button>
       <div class="set-row">
         <div><div class="t">Скрывать просмотренное</div><div class="d">Фильмы «уже смотрел» не попадут в ряды</div></div>
         <button class="switch" id="hideWatched"></button>
@@ -4074,6 +4091,19 @@ $('#fldSave').onclick = ()=>{
 };
 tsRefreshUI();
 $('#jacUrl').value = state.jacUrl;
+/* сворачивание категорий настроек */
+let setClosed = {};
+try{ setClosed = JSON.parse(LS.get('set_closed','{}')||'{}'); }catch(e){ setClosed = {}; }
+document.querySelectorAll('.set-group[data-cat]').forEach(g=>{
+  const c = g.dataset.cat;
+  if(setClosed[c]) g.classList.add('closed');
+  const h = g.querySelector('.set-cat');
+  if(h) h.onclick = ()=>{
+    g.classList.toggle('closed');
+    setClosed[c] = g.classList.contains('closed') ? 1 : 0;
+    try{ LS.set('set_closed', JSON.stringify(setClosed)); }catch(e){}
+  };
+});
 $('#jacUrl').addEventListener('change', e=>{
   state.jacUrl = e.target.value.trim().replace(/\/+$/,'') || 'https://jac.red';
   e.target.value = state.jacUrl; LS.set('jac_url', state.jacUrl);
