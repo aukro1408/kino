@@ -207,7 +207,10 @@
   /* ---------- profile / settings ---------- */
   .profile-head{display:flex; align-items:center; gap:16px; padding:10px 20px 6px}
   .avatar{width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#2f6fed,#9b5cff);
-    display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800}
+    display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800;
+    overflow:hidden; cursor:pointer; flex:none}
+  .avatar img{width:100%; height:100%; object-fit:cover; display:block}
+  .avatar:active{transform:scale(.94)}
   .profile-head b{font-size:18px} .profile-head small{color:var(--muted); font-size:12.5px}
   .set-group{margin:18px 16px 0; background:var(--card); border-radius:var(--radius); overflow:hidden}
   .set-row{padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px}
@@ -837,9 +840,10 @@
   <div class="screen" id="scr-profile">
     <div class="header"><div class="logo brand">ПРОФИЛЬ<span class="dot">.</span></div></div>
     <div class="profile-head">
-      <div class="avatar">D</div>
+      <div class="avatar" id="myAvatar" role="button" aria-label="Сменить аватар" title="Сменить аватар">D</div>
       <div><b>Киноман</b><br><small id="profileSub">демо-режим · вставь ключ TMDB</small></div>
     </div>
+    <input type="file" id="avatarFile" accept="image/*" hidden>
     <div class="stat-row">
       <div class="stat"><b id="stWatched">0</b><small>просмотрено</small></div>
       <div class="stat"><b id="stSaved">0</b><small>в избранном</small></div>
@@ -2485,6 +2489,47 @@ function openOptSheet(title, opts, cur, cb){
 }
 $('#optX').onclick = ()=>$('#optVeil').classList.remove('show');
 $('#optVeil').addEventListener('click', e=>{ if(e.target.id==='optVeil') e.target.classList.remove('show'); });
+
+/* --- свой аватар в профиле --- */
+function renderAvatar(){
+  const el = $('#myAvatar');
+  if(!el) return;
+  const av = LS.get('avatar','');
+  el.innerHTML = av ? `<img src="${av}" alt="Аватар">` : 'D';
+}
+$('#myAvatar').onclick = ()=>{
+  const has = !!LS.get('avatar','');
+  const opts = [{t:'Выбрать фото', s:'Из галереи'}];
+  if(has) opts.push({t:'Убрать фото', s:'Вернуть букву D'});
+  openOptSheet('Аватар', opts, -1, (i)=>{
+    if(i===0) $('#avatarFile').click();
+    else { LS.set('avatar',''); renderAvatar(); }
+  });
+};
+$('#avatarFile').onchange = (e)=>{
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if(!f) return;
+  const img = new Image();
+  const url = URL.createObjectURL(f);
+  img.onload = ()=>{
+    URL.revokeObjectURL(url);
+    try{
+      const S = 256;
+      const cv = document.createElement('canvas'); cv.width = S; cv.height = S;
+      const cx = cv.getContext('2d');
+      const sc = Math.max(S/img.width, S/img.height);
+      const w = img.width*sc, h = img.height*sc;
+      cx.drawImage(img, (S-w)/2, (S-h)/2, w, h);
+      LS.set('avatar', cv.toDataURL('image/jpeg', .85));
+      renderAvatar();
+      toast('Аватар обновлён');
+    }catch(err){ toast('Не удалось сохранить фото'); }
+  };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); toast('Не удалось прочитать фото'); };
+  img.src = url;
+};
+renderAvatar();
 
 /* --- каркас экрана --- */
 function vwShellHTML(){
