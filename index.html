@@ -218,6 +218,31 @@
   .fld-input:focus{outline:none; border-color:var(--accent2)}
   .fld-btn{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:14px; padding:13px 18px; font-size:15px; font-weight:700; cursor:pointer}
   .fld-btn.pri{background:var(--accent); border:none}
+  .set-cat[data-tint="gold"] .ic{color:#e8c877; background:rgba(212,175,105,.13)}
+/* ============ ТЕМА «ЛЮМЬЕР» · карточка фильма в духе кинопостера ============ */
+html[data-theme="lumiere"] #scr-movie{background:#0c0e13}
+html[data-theme="lumiere"] .mv-ambient{display:none}
+html[data-theme="lumiere"] .mv-backdrop{height:380px; -webkit-mask-image:linear-gradient(180deg,#000 60%,transparent 98%); mask-image:linear-gradient(180deg,#000 60%,transparent 98%)}
+html[data-theme="lumiere"] .mv-backdrop img{filter:none; transform:scale(1.03)}
+html[data-theme="lumiere"] .mv-shade{background:linear-gradient(180deg,rgba(6,8,12,.30) 0%,rgba(6,8,12,0) 35%,rgba(12,14,19,.55) 78%,#0c0e13 100%)}
+html[data-theme="lumiere"] .mv-poster-c{display:none}
+html[data-theme="lumiere"] .mv-body{background:#131722; margin:-110px 12px 0; border-radius:28px; padding:24px 18px 30px;
+  border:1px solid rgba(255,255,255,.07); box-shadow:0 30px 60px rgba(0,0,0,.55); z-index:2}
+html[data-theme="lumiere"] .mv-title-c{margin-top:4px}
+html[data-theme="lumiere"] .mv-title-t{font-family:Georgia,'Times New Roman',serif; font-size:34px; letter-spacing:.5px}
+html[data-theme="lumiere"] .mv-logo{filter:drop-shadow(0 4px 18px rgba(0,0,0,.5))}
+html[data-theme="lumiere"] .mv-orig-c{color:#a98f5f}
+html[data-theme="lumiere"] .mv-meta .rate{color:#e8c877}
+html[data-theme="lumiere"] .mv-genres{justify-content:center}
+html[data-theme="lumiere"] .mv-genres i{background:rgba(212,175,105,.10); border:1px solid rgba(212,175,105,.35); color:#e8c877}
+html[data-theme="lumiere"] .wcard{background:linear-gradient(180deg,rgba(212,175,105,.10),rgba(212,175,105,.03)); border-color:rgba(212,175,105,.28)}
+html[data-theme="lumiere"] .wcard svg{color:#e8c877; filter:drop-shadow(0 2px 8px rgba(212,175,105,.35))}
+html[data-theme="lumiere"] .wcard:active{transform:scale(.96)}
+html[data-theme="lumiere"] .mv-trailer{border-color:rgba(212,175,105,.30)}
+html[data-theme="lumiere"] .mv-watched.on{background:rgba(212,175,105,.14); border-color:rgba(212,175,105,.5); color:#e8c877}
+html[data-theme="lumiere"] .cast .ph{border-radius:50%}
+html[data-theme="lumiere"] .fav-star.on{color:#e8c877}
+html[data-theme="lumiere"] .fav-star.on svg{fill:#e8c877}
   .set-row .t{font-size:14px; font-weight:700}
   .set-row .d{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
   .set-cat{display:flex; align-items:center; gap:12px; width:100%; background:none; border:none; border-bottom:1px solid rgba(255,255,255,.06); color:#fff; padding:13px 18px; cursor:pointer; text-align:left; font-family:inherit}
@@ -802,6 +827,13 @@
       <div class="stat"><b id="stSaved">0</b><small>в избранном</small></div>
       <div class="stat" id="stAiCard" style="cursor:pointer"><b id="stAi">–</b><small>AI-режим</small></div>
     </div>
+    <div class="set-group" data-cat="design">
+      <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></svg></span><span class="n">Оформление</span><span class="ch">›</span></button>
+      <div class="set-row" id="rowTheme" style="cursor:pointer">
+        <div><div class="t">Тема</div><div class="d">Внешний вид карточки фильма · переключается мгновенно</div></div>
+        <div class="set-val" id="themeVal"></div>
+      </div>
+    </div>
     <div class="set-group" data-cat="keys">
       <button class="set-cat" data-tint="blue"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 20 3"/><path d="m16 7 3 3"/></svg></span><span class="n">API-ключи</span><span class="ch">›</span></button>
       <div class="set-row">
@@ -1021,6 +1053,7 @@ const state = {
   geminiKey: LS.get('gemini_key',''),
   tsUrl: LS.get('ts_url','http://127.0.0.1:8090'),
   tsUrlHttp: LS.get('ts_url_http',''),
+  theme: LS.get('theme','blackroom'),
   jacUrl: LS.get('jac_url','https://jac.red'),
   jacKey: LS.get('jac_key',''),
   jacUrl2: LS.get('jac_url2',''),
@@ -4088,6 +4121,22 @@ $('#fldSave').onclick = ()=>{
 };
 tsRefreshUI();
 $('#jacUrl').value = state.jacUrl;
+/* темы оформления */
+const THEMES = [
+  {id:'blackroom', t:'Blackroom', s:'Наша тёмная тема'},
+  {id:'lumiere', t:'Люмьер', s:'Карточка фильма в духе кинопостера'},
+];
+function applyTheme(){ document.documentElement.dataset.theme = state.theme || 'blackroom'; }
+function themeName(id){ const f = THEMES.find(t=>t.id===id); return f ? f.t : id; }
+function themeRefreshUI(){ const el = $('#themeVal'); if(el) el.textContent = themeName(state.theme); }
+$('#rowTheme').onclick = ()=>{
+  openOptSheet('Тема оформления', THEMES, Math.max(0, THEMES.findIndex(t=>t.id===state.theme)), (i)=>{
+    state.theme = THEMES[i].id; LS.set('theme', state.theme);
+    applyTheme(); themeRefreshUI();
+    toast('Тема: ' + THEMES[i].t);
+  });
+};
+applyTheme(); themeRefreshUI();
 /* категории настроек: при старте всегда закрыты, тап открывает/закрывает */
 document.querySelectorAll('.set-group[data-cat]').forEach(g=>{
   g.classList.add('closed');
