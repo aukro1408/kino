@@ -362,8 +362,7 @@
     animation:blobFloat 4.5s ease-in-out infinite}
   @keyframes blobFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
   .ai-blob.boing{animation:boing .55s ease}
-  #aiBlob.v3d{height:190px}
-  #aiBlob.v3d canvas{width:100%;height:100%;display:block}
+  #aiBlob{width:175px}
   @keyframes boing{0%{transform:scale(1,1)}30%{transform:scale(1.14,.8)}55%{transform:scale(.92,1.1)}75%{transform:scale(1.04,.96)}100%{transform:scale(1,1)}}
   @media (prefers-reduced-motion:reduce){
     .ai-go, .ai-go::after, .ai-go .sp, .ai-blob{animation:none}
@@ -954,7 +953,7 @@
     </div>
     <div class="ai-wrap">
       <div class="ai-buddy" id="aiBuddy">
-        <div class="ai-blob" id="aiBlob"><img src="ai-bot.png?v=2" alt="AI-помощник" style="width:100%;height:auto;display:block"></div>
+        <blue-bot class="ai-blob" id="aiBlob" mood="idle"></blue-bot>
       </div>
       <div class="ai-say" id="aiSay">Чем я могу тебе помочь? ✨</div>
       <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
@@ -4326,18 +4325,21 @@ async function aiRun(){
   if(!state.tmdbKey){ toast('Добавь TMDB ключ в профиле'); goto('profile'); return; }
   const sess = aiSession = {q, excludeTitles:[], excludeIds:[], items:[], preloaded:null, loading:true, preloading:false, loadingMore:false};
   aiSetGo(true, 'AI думает…');
+  aiBotMood('thinking');
   $('#aiResults').innerHTML = '<div class="ai-status"><div class="ai-spin"></div>AI подбирает фильмы…</div><div class="ai-skel">'+'<div class="skel"></div>'.repeat(6)+'</div>';
   try{
     const results = await aiFetchBatch(sess);
     if(aiSession!==sess) return;
     sess.loading = false; aiSetGo(false);
-    if(!results.length){ $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">AI ничего не нашёл. Попробуй переформулировать запрос.</div>'; return; }
+    if(!results.length){ $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">AI ничего не нашёл. Попробуй переформулировать запрос.</div>'; aiBotMood('surprised', 2500); return; }
     sess.items = results;
     aiRenderGrid(sess);
+    aiBotMood('happy', 2500);
     aiPreload(sess);
   }catch(e){
     if(aiSession!==sess) return;
     sess.loading = false; aiSetGo(false);
+    aiBotMood('surprised', 2500);
     $('#aiResults').innerHTML = '<div class="fav-empty" style="padding:20px 18px">'+aiErrText(e)+'</div>';
   }
 }
@@ -4394,108 +4396,69 @@ $('#aiBack').onclick = ()=>goBack();
 $('#aiGo').onclick = aiRun;
 $('#stAiCard').onclick = ()=>goto('ai');
 renderAiChips();
+/* ===== BlueBot: SVG-персонаж с настроениями ===== */
+class BlueBot extends HTMLElement {
+  static get observedAttributes(){return ['mood'];}
+  constructor(){super();this.attachShadow({mode:'open'});this.shadowRoot.innerHTML=`
+<style>
+:host{display:block;width:100%;max-width:420px;--blue:#2376ff}svg{width:100%;height:auto;overflow:visible} .float{animation:float 4s ease-in-out infinite;transform-origin:210px 220px}.halo{animation:halo 4s ease-in-out infinite;transform-origin:210px 360px}.eyes{transform-origin:210px 218px;animation:blink 5.7s infinite}.pupil{transition:transform .18s ease-out}.face{filter:drop-shadow(0 0 4px #53a9ff)} .thinking{animation:think 1.2s ease-in-out infinite}.talking{animation:talk .32s ease-in-out infinite;transform-origin:210px 262px}path,ellipse{transition:d .25s,rx .25s,ry .25s} @keyframes float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}@keyframes halo{50%{transform:scaleX(.87);opacity:.5}}@keyframes blink{0%,42%,46%,100%{transform:scaleY(1)}44%{transform:scaleY(.08)}}@keyframes think{50%{opacity:.3}}@keyframes talk{50%{transform:scaleY(.4)}}@media(prefers-reduced-motion:reduce){*,.float,.halo,.eyes{animation:none!important;transition:none!important}}
+</style>
+<svg viewBox="0 0 420 410" role="img" aria-label="Дружелюбный сине-белый робот">
+<defs>
+<radialGradient id="shell" cx="32%" cy="22%" r="85%"><stop stop-color="#fff"/><stop offset=".48" stop-color="#f3f9ff"/><stop offset=".8" stop-color="#cce3ff"/><stop offset="1" stop-color="#70aaff"/></radialGradient>
+<linearGradient id="ear" x2="1" y2="1"><stop stop-color="#a0cdff"/><stop offset=".5" stop-color="#428fff"/><stop offset="1" stop-color="#1458ce"/></linearGradient>
+<linearGradient id="screen" x2="0.8" y2="1"><stop stop-color="#0d2c63"/><stop offset="1" stop-color="#05152f"/></linearGradient>
+<linearGradient id="rim" x2=".8" y2="1"><stop stop-color="#75baff"/><stop offset="1" stop-color="#1a64ef"/></linearGradient>
+<radialGradient id="shadow"><stop stop-color="#548ee1" stop-opacity=".22"/><stop offset="1" stop-color="#548ee1" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse class="halo" cx="210" cy="370" rx="115" ry="20" fill="url(#shadow)"/>
+<g class="float">
+<path d="M210 88V65" stroke="#4d92f8" stroke-width="7" stroke-linecap="round"/><circle cx="210" cy="57" r="10" fill="#3986ff"/><circle cx="207" cy="54" r="3" fill="white"/>
+<rect x="42" y="172" width="49" height="98" rx="24" fill="url(#ear)"/><rect x="329" y="172" width="49" height="98" rx="24" fill="url(#ear)"/>
+<path d="M51 197v46M369 197v46" stroke="#c0e2ff" stroke-width="5" stroke-linecap="round"/>
+<path d="M69 207C69 124 122 86 210 86S351 124 351 207C351 294 296 341 210 341S69 294 69 207Z" fill="url(#shell)" stroke="#b2d5ff" stroke-width="2"/>
+<path d="M103 153c21-36 58-49 90-49" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" opacity=".85"/>
+<path d="M112 188Q210 151 308 188Q334 199 322 242Q312 285 210 290Q108 285 98 242Q86 199 112 188Z" fill="url(#rim)"/>
+<path d="M118 194Q210 162 302 194Q325 203 314 240Q304 276 210 281Q116 276 106 240Q95 203 118 194Z" fill="url(#screen)"/>
+<path d="M124 199Q202 173 279 192" stroke="white" stroke-width="2" opacity=".12" fill="none" stroke-linecap="round"/>
+<g class="pupil"><g class="face">
+<g class="eyes"><path id="left" d="M156 205 C141 205 141 233 156 233 C171 233 171 205 156 205Z" fill="#a9e5ff" stroke="#a9e5ff" stroke-width="6" stroke-linecap="round"/><path id="right" d="M264 205 C249 205 249 233 264 233 C279 233 279 205 264 205Z" fill="#a9e5ff" stroke="#a9e5ff" stroke-width="6" stroke-linecap="round"/></g>
+<path id="mouth" d="M193 251 Q210 277 227 251" fill="none" stroke="#a9e5ff" stroke-width="7" stroke-linecap="round"/>
+<g id="dots" visibility="hidden" fill="#a9e5ff"><circle class="thinking" cx="194" cy="261" r="4"/><circle class="thinking" style="animation-delay:.2s" cx="210" cy="261" r="4"/><circle class="thinking" style="animation-delay:.4s" cx="226" cy="261" r="4"/></g>
+</g></g>
+<path d="M176 313h68" stroke="#d0e7ff" stroke-width="5" stroke-linecap="round"/><circle cx="210" cy="312" r="3" fill="#428dff"/>
+</g></svg>`;
+  this.onMove=e=>{const r=this.getBoundingClientRect();const x=Math.max(-5,Math.min(5,(e.clientX-r.x-r.width/2)/25));const y=Math.max(-3,Math.min(3,(e.clientY-r.y-r.height/2)/30));this.shadowRoot.querySelector('.pupil').style.transform=`translate(${x}px,${y}px)`};
+  }
+  connectedCallback(){this.render();this.addEventListener('pointermove',this.onMove);this.addEventListener('pointerleave',()=>this.shadowRoot.querySelector('.pupil').style.transform='');}
+  attributeChangedCallback(){this.render();}
+  setMood(mood){this.setAttribute('mood',mood);}
+  render(){if(!this.shadowRoot)return;const round=x=>`M${x} 205 C${x-15} 205 ${x-15} 233 ${x} 233 C${x+15} 233 ${x+15} 205 ${x} 205Z`;const happy=x=>`M${x-15} 224 Q${x} 199 ${x+15} 224`;const wink=x=>`M${x-15} 220 Q${x} 227 ${x+15} 215`;const mood=this.getAttribute('mood')||'idle';let left=round(156),right=round(264),mouth='M193 251 Q210 277 227 251',fill='#a9e5ff';if(mood==='happy'){left=happy(156);right=happy(264);mouth='M187 249 Q210 286 233 249';fill='none';}if(mood==='wink'){right=wink(264);}if(mood==='surprised'){mouth='M210 247 C194 247 194 274 210 274 C226 274 226 247 210 247Z';}if(mood==='thinking'){left='M141 214 L171 214';right='M249 214 L279 214';fill='none';}if(mood==='playful'){left=happy(156);right=wink(264);mouth='M190 251 Q210 274 231 249 Q230 279 214 274';fill='none';}if(mood==='talking'){mouth='M192 251 Q210 241 228 251 Q228 275 210 275 Q192 275 192 251';}
+  for(const [id,d] of [['left',left],['right',right],['mouth',mouth]]){const el=this.shadowRoot.getElementById(id);el.setAttribute('d',d);if(id!=='mouth')el.setAttribute('fill',id==='right'&&mood==='wink'?'none':fill);}
+  const m=this.shadowRoot.getElementById('mouth');m.style.visibility=mood==='thinking'?'hidden':'visible';m.classList.toggle('talking',mood==='talking');this.shadowRoot.getElementById('dots').setAttribute('visibility',mood==='thinking'?'visible':'hidden');
+  this.shadowRoot.querySelector('svg').setAttribute('aria-label','Сине-белый робот: '+({idle:'улыбается',happy:'радуется',wink:'подмигивает',surprised:'удивляется',thinking:'думает',playful:'строит рожицу',talking:'говорит'}[mood]||'улыбается'));
+  }
+}
+customElements.define('blue-bot',BlueBot);
+function aiBotMood(m, back){
+  const b = $('#aiBlob');
+  if(!b || !b.setMood) return;
+  clearTimeout(b._mt);
+  b.setMood(m);
+  if(back) b._mt = setTimeout(()=>b.setMood('idle'), back);
+}
 /* помощник на экране AI-подборки */
 const AI_SAY = ['Чем я могу тебе помочь? ✨','Опиши настроение — я подберу 🎬','Триллер? Комедия? Решай 👻','Киновечер? Я уже в деле 🍿','Без ужасов? Понял, записываю 😄'];
 let aiSayI = 0;
 $('#aiBuddy').onclick = ()=>{
-  if(Date.now()-(window.__aiDragT||0) < 400) return; /* был drag, а не тап */
   aiSayI = (aiSayI+1) % AI_SAY.length;
   $('#aiSay').textContent = AI_SAY[aiSayI];
   const b = $('#aiBlob');
   b.classList.remove('boing'); void b.offsetWidth; b.classList.add('boing');
   clearTimeout(b._bt); b._bt = setTimeout(()=>b.classList.remove('boing'), 600);
-  const v = b.querySelector('video');
-  if(v){ v.currentTime=0; v.play().catch(()=>{}); }
-  else if(window.__aiCheer) window.__aiCheer();
+  const moods = ['happy','wink','playful','surprised'];
+  aiBotMood(moods[Math.floor(Math.random()*moods.length)], 1600);
 };
-/* 3D-персонаж: Three.js + ai-bot.glb (8 анимаций). Фолбэк — видео, затем картинка */
-(function(){
-  const wrap = $('#aiBlob');
-  const toVideo = ()=>{ wrap.classList.remove('v3d');
-    wrap.innerHTML = '<video src="ai-bot.webm?v=3" autoplay loop muted playsinline poster="ai-bot.png?v=2" style="width:100%;height:auto;display:block"></video>'; };
-  const toImg = ()=>{ wrap.classList.remove('v3d');
-    wrap.innerHTML = '<img src="ai-bot.png?v=2" alt="AI-помощник" style="width:100%;height:auto;display:block">'; };
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return; /* остаётся статичный постер */
-  const loadScript = (src)=>new Promise((res, rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
-  let started = false;
-  new IntersectionObserver((es, io)=>{
-    if(es[0].isIntersecting && !started){ started = true; io.disconnect(); boot3D(); }
-  }).observe(wrap);
-  function boot3D(){
-    loadScript('three.min.js').then(()=>loadScript('GLTFLoader.js')).then(initScene).catch(toVideo);
-  }
-  function initScene(){
-    try{
-      if(!window.THREE || !THREE.GLTFLoader) throw 0;
-      const cv = document.createElement('canvas');
-      const renderer = new THREE.WebGLRenderer({canvas:cv, alpha:true, antialias:true});
-      renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
-      const W = wrap.clientWidth || 150, H = 190;
-      renderer.setSize(W, H, false);
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(32, W/H, 0.01, 100);
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x2a2a4a, 1.05));
-      const key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(2.5, 4, 5); scene.add(key);
-      const rim = new THREE.DirectionalLight(0x9d7bff, 0.7); rim.position.set(-3, 2, -4); scene.add(rim);
-      new THREE.GLTFLoader().load('ai-bot.glb', (gltf)=>{
-        try{
-          const model = gltf.scene;
-          const box = new THREE.Box3().setFromObject(model);
-          const size = box.getSize(new THREE.Vector3());
-          const ctr = box.getCenter(new THREE.Vector3());
-          model.position.sub(ctr);
-          const spinner = new THREE.Group();
-          spinner.add(model);
-          scene.add(spinner);
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const dist = (maxDim/2) / Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * 1.5;
-          camera.position.set(0, 0, dist);
-          camera.lookAt(0, 0, 0);
-          const mixer = new THREE.AnimationMixer(model);
-          const clips = {};
-          gltf.animations.forEach(c=>{ clips[c.name] = c; });
-          const idleClip = clips['pocket_console_dance'] || gltf.animations[0];
-          if(!idleClip) throw 0;
-          let cur = mixer.clipAction(idleClip); cur.play();
-          const happyNames = ['pocket_console_celebrate','pocket_console_paw','pocket_console_nod','pocket_console_head_tilt'];
-          let busy = false;
-          window.__aiCheer = ()=>{
-            if(busy) return;
-            const happy = happyNames.map(n=>clips[n]).filter(Boolean);
-            if(!happy.length) return;
-            busy = true;
-            const nxt = mixer.clipAction(happy[Math.floor(Math.random()*happy.length)]);
-            nxt.setLoop(THREE.LoopOnce, 1); nxt.clampWhenFinished = true;
-            const back = ()=>{ mixer.removeEventListener('finished', back);
-              nxt.fadeOut(.3); cur.reset().fadeIn(.3).play();
-              setTimeout(()=>{ busy = false; }, 350); };
-            mixer.addEventListener('finished', back);
-            cur.fadeOut(.25); nxt.reset().fadeIn(.25).play();
-          };
-          wrap.innerHTML = ''; wrap.appendChild(cv); wrap.classList.add('v3d');
-          /* вращение пальцем с инерцией */
-          let rotY = 0, velY = 0, dragging = false, lastX = 0, movedPx = 0;
-          cv.style.touchAction = 'none'; cv.style.cursor = 'grab';
-          cv.addEventListener('pointerdown', (e)=>{ dragging = true; lastX = e.clientX; movedPx = 0; velY = 0; cv.style.cursor = 'grabbing'; try{cv.setPointerCapture(e.pointerId);}catch(_){}} );
-          cv.addEventListener('pointermove', (e)=>{ if(!dragging) return; const dx = e.clientX - lastX; lastX = e.clientX; movedPx += Math.abs(dx); rotY += dx*0.012; velY = dx*0.012; });
-          const endDrag = ()=>{ if(!dragging) return; dragging = false; cv.style.cursor = 'grab'; if(movedPx > 10) window.__aiDragT = Date.now(); };
-          cv.addEventListener('pointerup', endDrag);
-          cv.addEventListener('pointercancel', endDrag);
-          const clock = new THREE.Clock();
-          let vis = true;
-          new IntersectionObserver((es)=>{ vis = es[0].isIntersecting; }).observe(wrap);
-          renderer.setAnimationLoop(()=>{
-            if(!vis || document.hidden) return;
-            if(!dragging){ rotY += velY; velY *= 0.94; if(Math.abs(velY) < 0.0002) velY = 0; }
-            spinner.rotation.y = rotY;
-            mixer.update(Math.min(clock.getDelta(), .05));
-            renderer.render(scene, camera);
-          });
-        }catch(e){ toVideo(); }
-      }, undefined, ()=>toVideo());
-    }catch(e){ toVideo(); }
-  }
-})();
 
 /* =================== BOOT =================== */
 (async function(){
