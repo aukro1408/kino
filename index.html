@@ -841,7 +841,7 @@
     <div class="header"><div class="logo brand">ПРОФИЛЬ<span class="dot">.</span></div></div>
     <div class="profile-head">
       <div class="avatar" id="myAvatar" role="button" aria-label="Сменить аватар" title="Сменить аватар">D</div>
-      <div><b>Киноман</b><br><small id="profileSub">демо-режим · вставь ключ TMDB</small></div>
+      <div><b id="profileName" role="button" title="Изменить имя" style="cursor:pointer">Киноман</b><br><small id="profileSub">демо-режим · вставь ключ TMDB</small></div>
     </div>
     <input type="file" id="avatarFile" accept="image/*" hidden>
     <div class="stat-row">
@@ -4213,10 +4213,29 @@ function openFldEditor(which){
   const inp = $('#fldInput');
   inp.value = isH ? state.tsUrl : state.tsUrlHttp;
   inp.placeholder = isH ? 'https://…' : 'http://IP:8090';
+  inp.removeAttribute('maxlength');
   inp.setAttribute('inputmode','url');
   $('#fldVeil').classList.add('show');
   setTimeout(()=>{ try{ inp.focus(); inp.select(); }catch(e){} }, 80);
 }
+function renderProfileName(){
+  const el = $('#profileName');
+  if(el) el.textContent = LS.get('profile_name','Киноман') || 'Киноман';
+}
+function openNameEditor(){
+  fldTarget = 'name';
+  $('#fldTitle').textContent = 'Имя профиля';
+  $('#fldHint').textContent = 'Имя видно только тебе — в шапке профиля.';
+  const inp = $('#fldInput');
+  inp.value = LS.get('profile_name','Киноман');
+  inp.placeholder = 'Киноман';
+  inp.setAttribute('maxlength','24');
+  inp.removeAttribute('inputmode');
+  $('#fldVeil').classList.add('show');
+  setTimeout(()=>{ try{ inp.focus(); inp.select(); }catch(e){} }, 80);
+}
+$('#profileName').onclick = openNameEditor;
+renderProfileName();
 $('#rowTsHttps').onclick = ()=>openFldEditor('https');
 $('#rowTsHttp').onclick = ()=>openFldEditor('http');
 $('#fldX').onclick = ()=>$('#fldVeil').classList.remove('show');
@@ -4224,6 +4243,13 @@ $('#fldVeil').addEventListener('click', e=>{ if(e.target.id==='fldVeil') e.targe
 $('#fldClear').onclick = ()=>{ $('#fldInput').value=''; $('#fldInput').focus(); };
 $('#fldSave').onclick = ()=>{
   const v = $('#fldInput').value.trim().replace(/\/+$/,'');
+  if(fldTarget==='name'){
+    LS.set('profile_name', v || 'Киноман');
+    renderProfileName();
+    $('#fldVeil').classList.remove('show');
+    toast('Имя обновлено');
+    return;
+  }
   if(fldTarget==='https'){ state.tsUrl = v; LS.set('ts_url', v); }
   else { state.tsUrlHttp = v; LS.set('ts_url_http', v); }
   $('#fldVeil').classList.remove('show');
