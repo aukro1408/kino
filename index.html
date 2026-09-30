@@ -357,25 +357,14 @@
   .ai-go:disabled{opacity:.55; animation:none}
   /* помощник */
   .ai-buddy{display:flex; flex-direction:column; align-items:center; margin:4px 0 2px; cursor:pointer; -webkit-tap-highlight-color:transparent}
-  .ai-blob{width:104px; height:96px; position:relative;
-    background:
-      radial-gradient(circle at 30% 22%, rgba(255,255,255,.55), transparent 44%),
-      radial-gradient(circle at 70% 60%, #f0a6ff 0%, transparent 56%),
-      radial-gradient(circle at 32% 72%, #7c5cff 0%, transparent 62%),
-      radial-gradient(circle at 62% 28%, #a855f7 0%, #4c1d95 78%);
-    animation:blobFloat 4.5s ease-in-out infinite, blobMorph 8s ease-in-out infinite;
-    box-shadow:0 12px 36px rgba(124,92,255,.45), inset -8px -10px 26px rgba(0,0,0,.30), inset 8px 10px 24px rgba(255,255,255,.16)}
+  .ai-blob{width:140px; height:auto; position:relative; display:block;
+    filter:drop-shadow(0 14px 30px rgba(124,92,255,.35));
+    animation:blobFloat 4.5s ease-in-out infinite}
   @keyframes blobFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
-  @keyframes blobMorph{0%,100%{border-radius:46% 54% 52% 48% / 54% 48% 52% 46%}33%{border-radius:56% 44% 46% 54% / 46% 56% 44% 54%}66%{border-radius:48% 52% 58% 42% / 58% 44% 52% 48%}}
   .ai-blob.boing{animation:boing .55s ease}
   @keyframes boing{0%{transform:scale(1,1)}30%{transform:scale(1.14,.8)}55%{transform:scale(.92,1.1)}75%{transform:scale(1.04,.96)}100%{transform:scale(1,1)}}
-  .ai-eyes{position:absolute; top:32%; left:0; right:0; display:flex; justify-content:center; gap:15px; animation:eyeLook 7s ease-in-out infinite}
-  .ai-eyes i{width:11px; height:23px; border-radius:99px; background:#fff; box-shadow:0 0 12px rgba(255,255,255,.95); animation:eyeBlink 4.8s ease-in-out infinite}
-  .ai-eyes i:last-child{animation-delay:.12s}
-  @keyframes eyeBlink{0%,91%,100%{transform:scaleY(1)}94.5%{transform:scaleY(.06)}}
-  @keyframes eyeLook{0%,100%{transform:translate(0,0)}22%{transform:translate(-8px,3px)}48%{transform:translate(7px,-3px)}74%{transform:translate(-4px,-2px)}}
   @media (prefers-reduced-motion:reduce){
-    .ai-go, .ai-go::after, .ai-go .sp, .ai-blob, .ai-eyes, .ai-eyes i{animation:none}
+    .ai-go, .ai-go::after, .ai-go .sp, .ai-blob{animation:none}
   }
   .ai-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
   .ai-chip{background:var(--card); border:1px solid rgba(255,255,255,.1); color:var(--text); border-radius:99px;
@@ -963,7 +952,7 @@
     </div>
     <div class="ai-wrap">
       <div class="ai-buddy" id="aiBuddy">
-        <div class="ai-blob" id="aiBlob"><div class="ai-eyes"><i></i><i></i></div></div>
+        <img class="ai-blob" id="aiBlob" src="ai-bot.gif" alt="AI-помощник" onerror="this.onerror=null;this.src='ai-bot.png'">
       </div>
       <div class="ai-say" id="aiSay">Чем я могу тебе помочь? ✨</div>
       <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
@@ -4412,7 +4401,9 @@ $('#aiBuddy').onclick = ()=>{
   const b = $('#aiBlob');
   b.classList.remove('boing'); void b.offsetWidth; b.classList.add('boing');
   clearTimeout(b._bt); b._bt = setTimeout(()=>b.classList.remove('boing'), 600);
+  if(/\.gif(\?|$)/.test(b.src)) b.src = b.src.split('?')[0] + '?r=' + Date.now();
 };
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){ const b=$('#aiBlob'); if(b) b.src='ai-bot.png'; }
 
 /* =================== BOOT =================== */
 (async function(){
