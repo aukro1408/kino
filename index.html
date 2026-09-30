@@ -228,8 +228,12 @@
 #scr-movie .mv-genres{animation:riseIn .55s .32s ease both}
 .rv{opacity:0; transform:translateY(30px); transition:opacity .6s ease, transform .6s cubic-bezier(.22,.61,.36,1)}
 .rv.in{opacity:1; transform:translateY(0)}
+/* ============ Появление главной ============ */
+#hero.hero-in{animation:riseIn .6s ease both}
+#chips.chips-in{animation:riseIn .6s .1s ease both}
 @media (prefers-reduced-motion:reduce){
-  #scr-movie .mv-backdrop, #scr-movie .mv-poster-c, #scr-movie .mv-title-c, #scr-movie .mv-meta-c, #scr-movie .mv-genres{animation:none}
+  #scr-movie .mv-backdrop, #scr-movie .mv-poster-c, #scr-movie .mv-title-c, #scr-movie .mv-meta-c, #scr-movie .mv-genres,
+  #hero.hero-in, #chips.chips-in{animation:none}
   .rv{opacity:1; transform:none; transition:none}
 }
   .set-row .t{font-size:14px; font-weight:700}
@@ -1491,6 +1495,7 @@ function renderHero(){
       </div>
     </div>`).join('') + '</div>' +
     `<div class="hero-dots">${state.hero.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('')}</div>`;
+  h.classList.remove('hero-in'); void h.offsetWidth; h.classList.add('hero-in');
   const track = h.querySelector('.hero-track');
   if(!h.dataset.fx){
     h.dataset.fx = '1';
@@ -1551,10 +1556,13 @@ function pokeHero(){
     if(n) heroGo((heroCur+1) % n);
   }, 6000);
 }
+let chipsShown = false;
 function renderChips(){
-  $('#chips').innerHTML = GENRE_CHIPS.map(c=>
+  const cb = $('#chips');
+  cb.innerHTML = GENRE_CHIPS.map(c=>
     `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
   document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderRows(); });
+  if(!chipsShown){ chipsShown = true; cb.classList.remove('chips-in'); void cb.offsetWidth; cb.classList.add('chips-in'); }
 }
 async function renderRows(){
   const box = $('#rows');
@@ -1595,6 +1603,7 @@ async function renderRows(){
   bindColCards(box);
   box.querySelectorAll('.row-more').forEach(b=>{ b.onclick=()=>openCategory(shown[+b.dataset.i].more); });
   box.querySelectorAll('.studio-tile').forEach(t=>{ t.onclick=()=>{ const s=STUDIOS[+t.dataset.si]; openCategory({type:'studio', studioId:s.id, sub:(s.mv?'movie':'tv'), title:s.name}); }; });
+  box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
 function catURL(more, page){
