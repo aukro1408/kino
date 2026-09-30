@@ -42,6 +42,7 @@
   .icon-btn{width:42px;height:42px;border-radius:50%;background:var(--card);border:none;color:var(--text);
     display:flex;align-items:center;justify-content:center;cursor:pointer}
   .icon-btn:active{transform:scale(.94)}
+  .icon-btn.on{color:#7db9ff}
 
   /* ---------- hero ---------- */
   .hero-wrap{padding:0; position:relative}
@@ -929,7 +930,9 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
       <div class="logo" id="catTitle" style="font-size:16px; letter-spacing:3px">КАТЕГОРИЯ</div>
-      <div style="width:42px"></div>
+      <button class="icon-btn" id="catSort" aria-label="Сортировка">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
     </div>
     <div id="catChips"></div>
     <div class="grid3" id="catGrid" style="margin-top:8px"></div>
@@ -1218,6 +1221,7 @@ function norm(m, media){
     date: m.release_date||m.first_air_date||'',
     rating: m.vote_average!==undefined ? +m.vote_average.toFixed(1) : m.rating,
     votes: m.vote_count || 0,
+    popularity: m.popularity || 0,
     genres: m.genre_ids ? m.genre_ids.map(g=>RU_GENRE[g]).filter(Boolean) : (m.genres||[]),
     desc: m.overview || m.desc || 'Описание скоро появится.',
     poster: m.poster_path || null,
@@ -1634,6 +1638,7 @@ async function renderRows(){
   box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
+let catSort = null, catItems = [];
 function catURL(more, page){
   return more.type==='trending' ? `/trending/movie/week?page=${page}`
     : more.type==='now_playing' ? `/movie/now_playing?region=RU&page=${page}`
@@ -1687,10 +1692,8 @@ async function catLoadMore(){
         if(n && !seen.has(n.id)){ seen.add(n.id); items.push(n); }
       });
       items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
-      if(catPage===0) grid.innerHTML = '';
-      const html = visible(items.filter(m=>m.poster)).map(cardHTML).join('');
-      if(html) grid.insertAdjacentHTML('beforeend', html);
-      bindCards(grid);
+      catItems.push(...items);
+      applyCatSort();
       catPage++;
       if(!(d.results||[]).length || catPage >= (d.total_pages||1)) catDone = true;
     }
@@ -1715,8 +1718,35 @@ function attachCatSentinel(){
     {root: document.getElementById('scr-cat'), rootMargin:'700px'});
   catObs.observe(sens);
 }
+/* --- сортировка категории --- */
+const CAT_SORTS = [
+  {id:null, t:'Без сортировки', s:'Порядок каталога'},
+  {id:'rating', t:'По рейтингу', s:'Сначала с высокой оценкой'},
+  {id:'date', t:'По дате', s:'Самые свежие сначала'},
+  {id:'pop', t:'По популярности', s:'Самые обсуждаемые'},
+];
+function applyCatSort(){
+  const grid = $('#catGrid');
+  if(!grid) return;
+  let items = visible(catItems.filter(m=>m.poster));
+  if(catSort==='rating') items = items.slice().sort((a,b)=>(b.rating||0)-(a.rating||0));
+  else if(catSort==='date') items = items.slice().sort((a,b)=>String(b.date||b.year||'').localeCompare(String(a.date||a.year||'')));
+  else if(catSort==='pop') items = items.slice().sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>';
+  bindCards(grid);
+}
+$('#catSort').onclick = ()=>{
+  const cur = Math.max(0, CAT_SORTS.findIndex(o=>o.id===catSort));
+  openOptSheet('Сортировка', CAT_SORTS, cur, (i)=>{
+    catSort = CAT_SORTS[i].id;
+    $('#catSort').classList.toggle('on', !!catSort);
+    applyCatSort();
+  });
+};
 async function openCategory(more){
   const grid = $('#catGrid');
+  catSort = null; catItems = [];
+  const _csb = $('#catSort'); if(_csb){ _csb.classList.remove('on'); }
   const ct = $('#catTitle');
   if(more.type==='fav'){
     ct.classList.add('brand');
@@ -1732,6 +1762,7 @@ async function openCategory(more){
   $('#scr-cat').classList.add('active');
   const isColList = more.type==='collections';
   const isCol = isColList || more.type==='collection';
+  const _csb2 = $('#catSort'); if(_csb2) _csb2.style.display = isColList ? 'none' : '';
   const setGridMode = ()=>{
     grid.classList.toggle('grid3', !isColList);
     grid.style.display = isColList ? 'block' : '';
@@ -1743,6 +1774,7 @@ async function openCategory(more){
     renderStudioChips();
     setGridMode();
     const items = state.favs[more.favId]||[];
+    catItems = items.slice();
     grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Пока пусто</div>';
     bindCards(grid);
     if(catObs){ catObs.disconnect(); catObs = null; }
@@ -1754,6 +1786,7 @@ async function openCategory(more){
     setGridMode();
     bindCards(grid); bindColCards(grid);
     catMore = lastCat.more; catPage = lastCat.page; catDone = lastCat.done; catLoading = false;
+    catItems = lastCat.items||[];
     renderStudioChips();
     attachCatSentinel();
     const st = lastCat.scroll||0;
@@ -1767,6 +1800,7 @@ async function openCategory(more){
   setGridMode();
   if(!state.live && !isCol){
     const items = state.pool.slice(0,30);
+    catItems = items.slice();
     grid.innerHTML = visible(items).map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено (демо-режим)</div>';
     bindCards(grid);
     return;
@@ -1818,7 +1852,7 @@ function saveScrollState(){
   const el = document.getElementById(cur);
   if(el) scrollMem[cur] = el.scrollTop;
   if(cur==='scr-home') hrowMem = [...document.querySelectorAll('#scr-home .hrow')].map(r=>r.scrollLeft);
-  if(cur==='scr-cat' && catMore) lastCat = {more:catMore, html:document.getElementById('catGrid').innerHTML, page:catPage, done:catDone, scroll:el?el.scrollTop:0};
+  if(cur==='scr-cat' && catMore) lastCat = {more:catMore, html:document.getElementById('catGrid').innerHTML, page:catPage, done:catDone, items:catItems, scroll:el?el.scrollTop:0};
 }
 function pushScreen(id){ saveScrollState(); navStack.push(currentScreenId()); showScreen(id); }
 function goBack(){ const p=navStack.pop(); if(p) showScreen(p, true); else goto('home'); }
