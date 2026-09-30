@@ -211,6 +211,13 @@
   .set-group{margin:18px 16px 0; background:var(--card); border-radius:var(--radius); overflow:hidden}
   .set-row{padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px}
   .set-row + .set-row{border-top:1px solid rgba(255,255,255,.06)}
+  .set-val{max-width:44%; flex:none; font-size:13px; color:var(--muted); text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .set-val::after{content:' ›'; color:var(--accent2)}
+  .set-note{font-size:12px; color:var(--muted); padding:6px 18px 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .fld-input{width:100%; box-sizing:border-box; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); border-radius:14px; color:#fff; font-size:16px; padding:14px}
+  .fld-input:focus{outline:none; border-color:var(--accent2)}
+  .fld-btn{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:14px; padding:13px 18px; font-size:15px; font-weight:700; cursor:pointer}
+  .fld-btn.pri{background:var(--accent); border:none}
   .set-row .t{font-size:14px; font-weight:700}
   .set-row .d{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
   .key-input{width:150px; background:var(--bg2); border:1px solid rgba(255,255,255,.1); border-radius:10px;
@@ -801,10 +808,15 @@
       </div>
     </div>
     <div class="set-group">
-      <div class="set-row">
-        <div><div class="t">TorrServer</div><div class="d">Адрес твоего TorrServer · потоковое видео из торрентов</div></div>
-        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="tsUrl" placeholder="http://127.0.0.1:8090" autocomplete="off" autocapitalize="off"></div>
+      <div class="set-row" id="rowTsHttps" style="cursor:pointer">
+        <div><div class="t">TorrServer · https</div><div class="d">Прямой https-адрес сервера</div></div>
+        <div class="set-val" id="tsHttpsVal"></div>
       </div>
+      <div class="set-row" id="rowTsHttp" style="cursor:pointer">
+        <div><div class="t">TorrServer · http</div><div class="d">Только адрес сервера — прокси подставится сам · приоритет над https</div></div>
+        <div class="set-val" id="tsHttpVal"></div>
+      </div>
+      <div class="set-note" id="tsActive"></div>
       <div class="set-row">
         <div><div class="t">Парсер основной</div><div class="d">Ссылка на JacRed</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="jacUrl" placeholder="https://jac.red" autocomplete="off" autocapitalize="off"></div>
@@ -955,6 +967,14 @@
       Профиль</button>
   </nav>
   <div class="sheet-veil" id="favVeil"><div class="sheet" id="favSheet"></div></div>
+  <div class="sheet-veil" id="fldVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-head"><div class="sheet-title" id="fldTitle"></div><button class="sheet-x" id="fldX" aria-label="Закрыть">✕</button></div><div style="padding:4px 18px 22px">
+    <div id="fldHint" style="font-size:12.5px; color:var(--muted); margin-bottom:10px; line-height:1.45"></div>
+    <input id="fldInput" class="fld-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div style="display:flex; gap:10px; margin-top:14px">
+      <button id="fldClear" class="fld-btn">Очистить</button>
+      <button id="fldSave" class="fld-btn pri" style="flex:1">Сохранить</button>
+    </div>
+  </div></div></div>
   <div class="sheet-veil" id="optVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-head"><div class="sheet-title" id="optTitle"></div><button class="sheet-x" id="optX" aria-label="Закрыть">✕</button></div><div id="optList"></div></div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
@@ -986,6 +1006,7 @@ const state = {
   kpKey: LS.get('kp_key',''),
   geminiKey: LS.get('gemini_key',''),
   tsUrl: LS.get('ts_url','http://127.0.0.1:8090'),
+  tsUrlHttp: LS.get('ts_url_http',''),
   jacUrl: LS.get('jac_url','https://jac.red'),
   jacKey: LS.get('jac_key',''),
   jacUrl2: LS.get('jac_url2',''),
@@ -3300,8 +3321,21 @@ function vwTorRender(){
   vw.render = vwTorRender;
 }
 
+/* Прокси для http-серверов: вставляешь только адрес сервера, остальное — само.
+   Голый IP оборачивается в *.nip.io — воркерам Cloudflare нельзя ходить на IP напрямую. */
+const TS_PROXY = 'https://torrserver.flyugertdiana.workers.dev';
+function tsBase(){
+  const h = (state.tsUrlHttp||'').trim().replace(/\/+$/,'');
+  if(h){
+    if(/^https:\/\//i.test(h) || h.indexOf(TS_PROXY)===0) return h;
+    const u = h.replace(/^(https?:\/\/)(\d{1,3}(?:\.\d{1,3}){3})(:\d+)?/i,
+      (m,p,ip,port)=> p + ip + '.nip.io' + (port||''));
+    return TS_PROXY + '/' + u;
+  }
+  return (state.tsUrl||'').replace(/\/+$/,'') || 'http://127.0.0.1:8090';
+}
 async function tsAPI(body){
-  const r = await fetch(state.tsUrl.replace(/\/+$/,'') + '/torrents', {
+  const r = await fetch(tsBase() + '/torrents', {
     method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body)
   });
   if(!r.ok) throw new Error('HTTP '+r.status);
@@ -3327,7 +3361,7 @@ function openExternal(url){
 }
 
 async function playTorrent(t, m){
-  const ts = (state.tsUrl||'').replace(/\/+$/,'') || 'http://127.0.0.1:8090';
+  const ts = tsBase();
   toast('Подключаюсь к TorrServer…');
   try{ const e = await fetch(ts+'/echo', {cache:'no-store'}); if(!e.ok) throw 0; }
   catch(err){ toast('TorrServer не отвечает · проверь адрес в Профиле'); return; }
@@ -4003,13 +4037,43 @@ $('#rzProxy').value = state.rzProxy;
 $('#rzCookie').value = state.rzCookie;
 $('#fxToken').value = state.fxToken;
 $('#fxProxy').value = state.fxProxy;
-$('#tsUrl').value = state.tsUrl;
-$('#jacUrl').value = state.jacUrl;
-$('#tsUrl').addEventListener('change', e=>{
-  state.tsUrl = e.target.value.trim().replace(/\/+$/,'') || 'http://127.0.0.1:8090';
-  e.target.value = state.tsUrl; LS.set('ts_url', state.tsUrl);
+function tsRefreshUI(){
+  const h = $('#tsHttpsVal'), t = $('#tsHttpVal');
+  if(h) h.textContent = state.tsUrl || 'не задан';
+  if(t) t.textContent = state.tsUrlHttp || 'не задан';
+  const a = $('#tsActive');
+  if(a) a.textContent = 'Сейчас используется: ' + tsBase();
+}
+let fldTarget = 'https';
+function openFldEditor(which){
+  fldTarget = which;
+  const isH = which==='https';
+  $('#fldTitle').textContent = isH ? 'TorrServer · https' : 'TorrServer · http';
+  $('#fldHint').textContent = isH
+    ? 'Прямой https-адрес твоего сервера.'
+    : 'Вставь только адрес сервера, например http://85.208.208.228:8090 — шаблон прокси и nip.io подставятся автоматически.';
+  const inp = $('#fldInput');
+  inp.value = isH ? state.tsUrl : state.tsUrlHttp;
+  inp.placeholder = isH ? 'https://…' : 'http://IP:8090';
+  inp.setAttribute('inputmode','url');
+  $('#fldVeil').classList.add('show');
+  setTimeout(()=>{ try{ inp.focus(); inp.select(); }catch(e){} }, 80);
+}
+$('#rowTsHttps').onclick = ()=>openFldEditor('https');
+$('#rowTsHttp').onclick = ()=>openFldEditor('http');
+$('#fldX').onclick = ()=>$('#fldVeil').classList.remove('show');
+$('#fldVeil').addEventListener('click', e=>{ if(e.target.id==='fldVeil') e.target.classList.remove('show'); });
+$('#fldClear').onclick = ()=>{ $('#fldInput').value=''; $('#fldInput').focus(); };
+$('#fldSave').onclick = ()=>{
+  const v = $('#fldInput').value.trim().replace(/\/+$/,'');
+  if(fldTarget==='https'){ state.tsUrl = v; LS.set('ts_url', v); }
+  else { state.tsUrlHttp = v; LS.set('ts_url_http', v); }
+  $('#fldVeil').classList.remove('show');
+  tsRefreshUI();
   toast('Адрес TorrServer сохранён');
-});
+};
+tsRefreshUI();
+$('#jacUrl').value = state.jacUrl;
 $('#jacUrl').addEventListener('change', e=>{
   state.jacUrl = e.target.value.trim().replace(/\/+$/,'') || 'https://jac.red';
   e.target.value = state.jacUrl; LS.set('jac_url', state.jacUrl);
