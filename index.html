@@ -4320,7 +4320,7 @@ async function aiFetchBatch(sess){
 function aiSetGo(disabled, label){
   const b = $('#aiGo');
   b.disabled = disabled;
-  b.innerHTML = disabled ? '<div class="ai-spin"></div> '+label : '✨ Подобрать';
+  b.innerHTML = disabled ? '<div class="ai-spin"></div> '+label : '<span class="ai-go-t">Подобрать</span>';
 }
 function aiErrText(e){
   const m = (e && e.message) || '';
