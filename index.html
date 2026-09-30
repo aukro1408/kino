@@ -264,7 +264,16 @@ html[data-theme="rubin"] .mv-trailer{border-color:rgba(229,57,53,.30)}
 html[data-theme="rubin"] .mv-watched.on{background:rgba(229,57,53,.15); border-color:rgba(229,57,53,.55); color:#ff8a80}
 html[data-theme="rubin"] .fav-star.on{color:#ff5252}
 html[data-theme="rubin"] .fav-star.on svg{fill:#ff5252}
+html[data-theme="rubin"] .rate-card.tmdb .rate-bar i, html[data-theme="rubin"] .rate-card.kp .rate-bar i{background:#ff5252; box-shadow:0 0 10px rgba(229,57,53,.65)}
+html[data-theme="rubin"] .desc-more{color:#ff8a80}
+html[data-theme="rubin"] #lumg2 stop:first-child{stop-color:#ffc4bc}
+html[data-theme="rubin"] #lumg2 stop:last-child{stop-color:#e53935}
+html[data-theme="rubin"] .fact{border:1px solid rgba(229,57,53,.16)}
+html[data-theme="rubin"] .fact.link{border-color:rgba(229,57,53,.35); background:linear-gradient(180deg,rgba(229,57,53,.10),rgba(229,57,53,.03))}
+html[data-theme="rubin"] .fact.link .fact-go{color:#ff8a80}
+html[data-theme="rubin"] .mv-watched{border-color:rgba(229,57,53,.35)}
 /* переключатель тем */
+.set-row.vstack{display:block}
 .seg{display:flex; gap:8px}
 .seg button{flex:1; padding:12px 6px; border-radius:14px; border:1px solid rgba(255,255,255,.12);
   background:rgba(255,255,255,.05); color:var(--text); font:inherit; font-size:13.5px; font-weight:800; cursor:pointer}
@@ -858,7 +867,7 @@ html[data-theme="rubin"] .fav-star.on svg{fill:#ff5252}
     </div>
     <div class="set-group" data-cat="design">
       <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></svg></span><span class="n">Оформление</span><span class="ch">›</span></button>
-      <div class="set-row" style="display:block">
+      <div class="set-row vstack">
         <div class="t" style="margin-bottom:10px">Тема</div>
         <div class="seg" id="themeSeg">
           <button data-th="blackroom">Blackroom</button>
