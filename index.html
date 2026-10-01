@@ -336,6 +336,12 @@
     background:var(--card); border:1px solid rgba(255,255,255,.1); color:var(--text);
     font:inherit; font-size:14px; font-weight:800}
   .fav-more:active{transform:scale(.98)}
+  .fav-sec-h.hist{color:#b9a7ff}
+  .hist-actions{display:flex; gap:10px; margin:12px 18px 0}
+  .hist-actions .fav-more{flex:1; width:auto; margin:0}
+  .hist-clear{flex:1; padding:14px; border-radius:16px; cursor:pointer; background:transparent;
+    border:1px solid rgba(255,255,255,.12); color:var(--muted); font:inherit; font-size:14px; font-weight:800}
+  .hist-clear:active{transform:scale(.98)}
   /* ---------- AI ---------- */
   .ai-wrap{padding:8px 18px 4px}
   .ai-say{margin:12px 0 8px; text-align:center; font-size:16px; font-weight:800; letter-spacing:-.3px;
@@ -1093,6 +1099,23 @@ const IMG = 'https://image.tmdb.org/t/p/';
 
 /* =================== FAVORITES =================== */
 state.favs = LS.get('favs', {like:[], later:[], mark:[]});
+state.history = LS.get('history', []);
+const IC_HIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>';
+function pushHistory(m){
+  if(!m || m.id==null) return;
+  const arr = state.history;
+  const i = arr.findIndex(x=>x.id===m.id);
+  if(i!==-1) arr.splice(i,1);
+  arr.unshift(favSnap(m));
+  if(arr.length>100) arr.length = 100;
+  LS.set('history', arr);
+}
+function clearHistory(){
+  state.history = [];
+  LS.set('history', []);
+  renderFav();
+  toast('История очищена');
+}
 const IC_HEART = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
 const IC_HEART_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
 const IC_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
@@ -1126,19 +1149,29 @@ function favBadgeHTML(id){
 }
 function renderFav(){
   const box = $('#favLists');
-  box.innerHTML = FAV_LISTS.map(l=>{
+  const favHtml = FAV_LISTS.map(l=>{
     const items = state.favs[l.id];
     const shown = items.slice(0,3);
     return `<div class="fav-sec"><button class="fav-sec-h ${l.id}" data-fav="${l.id}">${l.icon()}<span>${l.name}</span><b>${items.length}</b><span class="fav-go">›</span></button>
       ${items.length ? `<div class="grid3">${shown.map(cardHTML).join('')}</div>` : `<div class="fav-empty">${l.empty}</div>`}
       ${items.length>3 ? `<button class="fav-more" data-fav="${l.id}">Ещё ›</button>` : ''}</div>`;
   }).join('');
+  const hist = state.history;
+  const histHtml = `<div class="fav-sec"><button class="fav-sec-h hist" data-hist="open">${IC_HIST}<span>История</span><b>${hist.length}</b><span class="fav-go">›</span></button>
+      ${hist.length ? `<div class="grid3">${hist.slice(0,3).map(cardHTML).join('')}</div>` : `<div class="fav-empty">Пока пусто. Открытые фильмы и сериалы появятся здесь.</div>`}
+      ${hist.length ? `<div class="hist-actions">${hist.length>3 ? `<button class="fav-more" data-hist="open">Ещё ›</button>` : ''}<button class="hist-clear" data-hist="clear">Очистить</button></div>` : ''}</div>`;
+  box.innerHTML = favHtml + histHtml;
   bindCards(box);
   const openFavCat = id=>{
     const l = FAV_LISTS.find(x=>x.id===id);
     openCategory({type:'fav', favId:l.id, title:l.name});
   };
   box.querySelectorAll('[data-fav]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); openFavCat(b.dataset.fav); });
+  box.querySelectorAll('[data-hist]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    if(b.dataset.hist==='clear') clearHistory();
+    else openCategory({type:'history', title:'История'});
+  });
 }
 let favSheetMovie = null;
 function openFavSheet(m){
@@ -1752,7 +1785,7 @@ async function openCategory(more){
   catSort = null; catItems = [];
   const _csb = $('#catSort'); if(_csb){ _csb.classList.remove('on'); }
   const ct = $('#catTitle');
-  if(more.type==='fav'){
+  if(more.type==='fav'||more.type==='history'){
     ct.classList.add('brand');
     ct.removeAttribute('style');
     ct.innerHTML = escTx(more.title) + '<span class="dot">.</span>';
@@ -1771,13 +1804,13 @@ async function openCategory(more){
     grid.classList.toggle('grid3', !isColList);
     grid.style.display = isColList ? 'block' : '';
   };
-  if(more.type==='fav'){
+  if(more.type==='fav'||more.type==='history'){
     lastCat = null;
     $('#scr-cat').scrollTop = 0;
     catMore = more; catPage = 0; catDone = true; catLoading = false;
     renderStudioChips();
     setGridMode();
-    const items = state.favs[more.favId]||[];
+    const items = more.type==='history' ? state.history : (state.favs[more.favId]||[]);
     catItems = items.slice();
     grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Пока пусто</div>';
     bindCards(grid);
@@ -1941,6 +1974,7 @@ async function openMovie(id){
     m = {...m, runtime: 95 + (nid*37)%70, cast: demoCast(nid), directors:[demoDirector(nid)], trailer:null};
   }
   if(currentScreenId()!=='scr-movie') return;
+  pushHistory(m);
   renderMovie(m);
 }
 function factIcon(n){
@@ -3935,7 +3969,7 @@ async function openPerson(pid, pname, role){
 
 /* =================== TABS =================== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
-$('#catBack').onclick = ()=>goto(catMore && catMore.type==='fav' ? 'fav' : 'home');
+$('#catBack').onclick = ()=>goto(catMore && (catMore.type==='fav'||catMore.type==='history') ? 'fav' : 'home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
   stopPlayer();
