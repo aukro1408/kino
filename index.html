@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>blackroom — рекомендации фильмов</title>
-<script type="importmap">{"imports":{"three":"./three/build/three.module.min.js","three/addons/":"./three/addons/"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
@@ -368,7 +367,6 @@
   @keyframes blobFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
   .ai-blob.boing{animation:boing .55s ease}
   #aiBlob{width:175px}
-  #aiCanvas{width:175px}
   @keyframes boing{0%{transform:scale(1,1)}30%{transform:scale(1.14,.8)}55%{transform:scale(.92,1.1)}75%{transform:scale(1.04,.96)}100%{transform:scale(1,1)}}
   @media (prefers-reduced-motion:reduce){
     .ai-go, .ai-go::after, .ai-go .sp, .ai-blob{animation:none}
@@ -963,8 +961,7 @@
     </div>
     <div class="ai-wrap">
       <div class="ai-buddy" id="aiBuddy">
-        <canvas class="ai-blob" id="aiCanvas" width="350" height="350"></canvas>
-        <blue-bot class="ai-blob" id="aiBlob" mood="idle" style="display:none"></blue-bot>
+        <blue-bot class="ai-blob" id="aiBlob" mood="idle"></blue-bot>
       </div>
       <div class="ai-say" id="aiSay">Чем я могу тебе помочь? ✨</div>
       <textarea id="aiInput" class="ai-input" rows="3" placeholder="Например: эпичная фантастика про космос, но без ужасов"></textarea>
@@ -4555,12 +4552,12 @@ class BlueBot extends HTMLElement {
   }
 }
 customElements.define('blue-bot',BlueBot);
-function aiPetEl(){ return window.__pet3d ? $('#aiCanvas') : $('#aiBlob'); }
 function aiBotMood(m, back){
-  clearTimeout(aiBotMood._mt);
-  if(window.__pet3d && window.__pet3d.setMood) window.__pet3d.setMood(m);
-  else { const b = $('#aiBlob'); if(b && b.setMood) b.setMood(m); }
-  if(back) aiBotMood._mt = setTimeout(()=>aiBotMood('idle'), back);
+  const b = $('#aiBlob');
+  if(!b || !b.setMood) return;
+  clearTimeout(b._mt);
+  b.setMood(m);
+  if(back) b._mt = setTimeout(()=>b.setMood('idle'), back);
 }
 /* помощник на экране AI-подборки */
 const AI_SAY = ['Чем я могу тебе помочь? ✨','Опиши настроение — я подберу 🎬','Триллер? Комедия? Решай 👻','Киновечер? Я уже в деле 🍿','Без ужасов? Понял, записываю 😄'];
@@ -4568,7 +4565,7 @@ let aiSayI = 0;
 $('#aiBuddy').onclick = ()=>{
   aiSayI = (aiSayI+1) % AI_SAY.length;
   $('#aiSay').textContent = AI_SAY[aiSayI];
-  const b = aiPetEl();
+  const b = $('#aiBlob');
   b.classList.remove('boing'); void b.offsetWidth; b.classList.add('boing');
   clearTimeout(b._bt); b._bt = setTimeout(()=>b.classList.remove('boing'), 600);
   const moods = ['happy','wink','playful','surprised'];
@@ -4584,106 +4581,6 @@ $('#aiBuddy').onclick = ()=>{
     if(ok){ renderHero(); renderRows(); }
   }
 })();
-</script>
-<script type="module">
-/* ===== 3D-питомец (Kenney Cube Pets, кот) вместо SVG-бота =====
-   Если WebGL/GLB недоступен — тихо откатываемся на <blue-bot>. */
-import * as THREE from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-
-const canvas = document.getElementById('aiCanvas');
-const svgBot = document.getElementById('aiBlob');
-const buddy = document.getElementById('aiBuddy');
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function showSvgFallback(){
-  if(canvas) canvas.style.display = 'none';
-  if(svgBot) svgBot.style.display = 'block';
-  window.__pet3d = null;
-}
-
-try{
-  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-  renderer.setClearColor(0x000000, 0);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
-
-  scene.add(new THREE.HemisphereLight(0xcfe2ff, 0x141b29, 1.15));
-  const key = new THREE.DirectionalLight(0xffffff, 1.7); key.position.set(3, 5, 4); scene.add(key);
-  const rimL = new THREE.DirectionalLight(0x6fb3ff, 0.9); rimL.position.set(-4, 2, -3); scene.add(rimL);
-
-  const pet = {clips:{}, mixer:null, cur:null, model:null, spin:0, lookX:0};
-  const MOOD_CLIP = {idle:'idle', happy:'gesture-positive', wink:'dance',
-    surprised:'gesture-negative', thinking:'idle', playful:'dance', talking:'idle'};
-
-  function sizeRenderer(){
-    const w = canvas.clientWidth || 175, h = canvas.clientHeight || 175;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h; camera.updateProjectionMatrix();
-  }
-
-  function playClip(name){
-    if(!pet.mixer) return;
-    const clip = pet.clips[name] || pet.clips['idle'];
-    if(!clip) return;
-    const action = pet.mixer.clipAction(clip);
-    if(pet.cur && pet.cur !== action) pet.cur.fadeOut(0.25);
-    action.reset().fadeIn(0.25).play();
-    pet.cur = action;
-  }
-
-  function setMood(m){
-    if(!pet.mixer) return;
-    playClip(MOOD_CLIP[m] || 'idle');
-    pet.spin = (m === 'thinking') ? 1 : 0;
-  }
-
-  new GLTFLoader().load('cat.glb', (gltf)=>{
-    try{
-      const model = gltf.scene;
-      pet.model = model;
-      gltf.animations.forEach(a=>{ pet.clips[a.name] = a; });
-      pet.mixer = new THREE.AnimationMixer(model);
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
-      model.position.y += size.y * 0.06;
-      pet.baseY = model.position.y;
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const dist = maxDim / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.45;
-      camera.position.set(0, size.y * 0.1, dist);
-      camera.lookAt(0, 0, 0);
-      sizeRenderer();
-      setMood('idle');
-      window.__pet3d = {setMood};
-    }catch(e){ showSvgFallback(); }
-  }, undefined, showSvgFallback);
-
-  buddy.addEventListener('pointermove', (e)=>{
-    if(!pet.model || reduceMotion) return;
-    const r = buddy.getBoundingClientRect();
-    pet.lookX = Math.max(-0.45, Math.min(0.45, (e.clientX - r.x - r.width / 2) / r.width));
-  });
-  buddy.addEventListener('pointerleave', ()=>{ pet.lookX = 0; });
-  addEventListener('resize', sizeRenderer);
-
-  const clock = new THREE.Clock();
-  (function tick(){
-    requestAnimationFrame(tick);
-    const dt = Math.min(clock.getDelta(), 0.05);
-    if(pet.mixer && !reduceMotion) pet.mixer.update(dt);
-    if(pet.model && !reduceMotion){
-      const t = clock.elapsedTime;
-      pet.model.position.y = (pet.baseY || 0) + Math.sin(t * 1.6) * 0.06;
-      if(pet.spin) pet.model.rotation.y += dt * 1.4;
-      else pet.model.rotation.y += (pet.lookX - pet.model.rotation.y) * 0.08;
-    }
-    renderer.render(scene, camera);
-  })();
-}catch(e){ showSvgFallback(); }
 </script>
 </body>
 </html>
