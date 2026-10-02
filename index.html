@@ -84,7 +84,8 @@
   .row-head a{font-size:12.5px; color:var(--accent2); font-weight:700; cursor:pointer}
   .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 12px; padding:2px 16px 10px}
   .card{cursor:pointer; min-width:0}
-  .poster{position:relative; width:100%; aspect-ratio:2/3; border-radius:14px; overflow:hidden; background:var(--card2);
+  .poster{position:relative; width:100%; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
+    background:var(--card2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E") no-repeat center/46px 46px;
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
   .more-card .more-tile{aspect-ratio:2/3; border-radius:14px; background:#1b2740; width:100%;
     display:flex; align-items:center; justify-content:center;
@@ -107,7 +108,8 @@
   .col-card{cursor:pointer; min-width:0}
   .col-card:active{transform:scale(.97)}
   .col-card{transition:transform .15s}
-  .col-cover{position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#1b2740;
+  .col-cover{position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
+    background:#1b2740 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E") no-repeat center/54px 54px;
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
   .col-cover img{width:100%; height:100%; object-fit:cover; display:block}
   .col-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,8,16,.02) 35%, rgba(5,8,16,.6))}
@@ -420,8 +422,12 @@
     background:var(--card); box-shadow:0 18px 44px rgba(0,0,0,.6); position:relative; z-index:2; perspective:1200px}
   .flip{position:absolute; inset:0; transform-style:preserve-3d; transition:transform .85s cubic-bezier(.35,.15,.25,1); cursor:pointer}
   .flip.flipped{transform:rotateY(-180deg)}
-  .flip-face{position:absolute; inset:0; border-radius:18px; overflow:hidden; background:#0d1526;
+  .flip-face{position:absolute; inset:0; border-radius:18px; overflow:hidden;
+    background:#0d1526 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E") no-repeat center/52px 52px;
     backface-visibility:hidden; -webkit-backface-visibility:hidden}
+  /* скелетон: постер плавно проявляется поверх логотипа */
+  .poster img, .col-cover img, .flip-front img{opacity:0; transition:opacity .5s ease}
+  .poster img.ld, .col-cover img.ld, .flip-front img.ld{opacity:1}
   .flip-back{transform:rotateY(180deg); background:#0a1122}
   .flip-bg{position:absolute; inset:-24px; filter:blur(22px) saturate(1.7); opacity:.8}
   .flip-bg img{width:100%; height:100%; object-fit:cover; display:block}
@@ -1970,6 +1976,11 @@ function wideCardHTML(m){
 function bindCards(root){
   root.querySelectorAll('.card, .twcard').forEach(c=>c.onclick=()=>openMovie(c.dataset.id));
 }
+/* скелетон: когда картинка догрузилась — плавно показать её поверх логотипа */
+document.addEventListener('load', e=>{
+  const t = e.target;
+  if(t && t.tagName === 'IMG') t.classList.add('ld');
+}, true);
 
 /* =================== NAV =================== */
 let navStack = [];
