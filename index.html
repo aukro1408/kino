@@ -1478,11 +1478,16 @@ function kpHideIfEmpty(){
     const sec = box.closest('.mv-sec'); if(sec) sec.style.display = 'none';
   }
 }
-async function kpFindFilm(m){
+async function kpFilmDetail(m){
+  // {kp, votes, imdb} или null; результат кэшируется на 7 дней
+  const cid = String(m.id);
+  const cached = kpCacheGet(cid);
+  if(cached && cached.imdb !== undefined) return cached.kp>0 ? cached : null;
   const titles = [];
   if(m.orig) titles.push(m.orig);
   if(m.title && m.title!==m.orig) titles.push(m.title);
   const yr = /^\d{4}$/.test(String(m.year)) ? String(m.year) : '';
+  let film = null;
   for(const t of titles){
     const d = await kpFetch('api/v2.1/films/search-by-keyword?keyword='+encodeURIComponent(t)+'&page=1');
     const films = d.films||d.items||[];
@@ -1491,16 +1496,8 @@ async function kpFindFilm(m){
     let cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n)===want));
     if(!cands.length) cands = films.filter(f=>[f.nameRu,f.nameEn,f.nameOriginal].some(n=>n&&kpNorm(n).indexOf(want)!==-1));
     if(yr){ const yc = cands.filter(f=>String(f.year||'').slice(0,4)===yr); if(yc.length) cands = yc; }
-    if(cands.length) return cands[0];
+    if(cands.length){ film = cands[0]; break; }
   }
-  return null;
-}
-async function kpFilmDetail(m){
-  // {kp, votes, imdb} или null; результат кэшируется на 7 дней
-  const cid = String(m.id);
-  const cached = kpCacheGet(cid);
-  if(cached && cached.imdb !== undefined) return cached.kp>0 ? cached : null;
-  const film = await kpFindFilm(m);
   if(!film){ kpCacheSet(cid, 0, 0, 0); return null; }
   const det = await kpFetch('api/v2.2/films/'+(film.filmId||film.kinopoiskId));
   const kp = Number(det.ratingKinopoisk)||0;
@@ -1508,75 +1505,6 @@ async function kpFilmDetail(m){
   const imdb = Number(det.ratingImdb)||0;
   kpCacheSet(cid, kp, votes, imdb);
   return kp>0 ? {kp, votes, imdb} : null;
-}
-function kpFranchCacheGet(kpid){
-  try{
-    const c = JSON.parse(localStorage.getItem('kino.kp_franchise')||'{}');
-    const it = c[kpid];
-    if(it && Date.now()-it.ts < 7*864e5) return it.items;
-  }catch(e){}
-  return null;
-}
-function kpFranchCacheSet(kpid, items){
-  try{
-    const c = JSON.parse(localStorage.getItem('kino.kp_franchise')||'{}');
-    c[kpid] = {items, ts: Date.now()};
-    const ks = Object.keys(c);
-    if(ks.length>200) ks.slice(0, ks.length-200).forEach(k=>delete c[k]);
-    localStorage.setItem('kino.kp_franchise', JSON.stringify(c));
-  }catch(e){}
-}
-async function kpFranchise(m){
-  // Полный список франшизы с Кинопоиска: [{kpid,title,poster,year}]; [] если нет
-  const film = await kpFindFilm(m);
-  if(!film) return [];
-  const kpid = film.filmId || film.kinopoiskId;
-  const cached = kpFranchCacheGet(kpid);
-  if(cached) return cached;
-  const d = await kpFetch(`api/v2.2/films/${kpid}/sequels_and_prequels`);
-  const arr = Array.isArray(d) ? d : [];
-  const seen = new Set([kpid]);
-  const items = [{
-    kpid, title: film.nameRu || m.title,
-    poster: m.poster ? IMG+'w342'+m.poster : '',
-    year: String(m.year||''), cur: true,
-  }];
-  arr.forEach(f=>{
-    const id = f.filmId;
-    if(!id || seen.has(id)) return;
-    seen.add(id);
-    items.push({
-      kpid: id,
-      title: f.nameRu || f.nameEn || f.nameOriginal || '',
-      poster: f.posterUrlPreview || f.posterUrl || '',
-      year: String(f.year||'').slice(0,4),
-    });
-  });
-  const head = items[0];
-  const rest = items.slice(1).sort((a,b)=>(a.year||'9999').localeCompare(b.year||'9999'));
-  const out = [head, ...rest].filter(f=>f.title);
-  kpFranchCacheSet(kpid, out);
-  return out;
-}
-function kpFranchCardHTML(f){
-  return `<div class="card" data-kpid="${f.kpid}" data-kptitle="${escAttr(f.title)}" data-kpyear="${escAttr(f.year||'')}" tabindex="0" data-fc>
-    <div class="poster">${f.poster?`<img loading="lazy" src="${escAttr(f.poster)}" alt="">`:''}</div>
-    <div class="card-title">${escTx(f.title)}</div>
-    <div class="card-stars"><span>${escTx(f.year||'')}</span></div>
-  </div>`;
-}
-async function openKpItem(el){
-  const title = el.dataset.kptitle || '', year = el.dataset.kpyear || '';
-  try{
-    let r = null;
-    const mq = await tmdb(`/search/movie?query=${encodeURIComponent(title)}${year?`&year=${year}`:''}`).catch(()=>null);
-    r = mq && (mq.results||[])[0];
-    if(r) return openMovie(r.id);
-    const tq = await tmdb(`/search/tv?query=${encodeURIComponent(title)}${year?`&first_air_date_year=${year}`:''}`).catch(()=>null);
-    const tr = tq && (tq.results||[])[0];
-    if(tr) return openMovie('tv'+tr.id);
-    toast('Не найдено в TMDB');
-  }catch(e){ toast('Не получилось открыть'); }
 }
 async function loadKpRating(m){
   if(!state.kpKey || !state.live) return;
@@ -2339,26 +2267,18 @@ async function openMovie(id){
         trailer: trailerKey(d.videos),
         logo: logo ? logo.file_path : null,
       };
-      m.kpFranchise = [];
-      if(state.kpKey){
-        try{ m.kpFranchise = await kpFranchise(m); }catch(e){ m.kpFranchise = []; }
-      }
-      m.collection = null; m.collectionParts = [];
-      if(!m.kpFranchise.length && !isTv){
-        /* запасной вариант без KP-ключа: коллекция TMDB */
-        try{
-          const bc = d.belongs_to_collection;
-          if(bc && bc.id){
-            const cd = await tmdb(`/collection/${bc.id}`);
-            m.collection = {name: cd.name || bc.name || 'Франшиза'};
-            m.collectionParts = (cd.parts||[])
-              .filter(p=>p.release_date)
-              .sort((a,b)=>a.release_date.localeCompare(b.release_date))
-              .map(p=>norm(p,'movie'));
-            m.collectionParts.forEach(x=>{ if(!state.pool.find(p=>p.id===x.id)) state.pool.push(x); });
-          }
-        }catch(e){}
-      }
+      try{
+        const bc = d.belongs_to_collection;
+        if(!isTv && bc && bc.id){
+          const cd = await tmdb(`/collection/${bc.id}`);
+          m.collection = {name: cd.name || bc.name || 'Франшиза'};
+          m.collectionParts = (cd.parts||[])
+            .filter(p=>p.release_date)
+            .sort((a,b)=>a.release_date.localeCompare(b.release_date))
+            .map(p=>norm(p,'movie'));
+          m.collectionParts.forEach(x=>{ if(!state.pool.find(p=>p.id===x.id)) state.pool.push(x); });
+        } else { m.collectionParts = []; }
+      }catch(e){ m.collectionParts = []; }
       try{
         let sm = await tmdb(`/${isTv?'tv':'movie'}/${num}/recommendations`);
         if(!(sm.results||[]).length) sm = await tmdb(`/${isTv?'tv':'movie'}/${num}/similar`);
@@ -2471,8 +2391,7 @@ function renderMovie(m){
           <div class="ph">${c.photo?`<img src="${IMG}w185${c.photo}" alt="" loading="lazy">`:initials(c.name)}</div>
           <b>${c.name}</b><small>${c.character||''}</small>
         </div>`).join('')}</div></div>`:''}
-      ${m.kpFranchise&&m.kpFranchise.length?`<div class="mv-sec"><h3>Франшиза</h3><div class="hrow">${m.kpFranchise.map(kpFranchCardHTML).join('')}</div></div>`
-      : m.collectionParts&&m.collectionParts.length?`<div class="mv-sec"><h3>${m.collection.name}</h3><div class="hrow">${m.collectionParts.map(cardHTML).join('')}</div></div>`:''}
+      ${m.collectionParts&&m.collectionParts.length?`<div class="mv-sec"><h3>${m.collection.name}</h3><div class="hrow">${m.collectionParts.map(cardHTML).join('')}</div></div>`:''}
       ${m.similar&&m.similar.length?`<div class="mv-sec"><h3>Похожие</h3><div class="hrow">${m.similar.map(cardHTML).join('')}</div></div>`:''}
     </div>`;
   $('#mvBack').onclick = goBack;
@@ -2503,7 +2422,6 @@ function renderMovie(m){
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
   box.querySelectorAll('.fact.link').forEach(f=>f.onclick=()=>openCategory({type:f.dataset.kind, coId:f.dataset.id, title:f.dataset.name}));
   bindCards(box);
-  box.querySelectorAll('.card[data-kpid]').forEach(el=>el.onclick=()=>openKpItem(el));
   animBars();
   loadKpRating(m);
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>openView('tor', m);
