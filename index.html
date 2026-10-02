@@ -467,6 +467,46 @@
   .theme-modern .mv-hero-logo .mv-logo{max-width:300px; max-height:120px; filter:drop-shadow(0 8px 22px rgba(0,0,0,.65))}
   .theme-modern .mv-hero-logo .mv-title-t{font-size:30px; font-weight:800; line-height:1.15; text-shadow:0 4px 20px rgba(0,0,0,.65)}
   .theme-modern .mv-hero-year{margin-top:10px; font-size:14px; font-weight:700; color:rgba(255,255,255,.78); letter-spacing:1px}
+  /* ===== тема «Модерн»: тёплая палитра как на рефе (вместо синего) ===== */
+  .theme-modern{
+    --bg:#181210; --bg2:#1f1613;
+    --card:rgba(255,240,225,.06); --card2:rgba(255,240,225,.10);
+    --text:#f2eae0; --muted:#ab9d8d;
+    --accent:#d9c6ac; --accent2:#efe0cb;
+    --logo:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%23d9c6ac' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%23d9c6ac' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%23d9c6ac' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%23d9c6ac' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%23d9c6ac'/%3E%3C/svg%3E");
+  }
+  .theme-modern .logo.brand{background:linear-gradient(110deg,#ffffff 30%,#e8d9bd 45%,#ffffff 60%); background-size:200% auto; -webkit-background-clip:text; background-clip:text; color:transparent}
+  .theme-modern .logo.brand .dot{color:#d9c6ac; -webkit-text-fill-color:#d9c6ac; animation:none; text-shadow:none}
+  .theme-modern .chip.on{color:#241a12; box-shadow:0 4px 18px rgba(217,198,172,.25)}
+  .theme-modern .roul-chip.on{background:linear-gradient(135deg,#b89a6e,#e8d5b5); color:#241a12; box-shadow:0 6px 18px rgba(217,198,172,.28)}
+  .theme-modern .fld-btn.pri{color:#241a12}
+  .theme-modern .back-btn, .theme-modern .fav-star, .theme-modern .trk-star{background:rgba(24,16,13,.55)}
+  .theme-modern .trk-star.on{background:rgba(217,198,172,.92); color:#241a12}
+  .theme-modern .ne-badge.new{background:rgba(217,198,172,.92); color:#241a12}
+  .theme-modern .mv-play{background:rgba(24,16,13,.25)}
+  .theme-modern .mv-play span{background:rgba(24,16,13,.55); border-color:rgba(217,198,172,.6); box-shadow:0 8px 26px rgba(0,0,0,.4)}
+  .theme-modern .rate-card{background:linear-gradient(180deg,rgba(217,198,172,.12),rgba(217,198,172,.03)); border-color:rgba(217,198,172,.25)}
+  .theme-modern .rate-score{text-shadow:0 2px 12px rgba(217,198,172,.25)}
+  .theme-modern .rate-bar i{background:linear-gradient(90deg,#b89a6e,#e8d5b5)}
+  .theme-modern .wcard{background:linear-gradient(180deg,rgba(217,198,172,.13),rgba(217,198,172,.04)); border-color:rgba(217,198,172,.25)}
+  .theme-modern .wcard svg{color:#dccbaa; filter:drop-shadow(0 2px 8px rgba(217,198,172,.35))}
+  .theme-modern .alp-refresh{border-color:rgba(217,198,172,.3)}
+  .theme-modern .mv-genres i{border-color:rgba(217,198,172,.3); color:#e6d9c4; background:rgba(217,198,172,.08)}
+  .theme-modern .fact{background:linear-gradient(180deg,rgba(217,198,172,.11),rgba(217,198,172,.03)); border-color:rgba(217,198,172,.2)}
+  .theme-modern .fact .fic{color:#dccbaa}
+  .theme-modern .fact.link{border-color:rgba(217,198,172,.3)}
+  .theme-modern .mv-watched{border-color:rgba(217,198,172,.3); color:#e6d9c4; background:rgba(217,198,172,.07)}
+  .theme-modern .mv-watched.on{background:rgba(217,198,172,.16); border-color:rgba(217,198,172,.55); color:#f2e8d8}
+  .theme-modern .vw-qb{color:#dccbaa; background:rgba(217,198,172,.14); border-color:rgba(217,198,172,.35)}
+  .theme-modern .vw-ep:active{border-color:rgba(217,198,172,.4)}
+  .theme-modern .tor-item:active{border-color:rgba(217,198,172,.4)}
+  .theme-modern .opt-row.on{border-color:rgba(217,198,172,.55); background:rgba(217,198,172,.12)}
+  .theme-modern .tpill.res{background:rgba(217,198,172,.16); color:#dccbaa; border-color:rgba(217,198,172,.35)}
+  .theme-modern .ditem.on{background:rgba(217,198,172,.15)}
+  .theme-modern .set-cat[data-tint="blue"] .ic{color:#d9c6ac; background:rgba(217,198,172,.13)}
+  .theme-modern .mv-shade{background:linear-gradient(180deg,rgba(24,18,16,.10) 25%,rgba(58,40,28,.40) 65%,rgba(24,18,16,.45) 100%)}
+  .theme-modern .mv-backdrop.mv-hero .mv-shade{background:linear-gradient(180deg, rgba(24,18,16,.22) 0%, rgba(24,18,16,0) 35%, rgba(24,18,16,.30) 60%, rgba(24,18,16,.55) 100%)}
+  .theme-modern .mv-ambient::after{background:linear-gradient(180deg, rgba(24,18,16,.18) 0%, rgba(24,18,16,.42) 42%, var(--bg) 88%)}
   @media (prefers-reduced-motion:reduce){ .flip{transition:none} }
   .mv-poster-c img{width:100%; height:100%; object-fit:cover}
   .mv-poster-c .demo-art{width:100%; height:100%}
