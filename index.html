@@ -931,6 +931,10 @@
         <button class="switch" id="hideWatched"></button>
       </div>
     </div>
+    <div class="set-group" data-cat="cats">
+      <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="n">Категории</span><span class="ch">›</span></button>
+      <div id="themeRowsBox"></div>
+    </div>
   </div>
 
   <!-- ============ CATEGORY ============ -->
@@ -1090,6 +1094,7 @@ const state = {
   torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
+  themeRows: LS.get('theme_rows', {}),
   genre: 'all',
   live: false,
   genres: [],           // from TMDB
@@ -1407,6 +1412,7 @@ async function bootLive(){
     state.hero = newest.slice(0,10);
     state.data = { trending:T, nowPlaying:newest, topRated:[...P].sort((a,b)=>b.rating-a.rating), tvTrend:TT };
     buildSections();
+    await loadThemeRows();
     if(fy){
       state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
@@ -1444,6 +1450,42 @@ function buildSections(){
     sec('top','Топ по рейтингу', D.topRated, {type:'top_rated', title:'Топ по рейтингу'}),
   ];
   if(D.tvTrend && D.tvTrend.length) state.sections.push(sec('tv','Сериалы в тренде', D.tvTrend, {type:'tv_trending', title:'Сериалы в тренде'}));
+}
+
+/* Тематические ряды на главной (как подборки в Lampa): TMDB keywords, ID проверены */
+const THEME_ROWS = [
+  {id:'space', title:'Космос', kw:9882},
+  {id:'comics', title:'По комиксам', kw:9717},
+  {id:'superhero', title:'Супергерои', kw:9715},
+  {id:'zombie', title:'Про зомби', kw:12377},
+  {id:'timetravel', title:'Путешествия во времени', kw:4379},
+  {id:'disaster', title:'Катастрофы', kw:10617},
+  {id:'maniac', title:'Про маньяков', kw:10714},
+  {id:'postapoc', title:'Постапокалипсис', kw:4458},
+  {id:'heist', title:'Ограбления', kw:10051},
+  {id:'dino', title:'Про динозавров', kw:12616},
+];
+function themeRowOn(id){ return (state.themeRows||{})[id]!==false; }
+async function loadThemeRows(){
+  state.sections = state.sections.filter(s=>!s.theme);
+  if(!state.live) return;
+  const on = THEME_ROWS.filter(t=>themeRowOn(t.id));
+  const res = await Promise.all(on.map(t=>
+    tmdb(`/discover/movie?sort_by=popularity.desc&with_keywords=${t.kw}&vote_count.gte=20`)
+      .then(d=>({t, items:(d.results||[]).map(norm)}))
+      .catch(()=>({t, items:[]}))
+  ));
+  res.forEach(({t, items})=>{
+    if(!items.length) return;
+    items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
+    state.sections.push({id:'th_'+t.id, title:t.title, theme:true, items:items.slice(0,14),
+      more:{type:'kw', kw:t.kw, title:t.title}});
+  });
+}
+async function refreshThemeRows(){
+  if(!state.live) return;
+  await loadThemeRows();
+  if(currentScreenId()==='scr-home' && state.genre==='all') renderRows();
 }
 
 /* Персональный ряд «Для тебя» — по жанрам из избранного (идея из Lampa Discovery) */
@@ -1684,6 +1726,7 @@ function catURL(more, page){
     : more.type==='foryou' ? `/discover/movie?with_genres=${more.genreIds}&sort_by=vote_average.desc&vote_count.gte=100&primary_release_date.lte=${todayStr()}&page=${page}`
     : more.type==='genre_tv' ? `/discover/tv?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`
     : more.type==='studio' ? studioURL(more, page)
+    : more.type==='kw' ? `/discover/movie?sort_by=popularity.desc&with_keywords=${more.kw}&vote_count.gte=20&page=${page}`
     : more.type==='network' ? `/discover/tv?with_networks=${more.coId}&sort_by=popularity.desc&page=${page}`
     : `/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`;
 }
@@ -4371,6 +4414,21 @@ if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
 hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderRows(); };
+function renderThemeRowsBox(){
+  const box = $('#themeRowsBox'); if(!box) return;
+  box.innerHTML = THEME_ROWS.map(t=>`
+    <div class="set-row"><div><div class="t">${t.title}</div><div class="d">Ряд на главном экране</div></div>
+    <button class="switch${themeRowOn(t.id)?' on':''}" data-th="${t.id}" aria-label="${t.title}"></button></div>`).join('');
+  box.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{
+    const id = b.dataset.th;
+    state.themeRows = state.themeRows||{};
+    state.themeRows[id] = !themeRowOn(id);
+    LS.set('theme_rows', state.themeRows);
+    b.classList.toggle('on', themeRowOn(id));
+    refreshThemeRows();
+  });
+}
+renderThemeRowsBox();
 paintHw();
 
 /* =================== AI =================== */
