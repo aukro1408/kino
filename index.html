@@ -4217,6 +4217,10 @@ function applyWide(){
 }
 let tvT = null;
 window.addEventListener('resize', ()=>{ clearTimeout(tvT); tvT = setTimeout(applyWide, 250); });
+/* ?tv=1 в адресе — принудительно включить ТВ-режим (для приложения Lampa) */
+try{
+  if(new URLSearchParams(location.search).get('tv')==='1') LS.set('tv_mode','on');
+}catch(e){}
 applyWide();
 const burgerBtn = $('#burger');
 if(burgerBtn) burgerBtn.onclick = ()=>{
