@@ -98,6 +98,8 @@
   .hrow{display:flex; gap:12px; overflow-x:auto; padding:2px 0 14px 16px; scrollbar-width:none; scroll-snap-type:x proximity; scroll-padding-left:16px}
   .hrow::-webkit-scrollbar{display:none}
   .hrow::after{content:''; flex:0 0 16px}
+  .mv-body .hrow{padding-left:0; scroll-padding-left:16px}
+  .mv-body .hrow::after{flex-basis:0}
   .hrow .card{flex:0 0 40%; scroll-snap-align:start; cursor:pointer; min-width:0}
   .hrow .twcard{flex:0 0 236px; scroll-snap-align:start; cursor:pointer; min-width:0; transition:transform .15s}
   .hrow .twcard:active{transform:scale(.97)}
@@ -550,7 +552,7 @@
   .theme-modern .rate-bar i{background:linear-gradient(90deg,#8b98ad,#c3ccd8); box-shadow:none}
   .theme-modern .rate-card.tmdb .rate-bar i{background:#9aa5b5; box-shadow:none}
   .theme-modern .wcard svg{color:#9aa5b5; filter:none}
-  .theme-modern .alpac-ico{filter:grayscale(1) brightness(1.2)}
+  .theme-modern #lumg2 stop{stop-color:#9aa5b5}
   .theme-modern .fact .fic{color:#9aa5b5}
   .theme-modern .fact-go{color:#9aa5b5}
   .theme-modern .fav-badge.mark{color:#9aa5b5}
