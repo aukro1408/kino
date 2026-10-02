@@ -268,6 +268,11 @@
   .mini-btn:active{transform:scale(.95)}
   .switch::after{content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:.25s}
   .switch.on{background:var(--accent)}
+  .th-ctl{display:flex; align-items:center; gap:6px; flex:0 0 auto}
+  .th-mv{width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.12);
+    background:var(--card); color:var(--text); font-size:15px; line-height:1; cursor:pointer}
+  .th-mv:active{transform:scale(.94)}
+  .th-mv.dis{opacity:.25; pointer-events:none}
   .switch.on::after{left:23px}
   .stat-row{display:flex; gap:12px; padding:0 16px; margin-top:14px}
   .stat{flex:1; background:var(--card); border-radius:16px; padding:16px; text-align:center}
@@ -1098,6 +1103,7 @@ const state = {
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
   themeRows: LS.get('theme_rows', {}),
+  themeOrder: LS.get('theme_order', []),
   genre: 'all',
   live: false,
   genres: [],           // from TMDB
@@ -1471,6 +1477,22 @@ const THEME_ROWS = [
   {id:'appletv', title:'Новинки на Apple TV+', prov:350, wide:true},
 ];
 function themeRowOn(id){ return (state.themeRows||{})[id]!==false; }
+function themeOrder(){
+  const ids = THEME_ROWS.map(t=>t.id);
+  const ord = (state.themeOrder||[]).filter(id=>ids.includes(id));
+  ids.forEach(id=>{ if(!ord.includes(id)) ord.push(id); });
+  return ord;
+}
+function moveThemeRow(id, dir){
+  const ord = themeOrder();
+  const i = ord.indexOf(id), j = i+dir;
+  if(i<0 || j<0 || j>=ord.length) return;
+  [ord[i],ord[j]] = [ord[j],ord[i]];
+  state.themeOrder = ord;
+  LS.set('theme_order', ord);
+  renderThemeRowsBox();
+  refreshThemeRows();
+}
 function themeURL(t){
   return t.kw
     ? `/discover/movie?sort_by=popularity.desc&with_keywords=${t.kw}&vote_count.gte=20`
@@ -1479,7 +1501,7 @@ function themeURL(t){
 async function loadThemeRows(){
   state.sections = state.sections.filter(s=>!s.theme);
   if(!state.live) return;
-  const on = THEME_ROWS.filter(t=>themeRowOn(t.id));
+  const on = themeOrder().map(id=>THEME_ROWS.find(t=>t.id===id)).filter(t=>t && themeRowOn(t.id));
   const res = await Promise.all(on.map(t=>
     tmdb(themeURL(t))
       .then(d=>({t, items:(d.results||[]).map(norm)}))
@@ -4436,9 +4458,16 @@ function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
 hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderRows(); };
 function renderThemeRowsBox(){
   const box = $('#themeRowsBox'); if(!box) return;
-  box.innerHTML = THEME_ROWS.map(t=>`
-    <div class="set-row"><div><div class="t">${t.title}</div><div class="d">Ряд на главном экране</div></div>
-    <button class="switch${themeRowOn(t.id)?' on':''}" data-th="${t.id}" aria-label="${t.title}"></button></div>`).join('');
+  const ord = themeOrder();
+  box.innerHTML = ord.map((id,idx)=>{
+    const t = THEME_ROWS.find(x=>x.id===id);
+    return `<div class="set-row"><div><div class="t">${t.title}</div><div class="d">Ряд на главном экране</div></div>
+    <div class="th-ctl">
+      <button class="th-mv${idx===0?' dis':''}" data-mv="-1" data-id="${t.id}" aria-label="Выше">↑</button>
+      <button class="th-mv${idx===ord.length-1?' dis':''}" data-mv="1" data-id="${t.id}" aria-label="Ниже">↓</button>
+      <button class="switch${themeRowOn(t.id)?' on':''}" data-th="${t.id}" aria-label="${t.title}"></button>
+    </div></div>`;
+  }).join('');
   box.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{
     const id = b.dataset.th;
     state.themeRows = state.themeRows||{};
@@ -4447,6 +4476,7 @@ function renderThemeRowsBox(){
     b.classList.toggle('on', themeRowOn(id));
     refreshThemeRows();
   });
+  box.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>moveThemeRow(b.dataset.id, +b.dataset.mv));
 }
 renderThemeRowsBox();
 paintHw();
