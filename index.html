@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>blackroom — рекомендации фильмов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1024,6 +1027,7 @@
         <div><div class="t">Режим ТВ</div><div class="d" id="tvModeDesc">Авто</div></div>
         <div class="set-val" id="tvModeVal">Авто</div>
       </div>
+      <div class="set-note">Сборка <b id="appVer" style="color:var(--text)"></b></div>
     </div>
     <div class="set-group" data-cat="cats">
       <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="n">Категории</span><span class="ch">›</span></button>
@@ -1189,6 +1193,7 @@ const LS = {
   get(k, d){ try{ const v = localStorage.getItem('kino.'+k); return v===null? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ localStorage.setItem('kino.'+k, JSON.stringify(v)); }
 };
+const APP_VER = '2026.10.02-tv1';
 const state = {
   tmdbKey: LS.get('tmdb_key',''),
   kpKey: LS.get('kp_key',''),
@@ -4645,6 +4650,8 @@ if(rowTv) rowTv.onclick = ()=>{
   });
 };
 syncTvRow();
+const avEl = $('#appVer');
+if(avEl) avEl.textContent = APP_VER;
 function renderThemeRowsBox(){
   const box = $('#themeRowsBox'); if(!box) return;
   const ord = themeOrder();
