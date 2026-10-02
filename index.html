@@ -2267,6 +2267,11 @@ async function openMovie(id){
         trailer: trailerKey(d.videos),
         logo: logo ? logo.file_path : null,
       };
+      try{
+        const sm = await tmdb(`/${isTv?'tv':'movie'}/${num}/similar`);
+        m.similar = (sm.results||[]).slice(0,14).map(r=>norm(r, isTv?'tv':'movie'));
+        m.similar.forEach(x=>{ if(!state.pool.find(p=>p.id===x.id)) state.pool.push(x); });
+      }catch(e){ m.similar = []; }
     }catch(e){ /* остаёмся на базовых данных */ }
   } else {
     const nid = parseInt(String(m.id).replace(/^tv/,''), 10) || 1;
@@ -2370,6 +2375,7 @@ function renderMovie(m){
           <div class="ph">${c.photo?`<img src="${IMG}w185${c.photo}" alt="" loading="lazy">`:initials(c.name)}</div>
           <b>${c.name}</b><small>${c.character||''}</small>
         </div>`).join('')}</div></div>`:''}
+      ${m.similar&&m.similar.length?`<div class="mv-sec"><h3>Похожие</h3><div class="hrow">${m.similar.map(cardHTML).join('')}</div></div>`:''}
     </div>`;
   $('#mvBack').onclick = goBack;
   $('#mvFav').onclick = ()=>openFavSheet(m);
@@ -2398,6 +2404,7 @@ function renderMovie(m){
   };
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>openPerson(el.dataset.pid, el.dataset.pname, el.dataset.role));
   box.querySelectorAll('.fact.link').forEach(f=>f.onclick=()=>openCategory({type:f.dataset.kind, coId:f.dataset.id, title:f.dataset.name}));
+  bindCards(box);
   animBars();
   loadKpRating(m);
   const tf = $('#torFind'); if(tf) tf.onclick = ()=>openView('tor', m);
