@@ -4226,17 +4226,33 @@ const burgerBtn = $('#burger');
 if(burgerBtn) burgerBtn.onclick = ()=>{
   $('#drawer').classList.add('open');
   $('#drawerVeil').classList.add('open');
+  const cur = document.querySelector('#drawer .ditem.on');
+  if(cur){ try{ cur.focus({preventScroll:true}); }catch(_){ cur.focus(); } }
 };
 const drawerVeil = $('#drawerVeil');
 if(drawerVeil) drawerVeil.onclick = closeDrawer;
 document.querySelectorAll('.ditem').forEach(b=>b.onclick=()=>{ goto(b.dataset.tab); closeDrawer(); });
+/* пульт: OK/Enter как у Lampa — по keyCode, не полагаемся на нативные кнопки */
+function tvKeyCode(e){
+  if(e.keyCode) return e.keyCode;
+  if(e.which) return e.which;
+  return 0;
+}
+function tvIsEnter(k){ return k===13 || k===23 || k===29443 || k===117 || k===65385; }
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){ closeDrawer(); return; }
-  const t = e.target;
-  if((e.key==='Enter' || e.key===' ') && t && t.matches && t.matches('[data-fc]')){
+  const k = tvKeyCode(e), t = e.target;
+  if(e.key==='Escape' || k===27){ closeDrawer(); return; }
+  if(k===4){ /* назад на пульте */
     e.preventDefault();
-    t.click();
+    const d = $('#drawer');
+    if(d && d.classList.contains('open')) closeDrawer();
+    else goBack();
+    return;
   }
+  if(!t || !t.matches) return;
+  const isCard = t.matches('[data-fc]'), isBtn = t.matches('button');
+  if(isCard && (tvIsEnter(k) || k===32)){ e.preventDefault(); t.click(); return; }
+  if(isBtn && tvIsEnter(k)){ e.preventDefault(); t.click(); }
 });
 $('#catBack').onclick = ()=>goto(catMore && (catMore.type==='fav'||catMore.type==='history') ? 'fav' : 'home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
