@@ -775,6 +775,10 @@
   body.wide button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
   body.wide #scr-home .header .logo{display:none}
   body.wide #scr-home .header{justify-content:flex-end}
+  /* пульт: видимый фокус на карточках */
+  body.wide [data-fc]{border-radius:14px}
+  body.wide [data-fc]:focus{outline:3px solid var(--accent); outline-offset:3px}
+  body.wide .flip[data-fc]{border-radius:18px}
   .pl-stage{position:relative; width:100%; height:100dvh; background:#000; overflow:hidden; display:flex; align-items:center; justify-content:center}
   #plVideo{width:100%; max-height:100%; background:#000; outline:none}
   .pl-tapzone{position:absolute; top:0; bottom:0; width:50%; z-index:3; touch-action:manipulation; cursor:pointer}
@@ -1012,6 +1016,10 @@
       <div class="set-row">
         <div><div class="t">Скрывать просмотренное</div><div class="d">Фильмы «уже смотрел» не попадут в ряды</div></div>
         <button class="switch" id="hideWatched"></button>
+      </div>
+      <div class="set-row" id="rowTvMode" style="cursor:pointer">
+        <div><div class="t">Режим ТВ</div><div class="d" id="tvModeDesc">Авто</div></div>
+        <div class="set-val" id="tvModeVal">Авто</div>
       </div>
     </div>
     <div class="set-group" data-cat="cats">
@@ -1677,7 +1685,7 @@ const COL_CATS = [
 function colCardHTML(c){
   const img = c.backdrop_path ? IMG+'w500'+c.backdrop_path : '';
   const t = (c.title||'').replace(/"/g,'&quot;');
-  return `<div class="col-card" data-id="${c.id}" data-title="${t}">
+  return `<div class="col-card" data-id="${c.id}" data-title="${t}" tabindex="0" data-fc>
     <div class="col-cover">${img?`<img loading="lazy" src="${img}" alt="">`:''}<div class="col-shade"></div>
       <div class="col-count">${c.items_count||0} ${plural(c.items_count||0,'фильм','фильма','фильмов')}</div></div>
     <div class="col-title">${c.title||''}</div>
@@ -1722,7 +1730,7 @@ function renderHero(){
   const h = $('#hero'); if(!state.hero || !state.hero.length) return;
   heroCur = 0;
   h.innerHTML = '<div class="hero-track">' + state.hero.map((m,i)=>`
-    <div class="hero-slide" data-id="${m.id}">
+    <div class="hero-slide" data-id="${m.id}" tabindex="0" data-fc>
       <div class="hero-art">${backdropHTML(m)}</div>
       <div class="hero-shade"></div>
       <div class="hero-info">
@@ -2022,7 +2030,7 @@ async function openCategory(more){
 }
 function cardHTML(m){
   const w = state.watched.includes(m.id) ? ' watched' : '';
-  return `<div class="card${w}" data-id="${m.id}">
+  return `<div class="card${w}" data-id="${m.id}" tabindex="0" data-fc>
     <div class="poster">${posterHTML(m)}
       ${m.media==='tv'?'<div class="tv-badge">Сериал</div>':''}
       ${favBadgeHTML(m.id)}
@@ -2034,7 +2042,7 @@ function cardHTML(m){
 }
 function wideCardHTML(m){
   const img = m.backdrop ? IMG+'w500'+m.backdrop : '';
-  return `<div class="twcard" data-id="${m.id}">
+  return `<div class="twcard" data-id="${m.id}" tabindex="0" data-fc>
     <div class="col-cover">${img?`<img loading="lazy" src="${img}" alt="">`:`<div class="demo-art demo-wide" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]})"><span class="demo-logo"></span></div>`}<div class="col-shade"></div>
       <div class="col-count">★ ${m.rating}</div></div>
     <div class="col-title">${m.title}</div>
@@ -2218,7 +2226,7 @@ function renderMovie(m){
       <button class="fav-star${favHas(m.id)?' on':''}" id="mvFav" aria-label="В избранное">${IC_STAR}</button>
     </div>
     <div class="mv-body">
-      <div class="mv-poster-c" id="posterFlipWrap"><div class="flip" id="posterFlip">
+      <div class="mv-poster-c" id="posterFlipWrap"><div class="flip" id="posterFlip" tabindex="0" data-fc>
         <div class="flip-face flip-front">${posterHTML(m)}<div class="flip-hint"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-3-3"/><path d="M20 15H7l3 3"/></svg></div></div>
         <div class="flip-face flip-back"><div class="flip-bg">${posterHTML(m)}</div><div class="flip-dossier">${flipFactsHTML(m)}</div></div>
       </div></div>
@@ -4175,18 +4183,32 @@ async function openPerson(pid, pname, role){
 
 /* =================== TABS =================== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goto(t.dataset.tab));
-/* ---------- TV / wide: авто-переключение от 1000px + выезжающее меню ---------- */
-const wideMQ = window.matchMedia('(min-width:1000px)');
+/* ---------- TV / wide: авто + ручной режим, пульт ---------- */
+const TV_MODES = ['auto','on','off'];
+const TV_MODE_T = {auto:'Авто', on:'Включён', off:'Выключен'};
+function tvScreenW(){ return Math.max(window.innerWidth||0, (window.screen && screen.width)||0); }
+function tvAuto(){ return tvScreenW() >= 1000; }
+function tvActive(){
+  const m = LS.get('tv_mode','auto');
+  return m==='on' || (m==='auto' && tvAuto());
+}
+function syncTvRow(){
+  const m = LS.get('tv_mode','auto'), v = $('#tvModeVal'), d = $('#tvModeDesc');
+  if(v) v.textContent = TV_MODE_T[m] || 'Авто';
+  if(d) d.textContent = (m==='auto' ? 'Авто · ' : '') + 'экран ' + tvScreenW() + 'px · ' + (tvActive() ? 'ТВ-режим' : 'обычный вид');
+}
 function closeDrawer(){
   const d = $('#drawer'), v = $('#drawerVeil');
   if(d) d.classList.remove('open');
   if(v) v.classList.remove('open');
 }
 function applyWide(){
-  document.body.classList.toggle('wide', wideMQ.matches);
+  document.body.classList.toggle('wide', tvActive());
   closeDrawer();
+  syncTvRow();
 }
-if(wideMQ.addEventListener) wideMQ.addEventListener('change', applyWide);
+let tvT = null;
+window.addEventListener('resize', ()=>{ clearTimeout(tvT); tvT = setTimeout(applyWide, 250); });
 applyWide();
 const burgerBtn = $('#burger');
 if(burgerBtn) burgerBtn.onclick = ()=>{
@@ -4196,7 +4218,14 @@ if(burgerBtn) burgerBtn.onclick = ()=>{
 const drawerVeil = $('#drawerVeil');
 if(drawerVeil) drawerVeil.onclick = closeDrawer;
 document.querySelectorAll('.ditem').forEach(b=>b.onclick=()=>{ goto(b.dataset.tab); closeDrawer(); });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ closeDrawer(); return; }
+  const t = e.target;
+  if((e.key==='Enter' || e.key===' ') && t && t.matches && t.matches('[data-fc]')){
+    e.preventDefault();
+    t.click();
+  }
+});
 $('#catBack').onclick = ()=>goto(catMore && (catMore.type==='fav'||catMore.type==='history') ? 'fav' : 'home');
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
@@ -4599,6 +4628,20 @@ if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
 hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderRows(); };
+const rowTv = $('#rowTvMode');
+if(rowTv) rowTv.onclick = ()=>{
+  const cur = TV_MODES.indexOf(LS.get('tv_mode','auto'));
+  openOptSheet('Режим ТВ', [
+    {t:'Авто', s:'По ширине экрана (от 1000px)'},
+    {t:'Включён', s:'Всегда широкий ТВ-режим'},
+    {t:'Выключен', s:'Всегда мобильный вид'}
+  ], cur < 0 ? 0 : cur, (i)=>{
+    LS.set('tv_mode', TV_MODES[i]);
+    applyWide();
+    toast('Режим ТВ: ' + TV_MODE_T[TV_MODES[i]]);
+  });
+};
+syncTvRow();
 function renderThemeRowsBox(){
   const box = $('#themeRowsBox'); if(!box) return;
   const ord = themeOrder();
