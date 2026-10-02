@@ -94,8 +94,8 @@
   .hrow::-webkit-scrollbar{display:none}
   .hrow::before,.hrow::after{content:''; flex:0 0 16px}
   .hrow .card{flex:0 0 40%; scroll-snap-align:start; cursor:pointer; min-width:0}
-  .hrow .wcard{flex:0 0 236px; scroll-snap-align:start; cursor:pointer; min-width:0; transition:transform .15s}
-  .hrow .wcard:active{transform:scale(.97)}
+  .hrow .twcard{flex:0 0 236px; scroll-snap-align:start; cursor:pointer; min-width:0; transition:transform .15s}
+  .hrow .twcard:active{transform:scale(.97)}
   .col-cover .demo-art{position:absolute; inset:0}
   .studio-tile{flex:0 0 auto; width:148px; height:84px; background:#fff; border:none; border-radius:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:12px 18px; box-shadow:0 6px 18px rgba(0,0,0,.35); scroll-snap-align:start}
   .studio-tile:active{transform:scale(.95)}
@@ -1918,7 +1918,7 @@ function cardHTML(m){
 }
 function wideCardHTML(m){
   const img = m.backdrop ? IMG+'w500'+m.backdrop : '';
-  return `<div class="wcard" data-id="${m.id}">
+  return `<div class="twcard" data-id="${m.id}">
     <div class="col-cover">${img?`<img loading="lazy" src="${img}" alt="">`:`<div class="demo-art" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]})"></div>`}<div class="col-shade"></div>
       <div class="col-count">★ ${m.rating}</div></div>
     <div class="col-title">${m.title}</div>
@@ -1926,7 +1926,7 @@ function wideCardHTML(m){
   </div>`;
 }
 function bindCards(root){
-  root.querySelectorAll('.card, .wcard').forEach(c=>c.onclick=()=>openMovie(c.dataset.id));
+  root.querySelectorAll('.card, .twcard').forEach(c=>c.onclick=()=>openMovie(c.dataset.id));
 }
 
 /* =================== NAV =================== */
