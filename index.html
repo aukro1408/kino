@@ -457,6 +457,15 @@
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
   .trk-star svg{width:20px; height:20px}
   .trk-star.on{background:rgba(77,163,255,.92); border-color:transparent}
+  /* ===== тема «Модерн»: страница фильма — кинематографичный хиро-кадр ===== */
+  .theme-modern .mv-backdrop.mv-hero{height:54vh; min-height:380px; max-height:600px;
+    -webkit-mask-image:none; mask-image:none}
+  .theme-modern .mv-backdrop.mv-hero img{filter:none; transform:none}
+  .theme-modern .mv-backdrop.mv-hero .mv-shade{background:linear-gradient(180deg, rgba(8,12,24,.22) 0%, rgba(8,12,24,0) 32%, rgba(8,12,24,.30) 60%, rgba(11,18,32,.94) 100%)}
+  .theme-modern .mv-hero-logo{position:absolute; left:24px; right:24px; bottom:30px; z-index:2; text-align:center}
+  .theme-modern .mv-hero-logo .mv-logo{max-width:300px; max-height:120px; filter:drop-shadow(0 8px 22px rgba(0,0,0,.65))}
+  .theme-modern .mv-hero-logo .mv-title-t{font-size:30px; font-weight:800; line-height:1.15; text-shadow:0 4px 20px rgba(0,0,0,.65)}
+  .theme-modern .mv-hero-year{margin-top:10px; font-size:14px; font-weight:700; color:rgba(255,255,255,.78); letter-spacing:1px}
   @media (prefers-reduced-motion:reduce){ .flip{transition:none} }
   .mv-poster-c img{width:100%; height:100%; object-fit:cover}
   .mv-poster-c .demo-art{width:100%; height:100%}
@@ -1043,6 +1052,13 @@
       </div>
       <div class="set-note">Сборка <b id="appVer" style="color:var(--text)"></b></div>
     </div>
+    <div class="set-group" data-cat="ui">
+      <button class="set-cat" data-tint="blue"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg></span><span class="n">Интерфейс</span><span class="ch">›</span></button>
+      <div class="set-row" id="rowTheme" style="cursor:pointer">
+        <div><div class="t">Тема оформления</div><div class="d" id="themeDesc">Классика</div></div>
+        <div class="set-val" id="themeVal">Классика</div>
+      </div>
+    </div>
     <div class="set-group" data-cat="cats">
       <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="n">Категории</span><span class="ch">›</span></button>
       <div id="themeRowsBox"></div>
@@ -1207,7 +1223,7 @@ const LS = {
   get(k, d){ try{ const v = localStorage.getItem('kino.'+k); return v===null? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ localStorage.setItem('kino.'+k, JSON.stringify(v)); }
 };
-const APP_VER = '2026.10.02-kp1';
+const APP_VER = '2026.10.02-ui1';
 const state = {
   tmdbKey: LS.get('tmdb_key',''),
   kpKey: LS.get('kp_key',''),
@@ -1226,6 +1242,7 @@ const state = {
   torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
+  theme: LS.get('theme','classic'),
   themeRows: LS.get('theme_rows', {}),
   themeOrder: LS.get('theme_order', []),
   genre: 'all',
@@ -2333,8 +2350,11 @@ function flipFactsHTML(m){
   return `<div class="flip-dossier-h">Досье</div><div class="flip-facts">` +
     rows.map(([k,v])=>`<div class="ff-row"><span>${k}</span><b>${v}</b></div>`).join('') + `</div>`;
 }
+let curMv = null;
 function renderMovie(m){
   const box = $('#scr-movie');
+  const modern = state.theme==='modern';
+  curMv = m;
   const dirs = m.directors || [];
   const facts = [];
   if(m.budget){ const v = money(m.budget); if(v) facts.push(['Бюджет', v]); }
@@ -2347,20 +2367,24 @@ function renderMovie(m){
   if(m.episodes) facts.push(['Серий', m.episodes]);
   box.innerHTML = `
     <div class="mv-ambient" id="mvAmbient"></div>
-    <div class="mv-backdrop">${backdropHTML(m)}<div class="mv-shade"></div>
+    <div class="mv-backdrop${modern?' mv-hero':''}">${backdropHTML(m)}<div class="mv-shade"></div>
       <button class="back-btn" id="mvBack">←</button>
       <button class="fav-star${favHas(m.id)?' on':''}" id="mvFav" aria-label="В избранное">${IC_STAR}</button>
       ${m.media==='tv'?`<button class="trk-star${isTracked(m.id)?' on':''}" id="trkStar" aria-label="Отслеживать сериал"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>`:''}
+      ${modern?`<div class="mv-hero-logo">
+        ${m.logo?`<img class="mv-logo" src="${IMG}w500${m.logo}" alt="">`:`<div class="mv-title-t">${m.title}</div>`}
+        <div class="mv-hero-year">${m.year}</div>
+      </div>`:''}
     </div>
     <div class="mv-body">
-      <div class="mv-poster-c" id="posterFlipWrap"><div class="flip" id="posterFlip" tabindex="0" data-fc>
+      ${modern?'':`<div class="mv-poster-c" id="posterFlipWrap"><div class="flip" id="posterFlip" tabindex="0" data-fc>
         <div class="flip-face flip-front">${posterHTML(m)}<div class="flip-hint"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-3-3"/><path d="M20 15H7l3 3"/></svg></div></div>
         <div class="flip-face flip-back"><div class="flip-bg">${posterHTML(m)}</div><div class="flip-dossier">${flipFactsHTML(m)}</div></div>
       </div></div>
       <div class="mv-title-c">
         ${m.logo?`<img class="mv-logo" src="${IMG}w500${m.logo}" alt="">`:`<div class="mv-title-t">${m.title}</div>`}
         <div class="mv-orig-c">${m.year}</div>
-      </div>
+      </div>`}
       <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}${m.seasons?`<span>${m.seasons} ${plural(m.seasons,'сезон','сезона','сезонов')}</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
       <div class="mv-genres">${m.genres.map(g=>`<i>${g.name||g}</i>`).join('')}${mvInfoChips(m)}</div>
       ${state.kpKey?`<div class="mv-sec"><h3>Рейтинги</h3><div class="rates" id="rateCards">${m.rating>0?tmdbCardHTML(m):''}<span id="kpCardSlot" style="display:contents"></span></div></div>`:''}
@@ -2398,7 +2422,9 @@ function renderMovie(m){
   $('#mvFav').onclick = ()=>openFavSheet(m);
   const amb = $('#mvAmbient');
   if(amb){
-    const src = m.poster ? IMG+'w500'+m.poster : (m.backdrop ? IMG+'w780'+m.backdrop : null);
+    const src = modern
+      ? (m.backdrop ? IMG+'w780'+m.backdrop : (m.poster ? IMG+'w500'+m.poster : null))
+      : (m.poster ? IMG+'w500'+m.poster : (m.backdrop ? IMG+'w780'+m.backdrop : null));
     amb.innerHTML = src ? `<img src="${src}" alt="">` : '';
   }
   const ts = $('#trkStar');
@@ -4339,6 +4365,27 @@ function applyWide(){
   closeDrawer();
   syncTvRow();
 }
+const THEMES = ['classic','modern'], THEME_T = {classic:'Классика', modern:'Модерн'};
+function applyTheme(){
+  document.body.classList.toggle('theme-modern', state.theme==='modern');
+  const v = $('#themeVal'), d = $('#themeDesc'), t = THEME_T[state.theme] || 'Классика';
+  if(v) v.textContent = t;
+  if(d) d.textContent = t;
+}
+const rowTheme = $('#rowTheme');
+if(rowTheme) rowTheme.onclick = ()=>{
+  const cur = THEMES.indexOf(state.theme);
+  openOptSheet('Тема оформления', [
+    {t:'Классика', s:'Обычный вид'},
+    {t:'Модерн', s:'Кинематографичная страница фильма'}
+  ], cur < 0 ? 0 : cur, (i)=>{
+    state.theme = THEMES[i]; LS.set('theme', state.theme);
+    applyTheme();
+    if(currentScreenId()==='scr-movie' && curMv) renderMovie(curMv);
+    toast('Тема: ' + THEME_T[state.theme]);
+  });
+};
+applyTheme();
 let tvT = null;
 window.addEventListener('resize', ()=>{ clearTimeout(tvT); tvT = setTimeout(applyWide, 250); });
 /* ?tv=1 в адресе — принудительно включить ТВ-режим (для приложения Lampa) */
