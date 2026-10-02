@@ -782,6 +782,13 @@
   body.wide [data-fc]{border-radius:14px}
   body.wide [data-fc]:focus{outline:3px solid #fff; outline-offset:4px}
   body.wide .flip[data-fc]{border-radius:18px}
+  /* ---------- отслеживание сериалов ---------- */
+  .ne-badge{position:absolute; left:8px; bottom:8px; font-size:11px; font-weight:800; color:#fff;
+    background:rgba(10,16,28,.72); border:1px solid rgba(255,255,255,.18); padding:5px 10px; border-radius:999px;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+  .ne-badge.new{background:rgba(77,163,255,.9); border-color:transparent}
+  .ne-sub{font-size:12px; color:var(--muted); margin-top:5px; font-weight:600}
+  .ne-sub b{color:var(--accent2); font-weight:800}
   body.wide .ditem:focus{background:#fff; color:#0b1220}
   body.wide .ditem:focus svg{color:#0b1220}
   body.wide button:focus-visible{outline:3px solid #fff; outline-offset:2px}
@@ -895,6 +902,7 @@
     </div>
     <div class="hero-wrap"><div class="hero" id="hero"></div></div>
     <div class="chips" id="chips"></div>
+    <div id="newEpWrap"></div>
     <div id="rows"></div>
   </div>
 
@@ -1817,6 +1825,78 @@ function renderChips(){
   document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderRows(); });
   if(!chipsShown){ chipsShown = true; cb.classList.remove('chips-in'); void cb.offsetWidth; cb.classList.add('chips-in'); }
 }
+/* ---------- отслеживание сериалов (вручную) ---------- */
+function trackedMap(){ return LS.get('tracked', {}); }
+function isTracked(id){ return !!trackedMap()[id]; }
+function setTracked(m, on){
+  const t = trackedMap();
+  if(on) t[m.id] = {id:m.id, title:m.title, poster:m.poster||'', year:m.year||'', addedAt:Date.now(), lastEp:null, hasNew:false};
+  else delete t[m.id];
+  LS.set('tracked', t);
+}
+function epWhen(air){
+  if(!air) return '';
+  const d = new Date(air+'T00:00:00'), now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dd = Math.round((d - today)/864e5);
+  if(dd===0) return 'сегодня';
+  if(dd===1) return 'завтра';
+  if(dd===-1) return 'вчера';
+  if(dd>1 && dd<7) return 'через '+dd+' '+plural(dd,'день','дня','дней');
+  if(dd<-1 && dd>-7) return Math.abs(dd)+' '+plural(Math.abs(dd),'день','дня','дней')+' назад';
+  return d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+}
+function neCardHTML(t){
+  const ep = (t.hasNew && t.lastEp) ? t.lastEp : (t.nextEp || t.lastEp);
+  const badge = ep ? `S${ep.s} · E${ep.e}` : '';
+  const sub = (t.hasNew && t.lastEp)
+    ? `<div class="ne-sub"><b>Новая серия</b> · ${epWhen(t.lastEp.air)}</div>`
+    : (t.nextEp ? `<div class="ne-sub">Следующая · ${epWhen(t.nextEp.air)}</div>`
+      : (t.lastEp ? `<div class="ne-sub">Последняя · ${epWhen(t.lastEp.air)}</div>` : ''));
+  return `<div class="card" data-id="${t.id}" tabindex="0" data-fc>
+    <div class="poster">${t.poster?`<img loading="lazy" src="${IMG}w342${t.poster}" alt="">`:`<div class="demo-art" style="background:linear-gradient(150deg,#2f6fed,#101a33)"><span class="demo-logo"></span></div>`}
+      ${badge?`<div class="ne-badge${t.hasNew?' new':''}">${badge}</div>`:''}</div>
+    <div class="card-title">${t.title}</div>${sub}</div>`;
+}
+function renderNewEpRow(){
+  const wrap = $('#newEpWrap'); if(!wrap) return;
+  const items = Object.values(trackedMap()).filter(x=>x.hasNew || x.nextEp);
+  if(!items.length){ wrap.innerHTML=''; return; }
+  items.sort((a,b)=>((b.hasNew?1:0)-(a.hasNew?1:0)) || ((b.addedAt||0)-(a.addedAt||0)));
+  wrap.innerHTML = `<div class="row-sec"><div class="row-head"><h2>Новые серии</h2></div>
+    <div class="hrow">${items.map(neCardHTML).join('')}</div></div>`;
+  bindCards(wrap);
+}
+async function checkTracked(force){
+  renderNewEpRow();
+  if(!state.live) return;
+  const t = trackedMap(), ids = Object.keys(t);
+  if(!ids.length) return;
+  if(!force && Date.now() - LS.get('tracked_check', 0) < 20*3600*1000) return;
+  LS.set('tracked_check', Date.now());
+  let changed = false;
+  for(const id of ids){
+    try{
+      const d = await tmdb(`/tv/${String(id).replace(/^tv/,'')}`);
+      const le = d.last_episode_to_air, ne = d.next_episode_to_air;
+      if(le && le.season_number){
+        const cur = {s:le.season_number, e:le.episode_number, air:le.air_date||''};
+        const prev = t[id].lastEp;
+        if(!prev){ t[id].lastEp = cur; changed = true; }
+        else if(cur.s>prev.s || (cur.s===prev.s && cur.e>prev.e)){
+          t[id].lastEp = cur; t[id].hasNew = true; changed = true;
+        }
+      }
+      if(ne && ne.season_number){
+        const nx = {s:ne.season_number, e:ne.episode_number, air:ne.air_date||''};
+        const pn = t[id].nextEp;
+        if(!pn || pn.s!==nx.s || pn.e!==nx.e || pn.air!==nx.air){ t[id].nextEp = nx; changed = true; }
+      } else if(t[id].nextEp){ delete t[id].nextEp; changed = true; }
+    }catch(e){}
+  }
+  if(changed) LS.set('tracked', t);
+  renderNewEpRow();
+}
 async function renderRows(){
   const box = $('#rows');
   let sections = state.sections;
@@ -2136,6 +2216,8 @@ async function openMovie(id){
     }catch(e){}
   }
   if(!m){ box.innerHTML = '<div class="mv-load">Фильм не найден</div>'; return; }
+  const tm0 = trackedMap();
+  if(tm0[m.id] && tm0[m.id].hasNew){ tm0[m.id].hasNew = false; LS.set('tracked', tm0); renderNewEpRow(); }
   if(state.live){
     try{
       const isTv = m.media==='tv';
@@ -2273,6 +2355,7 @@ function renderMovie(m){
           <b>${c.name}</b><small>${c.character||''}</small>
         </div>`).join('')}</div></div>`:''}
       <button class="mv-watched ${w?'on':''}" id="mvWatched">${w?'✓ Уже смотрел':'Отметить «Уже смотрел»'}</button>
+      ${m.media==='tv'?`<button class="mv-watched ${isTracked(m.id)?'on':''}" id="mvTrack">${isTracked(m.id)?'✓ Отслеживаю':'Отслеживать сериал'}</button>`:''}
     </div>`;
   $('#mvBack').onclick = goBack;
   $('#mvFav').onclick = ()=>openFavSheet(m);
@@ -2286,6 +2369,15 @@ function renderMovie(m){
     if(i===-1){ state.watched.push(m.id); toast('Отмечено как просмотренное'); }
     else { state.watched.splice(i,1); toast('Снята отметка'); }
     LS.set('watched', state.watched); updateStats(); renderMovie(m); renderRows();
+  };
+  const mtr = $('#mvTrack');
+  if(mtr) mtr.onclick = ()=>{
+    const on = !isTracked(m.id);
+    if(on && !state.live){ toast('Нужен TMDB-ключ для отслеживания'); return; }
+    setTracked(m, on);
+    toast(on ? 'Сериал отслеживается' : 'Отслеживание выключено');
+    renderMovie(m);
+    if(on) checkTracked(true); else renderNewEpRow();
   };
   const tr = $('#mvTrailer');
   if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
@@ -4608,7 +4700,7 @@ $('#tmdbKey').addEventListener('change', async e=>{
   if(state.tmdbKey){
     toast('Проверяю ключ…');
     const ok = await bootLive();
-    if(ok){ renderHero(); renderRows(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
+    if(ok){ renderHero(); renderRows(); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
     else { toast('Ключ не подошёл'); }
   } else { state.live=false; bootDemo(); renderHero(); renderRows(); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
 });
@@ -4938,6 +5030,7 @@ $('#aiBuddy').onclick = ()=>{
     const ok = await bootLive();
     if(ok){ renderHero(); renderRows(); }
   }
+  checkTracked();
 })();
 </script>
 </body>
