@@ -2268,8 +2268,24 @@ async function openMovie(id){
         logo: logo ? logo.file_path : null,
       };
       try{
-        const sm = await tmdb(`/${isTv?'tv':'movie'}/${num}/similar`);
-        m.similar = (sm.results||[]).slice(0,14).map(r=>norm(r, isTv?'tv':'movie'));
+        const bc = d.belongs_to_collection;
+        if(!isTv && bc && bc.id){
+          const cd = await tmdb(`/collection/${bc.id}`);
+          m.collection = {name: cd.name || bc.name || 'Франшиза'};
+          m.collectionParts = (cd.parts||[])
+            .filter(p=>p.release_date)
+            .sort((a,b)=>a.release_date.localeCompare(b.release_date))
+            .map(p=>norm(p,'movie'));
+          m.collectionParts.forEach(x=>{ if(!state.pool.find(p=>p.id===x.id)) state.pool.push(x); });
+        } else { m.collectionParts = []; }
+      }catch(e){ m.collectionParts = []; }
+      try{
+        let sm = await tmdb(`/${isTv?'tv':'movie'}/${num}/recommendations`);
+        if(!(sm.results||[]).length) sm = await tmdb(`/${isTv?'tv':'movie'}/${num}/similar`);
+        const collIds = new Set((m.collectionParts||[]).map(x=>x.id));
+        m.similar = (sm.results||[]).slice(0,16)
+          .map(r=>norm(r, isTv?'tv':'movie'))
+          .filter(x=>x.id!==m.id && !collIds.has(x.id)).slice(0,14);
         m.similar.forEach(x=>{ if(!state.pool.find(p=>p.id===x.id)) state.pool.push(x); });
       }catch(e){ m.similar = []; }
     }catch(e){ /* остаёмся на базовых данных */ }
@@ -2375,6 +2391,7 @@ function renderMovie(m){
           <div class="ph">${c.photo?`<img src="${IMG}w185${c.photo}" alt="" loading="lazy">`:initials(c.name)}</div>
           <b>${c.name}</b><small>${c.character||''}</small>
         </div>`).join('')}</div></div>`:''}
+      ${m.collectionParts&&m.collectionParts.length?`<div class="mv-sec"><h3>${m.collection.name}</h3><div class="hrow">${m.collectionParts.map(cardHTML).join('')}</div></div>`:''}
       ${m.similar&&m.similar.length?`<div class="mv-sec"><h3>Похожие</h3><div class="hrow">${m.similar.map(cardHTML).join('')}</div></div>`:''}
     </div>`;
   $('#mvBack').onclick = goBack;
