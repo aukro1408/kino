@@ -470,7 +470,7 @@
   /* ===== тема «Модерн»: тёплая палитра как на рефе (вместо синего) ===== */
   .theme-modern{
     --bg:#181210; --bg2:#1f1613;
-    --card:rgba(255,240,225,.06); --card2:rgba(255,240,225,.10);
+    --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.10);
     --text:#f2eae0; --muted:#ab9d8d;
     --accent:#d9c6ac; --accent2:#efe0cb;
     --logo:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%23d9c6ac' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%23d9c6ac' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%23d9c6ac' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%23d9c6ac' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%23d9c6ac'/%3E%3C/svg%3E");
@@ -1443,8 +1443,8 @@ function backdropHTML(m){
   return `<div class="demo-art" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]});position:absolute;inset:0"></div>`;
 }
 function norm(m, media){
-  // unify TMDB / demo shape; media: 'movie' | 'tv'
-  const mt = media || m.media_type || m.media || 'movie';
+  // unify TMDB / demo shape; media: 'movie' | 'tv' (строка; остальное игнорируем — защита от .map(norm))
+  const mt = (typeof media==='string' ? media : null) || m.media_type || m.media || 'movie';
   const rid = String(m.id);
   return {
     id: mt==='tv' && !rid.startsWith('tv') ? 'tv'+rid : m.id,
@@ -1578,7 +1578,7 @@ function visible(list){
   if(!state.hideWatched) return list;
   return list.filter(m=>state.watched.indexOf(m.id)===-1);
 }
-function byId(id){ return state.pool.concat(DEMO.map(norm)).find(m=>m.id==id); }
+function byId(id){ return state.pool.concat(DEMO.map(r=>norm(r))).find(m=>m.id==id); }
 
 /* =================== TMDB =================== */
 async function tmdb(path){
@@ -1598,7 +1598,7 @@ async function bootLive(){
       cubGet('list?category=top').catch(()=>null),
     ]);
     state.live = true;
-    const T=(tr.results||[]).map(norm), N=(now.results||[]).map(norm), P=(top.results||[]).map(norm), TT=((tvt.results||[]).map(r=>norm(r,'tv')));
+    const T=(tr.results||[]).map(r=>norm(r)), N=(now.results||[]).map(r=>norm(r)), P=(top.results||[]).map(r=>norm(r)), TT=((tvt.results||[]).map(r=>norm(r,'tv')));
     const newest=[...N].sort((a,b)=>b.date.localeCompare(a.date));
     state.hero = newest.slice(0,10);
     state.data = { trending:T, nowPlaying:newest, topRated:[...P].sort((a,b)=>b.rating-a.rating), tvTrend:TT };
@@ -1621,7 +1621,7 @@ async function bootLive(){
   }catch(e){ state.live=false; return false; }
 }
 function bootDemo(){
-  const d = DEMO.map(norm);
+  const d = DEMO.map(r=>norm(r));
   const newest=[...d].sort((a,b)=>b.year-a.year);
   state.hero = newest.slice(0,10);
   state.data = {
@@ -1686,7 +1686,7 @@ async function loadThemeRows(){
   const on = themeOrder().map(id=>THEME_ROWS.find(t=>t.id===id)).filter(t=>t && themeRowOn(t.id));
   const res = await Promise.all(on.map(t=>
     tmdb(themeURL(t))
-      .then(d=>({t, items:(d.results||[]).map(norm)}))
+      .then(d=>({t, items:(d.results||[]).map(r=>norm(r))}))
       .catch(()=>({t, items:[]}))
   ));
   res.forEach(({t, items})=>{
@@ -1720,7 +1720,7 @@ async function forYouPayload(){
   if(!taste.length || !state.tmdbKey) return null;
   try{
     const d = await tmdb(`/discover/movie?with_genres=${taste.join(',')}&sort_by=vote_average.desc&vote_count.gte=100&primary_release_date.lte=${todayStr()}&page=1`);
-    const items = (d.results||[]).map(norm);
+    const items = (d.results||[]).map(r=>norm(r));
     if(!items.length) return null;
     return {items, genreIds: taste.join(',')};
   }catch(e){ return null; }
@@ -1985,7 +1985,7 @@ async function renderRows(){
           tmdb(`/discover/movie?sort_by=popularity.desc&with_genres=${state.genre}`),
           tmdb(`/discover/tv?sort_by=popularity.desc&with_genres=${state.genre}`),
         ]);
-        items = (dm.results||[]).map(norm);
+        items = (dm.results||[]).map(r=>norm(r));
         tvItems = (dtv.results||[]).map(r=>norm(r,'tv'));
         items.concat(tvItems).forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
       }catch(e){}
@@ -4355,7 +4355,7 @@ async function openPerson(pid, pname, role){
       const seen = new Set();
       const key = x=>(x.media_type==='tv'?'tv':'')+x.id;
       movies = list.filter(x=>x.poster_path && !seen.has(key(x)) && seen.add(key(x)))
-        .sort((a,b)=>(b.vote_count||0)-(a.vote_count||0)).slice(0,30).map(norm);
+        .sort((a,b)=>(b.vote_count||0)-(a.vote_count||0)).slice(0,30).map(r=>norm(r));
       movies.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
     }catch(e){}
   } else {
@@ -4494,7 +4494,7 @@ async function doSearch(q){
   if(state.live){
     try{
       const d = await tmdb('/search/multi?query='+encodeURIComponent(q)+'&include_adult=false');
-      const items = (d.results||[]).filter(r=>r.media_type==='movie'||r.media_type==='tv').map(norm);
+      const items = (d.results||[]).filter(r=>r.media_type==='movie'||r.media_type==='tv').map(r=>norm(r));
       items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
       grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Ничего не найдено</div>';
       bindCards(grid); return;
