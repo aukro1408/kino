@@ -1836,7 +1836,7 @@ function trackedMap(){ return LS.get('tracked', {}); }
 function isTracked(id){ return !!trackedMap()[id]; }
 function setTracked(m, on){
   const t = trackedMap();
-  if(on) t[m.id] = {id:m.id, title:m.title, poster:m.poster||'', year:m.year||'', addedAt:Date.now(), lastEp:null, hasNew:false};
+  if(on) t[m.id] = {id:m.id, title:m.title, poster:m.poster||'', year:m.year||'', addedAt:Date.now(), lastEp:null, hasNew:false, status:''};
   else delete t[m.id];
   LS.set('tracked', t);
 }
@@ -1866,7 +1866,10 @@ function neCardHTML(t){
 }
 function renderNewEpRow(){
   const wrap = $('#newEpWrap'); if(!wrap) return;
-  const items = Object.values(trackedMap()).filter(x=>x.hasNew || x.nextEp);
+  const items = Object.values(trackedMap()).filter(x=>{
+    const ended = ['Ended','Canceled'].includes(x.status);
+    return (!ended || x.hasNew) && (x.hasNew || x.nextEp);
+  });
   if(!items.length){ wrap.innerHTML=''; return; }
   items.sort((a,b)=>((b.hasNew?1:0)-(a.hasNew?1:0)) || ((b.addedAt||0)-(a.addedAt||0)));
   wrap.innerHTML = `<div class="row-sec"><div class="row-head"><h2>Новые серии</h2></div>
@@ -1884,7 +1887,14 @@ async function checkTracked(force){
   for(const id of ids){
     try{
       const d = await tmdb(`/tv/${String(id).replace(/^tv/,'')}`);
-      const le = d.last_episode_to_air, ne = d.next_episode_to_air;
+      if(d.status && t[id].status!==d.status){ t[id].status = d.status; changed = true; }
+      let le = d.last_episode_to_air, ne = d.next_episode_to_air;
+      /* «следующая» с датой в прошлом — считаем вышедшей */
+      const nw = new Date(), todayStr = nw.getFullYear()+'-'+String(nw.getMonth()+1).padStart(2,'0')+'-'+String(nw.getDate()).padStart(2,'0');
+      if(ne && ne.season_number && ne.air_date && ne.air_date <= todayStr){
+        if(!le || ne.season_number>le.season_number || (ne.season_number===le.season_number && ne.episode_number>le.episode_number)) le = ne;
+        ne = null;
+      }
       if(le && le.season_number){
         const cur = {s:le.season_number, e:le.episode_number, air:le.air_date||''};
         const prev = t[id].lastEp;
