@@ -15,6 +15,7 @@
     --bg:#0b1220; --bg2:#0e1626; --card:#141e31; --card2:#182440;
     --text:#eef2f8; --muted:#8b98ad; --accent:#4da3ff; --accent2:#7cc4ff;
     --star:#ffc94d; --radius:18px;
+    --logo:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E");
     --tabbar-h:72px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -85,7 +86,7 @@
   .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 12px; padding:2px 16px 10px}
   .card{cursor:pointer; min-width:0}
   .poster{position:relative; width:100%; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
-    background:var(--card2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E") no-repeat center/46px 46px;
+    background:var(--card2) var(--logo) no-repeat center/46px 46px;
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
   .more-card .more-tile{aspect-ratio:2/3; border-radius:14px; background:#1b2740; width:100%;
     display:flex; align-items:center; justify-content:center;
@@ -109,9 +110,11 @@
   .col-card:active{transform:scale(.97)}
   .col-card{transition:transform .15s}
   .col-cover{position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
-    background:#1b2740 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E") no-repeat center/54px 54px;
+    background:#1b2740 var(--logo) no-repeat center/54px 54px;
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
   .col-cover img{width:100%; height:100%; object-fit:cover; display:block}
+  .demo-wide{position:absolute; inset:0}
+  .demo-wide .demo-logo{top:50%}
   .col-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,8,16,.02) 35%, rgba(5,8,16,.6))}
   .col-count{position:absolute; left:10px; bottom:8px; font-size:11.5px; font-weight:700; color:#fff;
     background:rgba(0,0,0,.55); padding:4px 10px; border-radius:999px}
@@ -123,6 +126,8 @@
   .col-chips::-webkit-scrollbar{display:none}
   .poster img{width:100%; height:100%; object-fit:cover; display:block}
   .poster .demo-art{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:10px}
+  .demo-logo{position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); width:54px; height:54px;
+    background:var(--logo) no-repeat center/contain; opacity:.95}
   .poster .demo-art b{font-size:13px; line-height:1.25; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.55)}
   .poster .demo-art small{font-size:10px; color:rgba(255,255,255,.75); font-weight:600; margin-top:3px}
   .watched-badge{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%;
@@ -423,7 +428,7 @@
   .flip{position:absolute; inset:0; transform-style:preserve-3d; transition:transform .85s cubic-bezier(.35,.15,.25,1); cursor:pointer}
   .flip.flipped{transform:rotateY(-180deg)}
   .flip-face{position:absolute; inset:0; border-radius:18px; overflow:hidden;
-    background:#0d1526 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='9' y='15' width='46' height='34' rx='9' fill='none' stroke='%234da3ff' stroke-width='3.5'/%3E%3Ccircle cx='18' cy='24' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='32' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Ccircle cx='18' cy='40' r='2.2' fill='%234da3ff' opacity='.55'/%3E%3Cpath d='M30 24v16l13-8z' fill='%234da3ff'/%3E%3C/svg%3E") no-repeat center/52px 52px;
+    background:#0d1526 var(--logo) no-repeat center/52px 52px;
     backface-visibility:hidden; -webkit-backface-visibility:hidden}
   /* скелетон: постер плавно проявляется поверх логотипа */
   .poster img, .col-cover img, .flip-front img{opacity:0; transition:opacity .5s ease}
@@ -1280,7 +1285,7 @@ function starsHTML(r){
 }
 function posterHTML(m, big){
   if(m.poster) return `<img src="${IMG}w500${m.poster}" alt="" loading="lazy">`;
-  return `<div class="demo-art" style="background:linear-gradient(150deg,${m.art[0]},${m.art[1]})"><b>${m.title}</b><small>${m.year}</small></div>`;
+  return `<div class="demo-art" style="background:linear-gradient(150deg,${m.art[0]},${m.art[1]})"><span class="demo-logo"></span><b>${m.title}</b><small>${m.year}</small></div>`;
 }
 function backdropHTML(m){
   if(m.backdrop) return `<img src="${IMG}w780${m.backdrop}" alt="">`;
@@ -1967,7 +1972,7 @@ function cardHTML(m){
 function wideCardHTML(m){
   const img = m.backdrop ? IMG+'w500'+m.backdrop : '';
   return `<div class="twcard" data-id="${m.id}">
-    <div class="col-cover">${img?`<img loading="lazy" src="${img}" alt="">`:`<div class="demo-art" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]})"></div>`}<div class="col-shade"></div>
+    <div class="col-cover">${img?`<img loading="lazy" src="${img}" alt="">`:`<div class="demo-art demo-wide" style="background:linear-gradient(140deg,${m.art[0]},${m.art[1]})"><span class="demo-logo"></span></div>`}<div class="col-shade"></div>
       <div class="col-count">★ ${m.rating}</div></div>
     <div class="col-title">${m.title}</div>
     <div class="col-meta">${m.year}</div>
