@@ -1207,7 +1207,7 @@ const LS = {
   get(k, d){ try{ const v = localStorage.getItem('kino.'+k); return v===null? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ localStorage.setItem('kino.'+k, JSON.stringify(v)); }
 };
-const APP_VER = '2026.10.02-tv1';
+const APP_VER = '2026.10.02-kp1';
 const state = {
   tmdbKey: LS.get('tmdb_key',''),
   kpKey: LS.get('kp_key',''),
