@@ -2879,6 +2879,32 @@ function torScore(t){
   s += Math.min(t.Seeders||0, 200) * 0.2;
   return Math.round(s);
 }
+/* красивое название раздачи: наше название + сезон/серии, вместо сырого имени трекера */
+function torNiceTitle(t, m){
+  const raw = t.Title || '';
+  const name = ((m && m.title) || '').trim() || raw;
+  if(m && m.media === 'tv'){
+    let season = null, ep1 = null, ep2 = null, mm;
+    mm = raw.match(/[Ss](\d{1,2})[Ee](\d{1,3})/);
+    if(mm){ season = +mm[1]; ep1 = ep2 = +mm[2]; }
+    if(season == null){
+      mm = raw.match(/\[s(\d{1,2})\]/i) || raw.match(/\bs(\d{1,2})\b/i)
+        || raw.match(/сезон\s*:\s*(\d{1,2})/i) || raw.match(/(\d{1,2})\s*сезон/i);
+      if(mm) season = +mm[1];
+    }
+    mm = raw.match(/\[(\d{1,3})\s*[-–]\s*(\d{1,3})\s*из\s*\d{1,3}\]/i)
+      || raw.match(/\((\d{1,3})\s*[-–]\s*(\d{1,3})\s*сери[яйи]/i)
+      || raw.match(/(\d{1,3})\s*[-–]\s*(\d{1,3})\s*сери[яйи]/i)
+      || raw.match(/серии\s*:\s*(\d{1,3})\s*[-–]\s*(\d{1,3})/i);
+    if(mm){ ep1 = +mm[1]; ep2 = +mm[2]; }
+    let s = name;
+    if(season != null) s += ' · Сезон ' + season;
+    if(ep1 != null) s += ep1 === ep2 ? ' · Серия ' + ep1 : ' · Серии ' + ep1 + '–' + ep2;
+    return s;
+  }
+  const y = (m && m.year && m.year !== '—') ? m.year : ((raw.match(/\b((?:19|20)\d{2})\b/) || [])[1]);
+  return y ? name + ' (' + y + ')' : name;
+}
 function torPills(t, isTop){
   const p = torParse(t.Title);
   const out = [];
@@ -3980,8 +4006,8 @@ function vwTorRender(){
   const el = $('#vwList'); if(!el) return;
   el.innerHTML = `<div class="vw-list">` + arr.map(t=>{
     const i = torCache.indexOf(t);
-    return `<div class="tor-item" data-i="${i}" style="margin-bottom:0">
-      <div class="tor-t">${escTx(t.Title)||'Без названия'}</div>
+    return `<div class="tor-item" data-i="${i}" style="margin-bottom:0" title="${escTx(t.Title).replace(/"/g,'&quot;')}">
+      <div class="tor-t">${escTx(torNiceTitle(t, m))}</div>
       ${torPills(t, i===topIdx)}
       <div class="tor-m"><span>${fmtSize(t.Size)}</span><span class="seeds">● ${t.Seeders||0}</span><span class="trk">${escTx(t.Tracker)||''}</span></div>
     </div>`;
