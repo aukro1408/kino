@@ -466,6 +466,21 @@
 .prm-bell{position:absolute; right:6px; top:6px; width:30px; height:30px; border-radius:50%; background:rgba(77,163,255,.94); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(77,163,255,.5); z-index:2}
 .prm-bell svg{width:16px; height:16px; stroke:#fff}
 .prm-sub{font-size:12px; color:#9fb2cc}
+.notif-badge{position:absolute; top:1px; right:1px; min-width:17px; height:17px; padding:0 4px; border-radius:9px; background:#ff3b30; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; line-height:1}
+.ntf-tabs{display:flex; background:rgba(255,255,255,.06); border-radius:12px; padding:3px; margin:2px 0 14px}
+.ntf-tabs button{flex:1; border:0; background:transparent; color:var(--muted); font-size:14px; padding:9px 0; border-radius:9px; cursor:pointer}
+.ntf-tabs button.on{background:rgba(255,255,255,.14); color:#fff; font-weight:600}
+.ntf-list{max-height:58vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px; padding-bottom:8px}
+.ntf-item{display:flex; gap:14px; align-items:flex-start; cursor:pointer}
+.ntf-poster{width:62px; height:93px; border-radius:10px; overflow:hidden; flex:none; background:#1a2233}
+.ntf-poster img{width:100%; height:100%; object-fit:cover; display:block}
+.ntf-body{flex:1; min-width:0}
+.ntf-title{font-size:16px; font-weight:600; line-height:1.3}
+.ntf-sub{color:var(--muted); font-size:13.5px; margin-top:5px}
+.ntf-badges{display:flex; gap:8px; margin-top:9px}
+.ntf-badges span{background:rgba(255,255,255,.1); border-radius:8px; padding:6px 12px; font-size:13.5px}
+.ntf-date{color:var(--muted); font-size:12.5px; white-space:nowrap; padding-top:2px}
+.ntf-empty{text-align:center; color:var(--muted); padding:34px 0; font-size:14px}
   /* ===== тема «Модерн»: страница фильма — кинематографичный хиро-кадр ===== */
   .theme-modern .mv-backdrop.mv-hero{height:54vh; min-height:380px; max-height:600px;
     -webkit-mask-image:linear-gradient(180deg,#000 68%,transparent 97%);
@@ -1053,6 +1068,10 @@
       <button class="icon-btn" id="radioBtn" aria-label="Радио">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="10" width="19" height="10" rx="2.5"/><path d="M5.5 10L14 3"/><circle cx="17" cy="15" r="1.8"/><path d="M6 13.4h4M6 16.6h4"/></svg>
       </button>
+      <button class="icon-btn" id="notifBtn" aria-label="Уведомления" style="position:relative">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="notif-badge" id="notifBadge" hidden></span>
+      </button>
       <button class="icon-btn" data-goto="profile" aria-label="Настройки">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -1371,6 +1390,13 @@
     </div>
   </div></div></div>
   <div class="sheet-veil" id="optVeil"><div class="sheet"><div class="sheet-grip"></div><div class="sheet-head"><div class="sheet-title" id="optTitle"></div><button class="sheet-x" id="optX" aria-label="Закрыть">✕</button></div><div id="optList"></div></div></div>
+  <div class="sheet-veil" id="ntfVeil"><div class="sheet"><div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">Уведомления</div><button class="sheet-x" id="ntfClose" aria-label="Закрыть">✕</button></div>
+    <div class="ntf-tabs" id="ntfTabs">
+      <button data-t="all" class="on">Все</button><button data-t="series">Сериалы</button><button data-t="premieres">Премьеры</button>
+    </div>
+    <div class="ntf-list" id="ntfList"></div>
+  </div></div>
   <div class="sheet-veil" id="roulVeil"><div class="sheet" id="roulSheet">
     <div class="sheet-grip"></div>
     <div class="sheet-title">Фильтры · Мне повезёт</div>
@@ -2071,6 +2097,8 @@ function renderNewEpRow(){
   wrap.innerHTML = `<div class="row-sec"><div class="row-head"><h2>Новые серии</h2></div>
     <div class="hrow">${items.map(neCardHTML).join('')}</div></div>`;
   bindCards(wrap);
+  bindCards(wrap);
+  updateNotifBell();
 }
 async function checkTracked(force){
   renderNewEpRow();
@@ -2166,7 +2194,58 @@ function renderPremiereRows(){
   bindCards(wrap);
   wrap.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay=(i%3*60)+'ms'; rvObs.observe(el); });
   const mb = $('#prmMore'); if(mb) mb.onclick = ()=>openCategory({type:'upcoming', title:'Скоро выйдет'});
+  updateNotifBell();
 }
+
+/* ===== УВЕДОМЛЕНИЯ: колокольчик в шапке + шторка ===== */
+function notifItems(){
+  const series = Object.values(trackedMap()).filter(x=>x.hasNew && x.lastEp);
+  const now = todayStr();
+  const premieres = Object.values(prmMap()).filter(x=>x.notified && !x.seen && x.date && x.date<=now);
+  series.sort((a,b)=>(b.lastEp.air||'').localeCompare(a.lastEp.air||''));
+  premieres.sort((a,b)=>b.date.localeCompare(a.date));
+  return {series, premieres};
+}
+function updateNotifBell(){
+  const b = $('#notifBtn'); if(!b) return;
+  const {series, premieres} = notifItems();
+  const n = series.length + premieres.length;
+  const badge = $('#notifBadge');
+  if(badge){ badge.hidden = n===0; badge.textContent = n>99 ? '99+' : n; }
+  b.classList.toggle('bell-live', n>0);
+}
+function ntfItemHTML(it){
+  const art = ['#2f6fed','#101a33'];
+  if(it.kind==='series'){
+    const le = it.lastEp||{};
+    return `<div class="ntf-item" data-kind="series" data-id="${it.id}">
+      <div class="ntf-poster">${posterHTML({poster:it.poster, art})}</div>
+      <div class="ntf-body"><div class="ntf-title">${it.title}</div>
+        <div class="ntf-sub">Новая серия</div>
+        <div class="ntf-badges"><span>S - ${le.s}</span><span>E - ${le.e}</span></div></div>
+      <div class="ntf-date">${le.air?fmtPrmDate(le.air):''}</div>
+    </div>`;
+  }
+  return `<div class="ntf-item" data-kind="premiere" data-id="${it.id}">
+    <div class="ntf-poster">${posterHTML({poster:it.poster, art})}</div>
+    <div class="ntf-body"><div class="ntf-title">Премьера: ${it.title}</div>
+      <div class="ntf-sub">Фильм уже вышел</div></div>
+    <div class="ntf-date">${fmtPrmDate(it.date)}</div>
+  </div>`;
+}
+let ntfTab = 'all';
+function renderNotifList(){
+  const {series, premieres} = notifItems();
+  const items = series.map(s=>({...s, kind:'series'})).concat(premieres.map(p=>({...p, kind:'premiere'})));
+  const f = ntfTab==='all' ? items : items.filter(i=>i.kind===ntfTab);
+  const box = $('#ntfList');
+  box.innerHTML = f.length ? f.map(ntfItemHTML).join('') : '<div class="ntf-empty">Пока тихо</div>';
+  box.querySelectorAll('.ntf-item').forEach(el=>{
+    el.onclick = ()=>{ $('#ntfVeil').classList.remove('show'); openMovie(el.dataset.id); };
+  });
+  $('#ntfTabs').querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.t===ntfTab));
+}
+function openNotif(){ ntfTab='all'; renderNotifList(); $('#ntfVeil').classList.add('show'); }
 async function renderRows(){
   const box = $('#rows');
   let sections = state.sections;
@@ -2435,7 +2514,7 @@ function showScreen(id, restore){
   if(restore && id==='scr-home'){
     document.querySelectorAll('#scr-home .hrow').forEach((r,i)=>{ if(hrowMem[i]) r.scrollLeft = hrowMem[i]; });
   }
-  if(id==='scr-home'){ renderNewEpRow(); renderPremiereRows(); }
+  if(id==='scr-home'){ renderNewEpRow(); renderPremiereRows(); updateNotifBell(); }
 }
 function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
 function saveScrollState(){
@@ -5489,6 +5568,10 @@ $('#aiBtn').onclick = ()=>goto('ai');
 $('#aiBack').onclick = ()=>goBack();
 $('#aiGo').onclick = aiRun;
 $('#radioBtn').onclick = openRadio;
+$('#notifBtn').onclick = openNotif;
+$('#ntfClose').onclick = ()=>$('#ntfVeil').classList.remove('show');
+$('#ntfVeil').addEventListener('click', e=>{ if(e.target.id==='ntfVeil') $('#ntfVeil').classList.remove('show'); });
+$('#ntfTabs').querySelectorAll('button').forEach(b=>{ b.onclick = ()=>{ ntfTab=b.dataset.t; renderNotifList(); }; });
 $('#rmPlay').onclick = e=>{ e.stopPropagation(); radioToggle(); };
 $('#rmX').onclick = e=>{ e.stopPropagation(); radioStop(); };
 $('#radioMini').onclick = ()=>radioFullOpen();
