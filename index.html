@@ -2097,7 +2097,6 @@ function renderNewEpRow(){
   wrap.innerHTML = `<div class="row-sec"><div class="row-head"><h2>Новые серии</h2></div>
     <div class="hrow">${items.map(neCardHTML).join('')}</div></div>`;
   bindCards(wrap);
-  bindCards(wrap);
   updateNotifBell();
 }
 async function checkTracked(force){
