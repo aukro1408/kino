@@ -466,6 +466,14 @@
 .prm-bell{position:absolute; right:6px; top:6px; width:30px; height:30px; border-radius:50%; background:rgba(77,163,255,.94); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(77,163,255,.5); z-index:2}
 .prm-bell svg{width:16px; height:16px; stroke:#fff}
 .prm-sub{font-size:12px; color:#9fb2cc}
+.mv-vote{display:flex; gap:10px; justify-content:center; margin-top:14px}
+.vote-btn{display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--text); font-size:14px; font-weight:600; cursor:pointer; transition:transform .15s}
+.vote-btn:active{transform:scale(.94)}
+.vote-btn svg{width:18px; height:18px}
+.vote-btn.like-on{background:rgba(52,199,89,.16); border-color:rgba(52,199,89,.55); color:#4cd964}
+.vote-btn.like-on svg{fill:#4cd964; stroke:#4cd964}
+.vote-btn.dis-on{background:rgba(255,69,58,.13); border-color:rgba(255,69,58,.5); color:#ff6b62}
+.vote-btn.dis-on svg{fill:#ff6b62; stroke:#ff6b62}
 #ntfVeil .sheet-head{position:relative; justify-content:center}
 #ntfVeil .sheet-x{position:absolute; right:0; top:50%; margin-top:-17px}
 #ntfVeil .x1{display:inline-block; transform:translateY(-1px)}
@@ -1232,6 +1240,13 @@
     <div class="set-group" data-cat="cats">
       <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="n">Категории</span><span class="ch">›</span></button>
       <div id="themeRowsBox"></div>
+      <div class="set-row" id="rowHidden" style="cursor:pointer">
+        <div><div class="t">Скрытое</div><div class="d">Не показывать в рекомендациях</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="set-val" id="hiddenCount">0</span>
+          <button class="mini-btn" id="hiddenClear">Очистить</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1733,8 +1748,10 @@ async function loadKpRating(m){
   }catch(e){ kpHideIfEmpty(); }
 }
 function visible(list){
-  if(!state.hideWatched) return list;
-  return list.filter(m=>state.watched.indexOf(m.id)===-1);
+  const h = hiddenMap(), hk = Object.keys(h);
+  const out = hk.length ? (list||[]).filter(m=>!h[m.id]) : (list||[]);
+  if(!state.hideWatched) return out;
+  return out.filter(m=>state.watched.indexOf(m.id)===-1);
 }
 function byId(id){ return state.pool.concat(DEMO.map(r=>norm(r))).find(m=>m.id==id); }
 
@@ -1894,6 +1911,12 @@ function buildTaste(){
         const id = GENRE_ID_BY_RU[g.name||g];
         if(id) weights[id] = (weights[id]||0)+w;
       });
+    });
+  });
+  Object.values(likedMap()).forEach(m=>{
+    (m.genres||[]).forEach(g=>{
+      const id = GENRE_ID_BY_RU[g];
+      if(id) weights[id] = (weights[id]||0)+6;
     });
   });
   return Object.entries(weights).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);
@@ -2159,6 +2182,22 @@ function prmMap(){ return LS.get(PRM_LS, {}); }
 function prmSet(m){ const t=prmMap(); t[m.id]=m; LS.set(PRM_LS, t); }
 function prmDel(id){ const t=prmMap(); delete t[id]; LS.set(PRM_LS, t); }
 function isPrmTracked(id){ return !!prmMap()[id]; }
+function likedMap(){ return LS.get('liked', {}); }
+function isLiked(id){ return !!likedMap()[id]; }
+function setLiked(m, on){
+  const t = likedMap();
+  if(on) t[m.id] = {id:m.id, title:m.title, genres:(m.genres||[]).map(g=>g.name||g), at:Date.now()};
+  else delete t[m.id];
+  LS.set('liked', t);
+}
+function hiddenMap(){ return LS.get('hidden', {}); }
+function isHidden(id){ return !!hiddenMap()[id]; }
+function setHidden(m, on){
+  const t = hiddenMap();
+  if(on) t[m.id] = {id:m.id, title:m.title, poster:m.poster||'', rating:m.rating||0, year:m.year||'', art:m.art||['#2f6fed','#101a33'], at:Date.now()};
+  else delete t[m.id];
+  LS.set('hidden', t);
+}
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 const MONTHS_RU = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
 function fmtPrmDate(ds){ const p=String(ds||'').split('-'); return p.length>=3 ? (+p[2])+' '+MONTHS_RU[(+p[1]||1)-1] : ds; }
@@ -2205,7 +2244,7 @@ function releasedHTML(){
 }
 function upcomingHTML(){
   const now = todayStr();
-  const up = (state.upcoming||[]).filter(u=>u.date>now).slice(0,14);
+  const up = (state.upcoming||[]).filter(u=>u.date>now && !isHidden(u.id)).slice(0,14);
   if(!up.length) return '';
   return `<div class="row-sec" data-sec="upcoming"><div class="row-head"><h2>Скоро выйдет</h2><button class="row-more" data-secmore="upcoming">Ещё</button></div><div class="hrow">${up.map(prmCardHTML).join('')}</div></div>`;
 }
@@ -2424,7 +2463,7 @@ const CAT_SORTS = [
 function applyCatSort(){
   const grid = $('#catGrid');
   if(!grid) return;
-  let items = visible(catItems.filter(m=>m.poster));
+  let items = (catMore && catMore.type==='hidden' ? catItems : visible(catItems)).filter(m=>m.poster);
   if(catSort==='rating') items = items.slice().sort((a,b)=>(b.rating||0)-(a.rating||0));
   else if(catSort==='date') items = items.slice().sort((a,b)=>String(b.date||b.year||'').localeCompare(String(a.date||a.year||'')));
   else if(catSort==='pop') items = items.slice().sort((a,b)=>(b.popularity||0)-(a.popularity||0));
@@ -2444,7 +2483,7 @@ async function openCategory(more){
   catSort = null; catItems = [];
   const _csb = $('#catSort'); if(_csb){ _csb.classList.remove('on'); }
   const ct = $('#catTitle');
-  if(more.type==='fav'||more.type==='history'){
+  if(more.type==='fav'||more.type==='history'||more.type==='hidden'){
     ct.classList.add('brand');
     ct.removeAttribute('style');
     ct.innerHTML = escTx(more.title) + '<span class="dot">.</span>';
@@ -2463,13 +2502,13 @@ async function openCategory(more){
     grid.classList.toggle('grid3', !isColList);
     grid.style.display = isColList ? 'block' : '';
   };
-  if(more.type==='fav'||more.type==='history'){
+  if(more.type==='fav'||more.type==='history'||more.type==='hidden'){
     lastCat = null;
     $('#scr-cat').scrollTop = 0;
     catMore = more; catPage = 0; catDone = true; catLoading = false;
     renderStudioChips();
     setGridMode();
-    const items = more.type==='history' ? state.history : (state.favs[more.favId]||[]);
+    const items = more.type==='history' ? state.history : more.type==='hidden' ? Object.values(hiddenMap()).sort((a,b)=>(b.at||0)-(a.at||0)) : (state.favs[more.favId]||[]);
     catItems = items.slice();
     grid.innerHTML = items.map(cardHTML).join('') || '<div class="search-hint">Пока пусто</div>';
     bindCards(grid);
@@ -2666,7 +2705,7 @@ async function openMovie(id){
         const collIds = new Set((m.collectionParts||[]).map(x=>x.id));
         m.similar = (sm.results||[]).slice(0,16)
           .map(r=>norm(r, isTv?'tv':'movie'))
-          .filter(x=>x.id!==m.id && !collIds.has(x.id)).slice(0,14);
+          .filter(x=>x.id!==m.id && !collIds.has(x.id) && !isHidden(x.id)).slice(0,14);
         m.similar.forEach(x=>{ if(!state.pool.find(p=>p.id===x.id)) state.pool.push(x); });
       }catch(e){ m.similar = []; }
     }catch(e){ /* остаёмся на базовых данных */ }
@@ -2751,6 +2790,10 @@ function renderMovie(m){
         <div class="mv-orig-c">${m.year}</div>
       </div>`}
       <div class="mv-meta mv-meta-c"><span class="rate">★ ${m.rating}</span>${m.runtime?`<span>${m.runtime} мин</span>`:''}${m.seasons?`<span>${m.seasons} ${plural(m.seasons,'сезон','сезона','сезонов')}</span>`:''}<span>${m.media==='tv'?'Сериал':'Фильм'}</span></div>
+      <div class="mv-vote">
+        <button class="vote-btn${isLiked(m.id)?' like-on':''}" id="likeBtn" aria-label="Нравится"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg><span>Нравится</span></button>
+        <button class="vote-btn${isHidden(m.id)?' dis-on':''}" id="disBtn" aria-label="Не моё"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg><span>Не моё</span></button>
+      </div>
       <div class="mv-genres">${m.genres.map(g=>`<i data-gid="${g.id||''}" data-genre="${escAttr(g.name||g)}">${g.name||g}</i>`).join('')}${mvInfoChips(m)}</div>
       ${state.kpKey?`<div class="mv-sec"><h3>Рейтинги</h3><div class="rates" id="rateCards">${m.rating>0?tmdbCardHTML(m):''}<span id="kpCardSlot" style="display:contents"></span></div></div>`:''}
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
@@ -2810,6 +2853,27 @@ function renderMovie(m){
     ps.classList.remove('bell-live');
     toast(on ? 'Напомню о выходе' : 'Напоминание выключено');
     renderHomeRows();
+  };
+  const paintVote = ()=>{
+    const lb2 = $('#likeBtn'), db2 = $('#disBtn');
+    if(lb2) lb2.classList.toggle('like-on', isLiked(m.id));
+    if(db2) db2.classList.toggle('dis-on', isHidden(m.id));
+  };
+  const lb = $('#likeBtn');
+  if(lb) lb.onclick = ()=>{
+    const on = !isLiked(m.id);
+    if(on && isHidden(m.id)) setHidden(m, false);
+    setLiked(m, on);
+    paintVote();
+    toast(on ? 'Запомнил — предложу похожее' : 'Убрано из понравившихся');
+  };
+  const db = $('#disBtn');
+  if(db) db.onclick = ()=>{
+    const on = !isHidden(m.id);
+    if(on && isLiked(m.id)) setLiked(m, false);
+    setHidden(m, on);
+    paintVote();
+    toast(on ? 'Скрыто из рекомендаций' : 'Снова в рекомендациях');
   };
   const tr = $('#mvTrailer');
   if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
@@ -4780,6 +4844,18 @@ function applyTheme(){
   if(v) v.textContent = t;
   if(d) d.textContent = t;
 }
+const rowHidden = $('#rowHidden');
+if(rowHidden) rowHidden.onclick = e=>{
+  if(e.target.id==='hiddenClear') return;
+  openCategory({type:'hidden', title:'Скрытое'});
+};
+const hiddenClear = $('#hiddenClear');
+if(hiddenClear) hiddenClear.onclick = e=>{
+  e.stopPropagation();
+  LS.set('hidden', {});
+  paintHiddenCount();
+  toast('Скрытое очищено');
+};
 const rowTheme = $('#rowTheme');
 if(rowTheme) rowTheme.onclick = ()=>{
   const cur = THEMES.indexOf(state.theme);
@@ -5080,7 +5156,9 @@ $('#diceBtn').onclick = spinRoulette;
 renderRoulChips();
 
 /* =================== SETTINGS =================== */
+function paintHiddenCount(){ const el=$('#hiddenCount'); if(el) el.textContent = Object.keys(hiddenMap()).length; }
 function updateStats(){
+  paintHiddenCount();
   $('#stWatched').textContent = state.watched.length;
   const f = state.favs;
   $('#stSaved').textContent = f.like.length + f.later.length + f.mark.length;
@@ -5489,7 +5567,10 @@ async function aiAsk(prompt){
 }
 function aiPrompt(q, exclude){
   let p = 'Act as a movie expert. Suggest strictly '+AI_LIMIT+' movies or TV series for query: "'+q+'".';
-  if(exclude&&exclude.length) p += ' IMPORTANT: You MUST EXCLUDE these titles from your suggestions: '+exclude.slice(-50).join(', ')+'. Provide strictly NEW '+AI_LIMIT+' suggestions.';
+  const likedT = Object.values(likedMap()).map(x=>x.title).filter(Boolean).slice(-15);
+  if(likedT.length) p += ' The user likes these titles: '+likedT.join(', ')+'. Prefer suggesting titles similar to them.';
+  const excl = (exclude&&exclude.length?exclude.slice():[]).concat(Object.values(hiddenMap()).map(x=>x.title).filter(Boolean));
+  if(excl.length) p += ' IMPORTANT: You MUST EXCLUDE these titles from your suggestions: '+excl.slice(-60).join(', ')+'. Provide strictly NEW '+AI_LIMIT+' suggestions.';
   p += ' Respond ONLY with a valid JSON array: [{"uk":"Название на русском","orig":"Original Title","year":Year}]. All titles and all text must be in Russian. No markdown, no intro text.';
   return p;
 }
