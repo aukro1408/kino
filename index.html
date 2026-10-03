@@ -44,7 +44,7 @@
   @keyframes dot-pulse{0%{text-shadow:0 0 5px rgba(59,130,246,.5)}100%{text-shadow:0 0 12px rgba(59,130,246,.9),0 0 22px rgba(59,130,246,.6)}}
   @media (prefers-reduced-motion: reduce){ .logo.brand, .logo.brand .dot{animation:none;} }
   .logo span{color:var(--accent)}
-  .icon-btn{width:42px;height:42px;border-radius:50%;background:var(--card);border:none;color:var(--text);
+  .icon-btn{width:42px;height:42px;border-radius:50%;background:transparent;border:none;color:var(--text);
     display:flex;align-items:center;justify-content:center;cursor:pointer}
   .icon-btn:active{transform:scale(.94)}
   .icon-btn.on{color:#7db9ff}
@@ -1081,9 +1081,7 @@
     </div>
     <div class="hero-wrap"><div class="hero" id="hero"></div></div>
     <div class="chips" id="chips"></div>
-    <div id="newEpWrap"></div>
-    <div id="prmWrap"></div>
-    <div id="rows"></div>
+    <div id="homeRows"></div>
   </div>
 
   <!-- ============ SEARCH ============ -->
@@ -1445,8 +1443,6 @@ const state = {
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
   theme: LS.get('theme','classic'),
-  themeRows: LS.get('theme_rows', {}),
-  themeOrder: LS.get('theme_order', []),
   genre: 'all',
   live: false,
   genres: [],           // from TMDB
@@ -1548,7 +1544,7 @@ function renderFavSheet(){
     favToggle(m.id, b.dataset.list, m);
     const l = FAV_LISTS.find(x=>x.id===b.dataset.list);
     const on = state.favs[b.dataset.list].some(x=>x.id===m.id);
-    renderFavSheet(); syncFavStar(m.id); renderRows(); updateStats(); refreshForYou();
+    renderFavSheet(); syncFavStar(m.id); renderHomeRows(); updateStats(); refreshForYou();
     toast(on ? `«${m.title}» — ${l.name.toLowerCase()}` : 'Убрано из «'+l.name.toLowerCase()+'»');
   });
 }
@@ -1769,7 +1765,7 @@ async function bootLive(){
     state.upcoming = ((upc&&upc.results)||[]).map(r=>norm(r)).filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
     refreshPrmDates();
     await loadThemeRows();
-    renderPremiereRows();
+    renderHomeRows();
     if(fy){
       state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
@@ -1824,23 +1820,7 @@ const THEME_ROWS = [
   {id:'netflix', title:'Новинки на Netflix', prov:8, wide:true},
   {id:'appletv', title:'Новинки на Apple TV+', prov:350, wide:true},
 ];
-function themeRowOn(id){ return (state.themeRows||{})[id]!==false; }
-function themeOrder(){
-  const ids = THEME_ROWS.map(t=>t.id);
-  const ord = (state.themeOrder||[]).filter(id=>ids.includes(id));
-  ids.forEach(id=>{ if(!ord.includes(id)) ord.push(id); });
-  return ord;
-}
-function moveThemeRow(id, dir){
-  const ord = themeOrder();
-  const i = ord.indexOf(id), j = i+dir;
-  if(i<0 || j<0 || j>=ord.length) return;
-  [ord[i],ord[j]] = [ord[j],ord[i]];
-  state.themeOrder = ord;
-  LS.set('theme_order', ord);
-  renderThemeRowsBox();
-  refreshThemeRows();
-}
+
 function themeURL(t){
   return t.kw
     ? `/discover/movie?sort_by=popularity.desc&with_keywords=${t.kw}&vote_count.gte=20`
@@ -1849,8 +1829,7 @@ function themeURL(t){
 async function loadThemeRows(){
   state.sections = state.sections.filter(s=>!s.theme);
   if(!state.live) return;
-  const on = themeOrder().map(id=>THEME_ROWS.find(t=>t.id===id)).filter(t=>t && themeRowOn(t.id));
-  const res = await Promise.all(on.map(t=>
+  const res = await Promise.all(THEME_ROWS.map(t=>
     tmdb(themeURL(t))
       .then(d=>({t, items:(d.results||[]).map(r=>norm(r))}))
       .catch(()=>({t, items:[]}))
@@ -1862,10 +1841,48 @@ async function loadThemeRows(){
       more: t.kw ? {type:'kw', kw:t.kw, title:t.title} : {type:'prov', prov:t.prov, title:t.title}});
   });
 }
-async function refreshThemeRows(){
-  if(!state.live) return;
-  await loadThemeRows();
-  if(currentScreenId()==='scr-home' && state.genre==='all') renderRows();
+/* ===== Порядок рядов главной (Профиль → Категории) ===== */
+const HOME_SECTIONS = [
+  {id:'studios', title:'Стриминги'},
+  {id:'newep', title:'Новые серии'},
+  {id:'released', title:'Уже вышло'},
+  {id:'upcoming', title:'Скоро выйдет'},
+  {id:'foryou', title:'Для тебя'},
+  {id:'trend', title:'Сейчас в тренде'},
+  {id:'new', title:'Новинки для вас'},
+  {id:'top', title:'Топ по рейтингу'},
+  {id:'tv', title:'Сериалы в тренде'},
+  {id:'cols', title:'Коллекции'},
+  ...THEME_ROWS.map(t=>({id:'th_'+t.id, title:t.title})),
+];
+function defaultHomeOrder(){
+  const ord = ['studios','upcoming','newep','released','foryou','trend','new','top','tv','cols'];
+  const thIds = THEME_ROWS.map(t=>'th_'+t.id);
+  const oldTh = (LS.get('theme_order')||[]).map(id=>'th_'+id).filter(id=>thIds.includes(id));
+  oldTh.forEach(id=>{ if(!ord.includes(id)) ord.push(id); });
+  thIds.forEach(id=>{ if(!ord.includes(id)) ord.push(id); });
+  const off = {}, oldOff = LS.get('theme_rows', {});
+  Object.keys(oldOff).forEach(k=>{ if(oldOff[k]===false) off['th_'+k]=true; });
+  LS.set('home_off', off);
+  return ord;
+}
+function homeOrder(){
+  const all = HOME_SECTIONS.map(s=>s.id);
+  let stored = LS.get('home_order');
+  if(!Array.isArray(stored)){ stored = defaultHomeOrder(); LS.set('home_order', stored); }
+  const ord = stored.filter(id=>all.includes(id));
+  all.forEach(id=>{ if(!ord.includes(id)) ord.push(id); });
+  return ord;
+}
+function homeOff(id){ return !!LS.get('home_off',{})[id]; }
+function setHomeOff(id, off){ const m = LS.get('home_off',{}); if(off) m[id]=true; else delete m[id]; LS.set('home_off', m); }
+function moveHomeSec(id, dir){
+  const ord = homeOrder(), i = ord.indexOf(id), j = i+dir;
+  if(i<0 || j<0 || j>=ord.length) return;
+  [ord[i],ord[j]] = [ord[j],ord[i]];
+  LS.set('home_order', ord);
+  renderHomeRowsBox();
+  renderHomeRows();
 }
 
 /* Персональный ряд «Для тебя» — по жанрам из избранного (идея из Lampa Discovery) */
@@ -1900,7 +1917,7 @@ async function refreshForYou(){
     state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
       more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
   }
-  if(currentScreenId()==='scr-home' && state.genre==='all') renderRows();
+  if(currentScreenId()==='scr-home' && state.genre==='all') renderHomeRows();
 }
 
 /* =================== КОЛЛЕКЦИИ (CUB) =================== */
@@ -2052,7 +2069,7 @@ function renderChips(){
   const cb = $('#chips');
   cb.innerHTML = GENRE_CHIPS.map(c=>
     `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
-  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderRows(); });
+  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderHomeRows(); });
   if(!chipsShown){ chipsShown = true; cb.classList.remove('chips-in'); void cb.offsetWidth; cb.classList.add('chips-in'); }
 }
 /* ---------- отслеживание сериалов (вручную) ---------- */
@@ -2088,21 +2105,18 @@ function neCardHTML(t){
       ${badge?`<div class="ne-badge${t.hasNew?' new':''}">${badge}</div>`:''}</div>
     <div class="card-title">${t.title}</div>${sub}</div>`;
 }
-function renderNewEpRow(){
-  const wrap = $('#newEpWrap'); if(!wrap) return;
+function newepHTML(){
   const items = Object.values(trackedMap()).filter(x=>{
     const ended = ['Ended','Canceled'].includes(x.status);
     return (!ended || x.hasNew) && (x.hasNew || x.nextEp);
   });
-  if(!items.length){ wrap.innerHTML=''; return; }
+  if(!items.length) return '';
   items.sort((a,b)=>((b.hasNew?1:0)-(a.hasNew?1:0)) || ((b.addedAt||0)-(a.addedAt||0)));
-  wrap.innerHTML = `<div class="row-sec"><div class="row-head"><h2>Новые серии</h2></div>
+  return `<div class="row-sec" data-sec="newep"><div class="row-head"><h2>Новые серии</h2></div>
     <div class="hrow">${items.map(neCardHTML).join('')}</div></div>`;
-  bindCards(wrap);
-  updateNotifBell();
 }
 async function checkTracked(force){
-  renderNewEpRow();
+  renderHomeRows();
   if(!state.live) return;
   const t = trackedMap(), ids = Object.keys(t);
   if(!ids.length) return;
@@ -2136,7 +2150,7 @@ async function checkTracked(force){
     }catch(e){}
   }
   if(changed) LS.set('tracked', t);
-  renderNewEpRow();
+  renderHomeRows();
 }
 
 /* ===== ПРЕМЬЕРЫ: календарь + напоминания ===== */
@@ -2182,20 +2196,22 @@ function relCardHTML(p){
     <div class="card-stars"><span class="prm-sub">вышло ${fmtPrmDate(p.date)}</span></div>
   </div>`;
 }
-function renderPremiereRows(){
-  const wrap = $('#prmWrap'); if(!wrap) return;
+function releasedHTML(){
   premiereCheck();
   const now = todayStr();
-  let html = '';
   const rel = Object.values(prmMap()).filter(p=>p.date && p.date<=now).sort((a,b)=>b.date.localeCompare(a.date));
-  if(rel.length) html += `<div class="row-sec"><div class="row-head"><h2>Уже вышло</h2></div><div class="hrow">${rel.map(relCardHTML).join('')}</div></div>`;
+  if(!rel.length) return '';
+  return `<div class="row-sec" data-sec="released"><div class="row-head"><h2>Уже вышло</h2></div><div class="hrow">${rel.map(relCardHTML).join('')}</div></div>`;
+}
+function upcomingHTML(){
+  const now = todayStr();
   const up = (state.upcoming||[]).filter(u=>u.date>now).slice(0,14);
-  if(up.length) html += `<div class="row-sec"><div class="row-head"><h2>Скоро выйдет</h2><button class="row-more" id="prmMore">Ещё</button></div><div class="hrow">${up.map(prmCardHTML).join('')}</div></div>`;
-  wrap.innerHTML = html;
-  bindCards(wrap);
-  wrap.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay=(i%3*60)+'ms'; rvObs.observe(el); });
-  const mb = $('#prmMore'); if(mb) mb.onclick = ()=>openCategory({type:'upcoming', title:'Скоро выйдет'});
-  updateNotifBell();
+  if(!up.length) return '';
+  return `<div class="row-sec" data-sec="upcoming"><div class="row-head"><h2>Скоро выйдет</h2><button class="row-more" data-secmore="upcoming">Ещё</button></div><div class="hrow">${up.map(prmCardHTML).join('')}</div></div>`;
+}
+function studiosStripHTML(){
+  if(!state.live) return '';
+  return `<div class="row-sec" data-sec="studios"><div class="row-head"><h2>Стриминги</h2></div><div class="hrow" id="studioRow">${STUDIOS.map((s,i)=>`<button class="studio-tile${s.dark?' dark':''}" data-si="${i}" aria-label="${s.name}">${s.svg}</button>`).join('')}</div></div>`;
 }
 
 /* ===== УВЕДОМЛЕНИЯ: колокольчик в шапке + шторка ===== */
@@ -2246,8 +2262,16 @@ function renderNotifList(){
   $('#ntfTabs').querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.t===ntfTab));
 }
 function openNotif(){ ntfTab='all'; renderNotifList(); $('#ntfVeil').classList.add('show'); }
-async function renderRows(){
-  const box = $('#rows');
+function sectionCardsHTML(s){
+  const cards = s.kind==='collections' ? s.items.map(colCardHTML).join('') : visible(s.items).map(s.wide?wideCardHTML:cardHTML).join('');
+  return `<div class="row-sec" data-sec="${s.id}"><div class="row-head"><h2>${s.title}</h2>${s.more?`<button class="row-more" data-sec="${s.id}">Ещё</button>`:''}</div>
+    <div class="hrow">${cards}</div></div>`;
+}
+function rvAnimate(box){
+  box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
+}
+async function renderHomeRows(){
+  const box = $('#homeRows');
   let sections = state.sections;
   if(state.genre!=='all'){
     const chip = GENRE_CHIPS.find(c=>c.id==state.genre);
@@ -2271,21 +2295,40 @@ async function renderRows(){
       more:{type:'genre', genreId:state.genre, title:gname}},
       {id:'gtv', title:gname+' · сериалы', items:tvItems.slice(0,14),
       more:{type:'genre_tv', genreId:state.genre, title:gname+' · сериалы'}}];
+    const shown = sections.filter(s=>visible(s.items).length);
+    box.innerHTML = shown.map(s=>sectionCardsHTML(s)).join('');
+    bindCards(box);
+    box.querySelectorAll('.row-more').forEach(b=>{ const s=shown.find(x=>x.id===b.dataset.sec); if(s&&s.more) b.onclick=()=>openCategory(s.more); });
+    rvAnimate(box);
+    return;
   }
-  const shown = sections.filter(s=> s.kind==='collections' ? (s.items&&s.items.length) : visible(s.items).length);
-  const studiosStrip = (state.genre==='all' && state.live)
-    ? `<div class="row-sec"><div class="row-head"><h2>Студии</h2></div><div class="hrow" id="studioRow">${STUDIOS.map((s,i)=>`<button class="studio-tile${s.dark?' dark':''}" data-si="${i}" aria-label="${s.name}">${s.svg}</button>`).join('')}</div></div>`
-    : '';
-  box.innerHTML = studiosStrip + shown.map((s,i)=>{
-    const cards = s.kind==='collections' ? s.items.map(colCardHTML).join('') : visible(s.items).map(s.wide?wideCardHTML:cardHTML).join('');
-    return `<div class="row-sec"><div class="row-head"><h2>${s.title}</h2>${s.more?`<button class="row-more" data-i="${i}">Ещё</button>`:''}</div>
-      <div class="hrow">${cards}</div></div>`;
-  }).join('');
+  const byId = {};
+  sections.forEach(s=>{ byId[s.id]=s; });
+  const parts = [];
+  for(const id of homeOrder()){
+    if(homeOff(id)) continue;
+    if(id==='studios'){ const h=studiosStripHTML(); if(h) parts.push(h); continue; }
+    if(id==='newep'){ const h=newepHTML(); if(h) parts.push(h); continue; }
+    if(id==='released'){ const h=releasedHTML(); if(h) parts.push(h); continue; }
+    if(id==='upcoming'){ const h=upcomingHTML(); if(h) parts.push(h); continue; }
+    const s = byId[id];
+    if(!s) continue;
+    const items = s.kind==='collections' ? s.items : visible(s.items);
+    if(!(items && items.length)) continue;
+    parts.push(sectionCardsHTML(s));
+  }
+  const shown = parts;
+  box.innerHTML = parts.join('');
   bindCards(box);
   bindColCards(box);
-  box.querySelectorAll('.row-more').forEach(b=>{ b.onclick=()=>openCategory(shown[+b.dataset.i].more); });
+  box.querySelectorAll('.row-more').forEach(b=>{
+    const s = byId[b.dataset.sec];
+    if(s && s.more) b.onclick=()=>openCategory(s.more);
+  });
+  box.querySelectorAll('[data-secmore]').forEach(b=>{ b.onclick=()=>openCategory({type:'upcoming', title:'Скоро выйдет'}); });
   box.querySelectorAll('.studio-tile').forEach(t=>{ t.onclick=()=>{ const s=STUDIOS[+t.dataset.si]; openCategory({type:'studio', studioId:s.id, sub:(s.mv?'movie':'tv'), title:s.name}); }; });
-  box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
+  rvAnimate(box);
+  updateNotifBell();
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
 let catSort = null, catItems = [];
@@ -2499,7 +2542,7 @@ document.addEventListener('load', e=>{
 /* =================== NAV =================== */
 let navStack = [];
 const scrollMem = {};
-let hrowMem = [];
+let hrowMem = {};
 let lastCat = null;
 function showScreen(id, restore){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
@@ -2512,16 +2555,16 @@ function showScreen(id, restore){
     try{ vw.render(); }catch(e){}
   }
   if(restore && id==='scr-home'){
-    document.querySelectorAll('#scr-home .hrow').forEach((r,i)=>{ if(hrowMem[i]) r.scrollLeft = hrowMem[i]; });
+    document.querySelectorAll('#scr-home .hrow').forEach(r=>{ const s=r.closest('.row-sec'); const k=s&&s.dataset.sec; if(k&&hrowMem[k]) r.scrollLeft = hrowMem[k]; });
   }
-  if(id==='scr-home'){ renderNewEpRow(); renderPremiereRows(); updateNotifBell(); }
+  if(id==='scr-home') renderHomeRows();
 }
 function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
 function saveScrollState(){
   const cur = currentScreenId();
   const el = document.getElementById(cur);
   if(el) scrollMem[cur] = el.scrollTop;
-  if(cur==='scr-home') hrowMem = [...document.querySelectorAll('#scr-home .hrow')].map(r=>r.scrollLeft);
+  if(cur==='scr-home'){ hrowMem = {}; document.querySelectorAll('#scr-home .hrow').forEach(r=>{ const s=r.closest('.row-sec'); if(s&&s.dataset.sec) hrowMem[s.dataset.sec]=r.scrollLeft; }); }
   if(cur==='scr-cat' && catMore) lastCat = {more:catMore, html:document.getElementById('catGrid').innerHTML, page:catPage, done:catDone, items:catItems, scroll:el?el.scrollTop:0};
 }
 function pushScreen(id){ saveScrollState(); navStack.push(currentScreenId()); showScreen(id); }
@@ -2569,9 +2612,9 @@ async function openMovie(id){
   }
   if(!m){ box.innerHTML = '<div class="mv-load">Фильм не найден</div>'; return; }
   const tm0 = trackedMap();
-  if(tm0[m.id] && tm0[m.id].hasNew){ tm0[m.id].hasNew = false; LS.set('tracked', tm0); renderNewEpRow(); }
+  if(tm0[m.id] && tm0[m.id].hasNew){ tm0[m.id].hasNew = false; LS.set('tracked', tm0); renderHomeRows(); }
   const pm0 = prmMap();
-  if(pm0[m.id] && !pm0[m.id].seen){ pm0[m.id].seen = true; LS.set(PRM_LS, pm0); renderPremiereRows(); }
+  if(pm0[m.id] && !pm0[m.id].seen){ pm0[m.id].seen = true; LS.set(PRM_LS, pm0); renderHomeRows(); }
   if(state.live){
     try{
       const isTv = m.media==='tv';
@@ -2756,7 +2799,7 @@ function renderMovie(m){
     setTracked(m, on);
     ts.classList.toggle('on', on);
     toast(on ? 'Сериал отслеживается' : 'Отслеживание выключено');
-    if(on) checkTracked(true); else renderNewEpRow();
+    if(on) checkTracked(true); else renderHomeRows();
   };
   const ps = $('#prmStar');
   if(ps) ps.onclick = ()=>{
@@ -2766,7 +2809,7 @@ function renderMovie(m){
     ps.classList.toggle('on', on);
     ps.classList.remove('bell-live');
     toast(on ? 'Напомню о выходе' : 'Напоминание выключено');
-    renderPremiereRows();
+    renderHomeRows();
   };
   const tr = $('#mvTrailer');
   if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
@@ -5145,9 +5188,9 @@ $('#tmdbKey').addEventListener('change', async e=>{
   if(state.tmdbKey){
     toast('Проверяю ключ…');
     const ok = await bootLive();
-    if(ok){ renderHero(); renderRows(); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
+    if(ok){ renderHero(); renderHomeRows(); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
     else { toast('Ключ не подошёл'); }
-  } else { state.live=false; bootDemo(); renderHero(); renderRows(); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
+  } else { state.live=false; bootDemo(); renderHero(); renderHomeRows(); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
 });
 $('#geminiKey').addEventListener('change', e=>{
   state.geminiKey = e.target.value.trim(); LS.set('gemini_key', state.geminiKey);
@@ -5192,7 +5235,7 @@ $('#geminiCheck').onclick = async ()=>{
 if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
-hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderRows(); };
+hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderHomeRows(); };
 const rowTv = $('#rowTvMode');
 if(rowTv) rowTv.onclick = ()=>{
   const cur = TV_MODES.indexOf(LS.get('tv_mode','auto'));
@@ -5209,29 +5252,27 @@ if(rowTv) rowTv.onclick = ()=>{
 syncTvRow();
 const avEl = $('#appVer');
 if(avEl) avEl.textContent = APP_VER;
-function renderThemeRowsBox(){
+function renderHomeRowsBox(){
   const box = $('#themeRowsBox'); if(!box) return;
-  const ord = themeOrder();
+  const ord = homeOrder();
   box.innerHTML = ord.map((id,idx)=>{
-    const t = THEME_ROWS.find(x=>x.id===id);
+    const t = HOME_SECTIONS.find(x=>x.id===id) || {title:id};
     return `<div class="set-row"><div><div class="t">${t.title}</div><div class="d">Ряд на главном экране</div></div>
     <div class="th-ctl">
-      <button class="th-mv${idx===0?' dis':''}" data-mv="-1" data-id="${t.id}" aria-label="Выше">↑</button>
-      <button class="th-mv${idx===ord.length-1?' dis':''}" data-mv="1" data-id="${t.id}" aria-label="Ниже">↓</button>
-      <button class="switch${themeRowOn(t.id)?' on':''}" data-th="${t.id}" aria-label="${t.title}"></button>
+      <button class="th-mv${idx===0?' dis':''}" data-mv="-1" data-id="${id}" aria-label="Выше">↑</button>
+      <button class="th-mv${idx===ord.length-1?' dis':''}" data-mv="1" data-id="${id}" aria-label="Ниже">↓</button>
+      <button class="switch${homeOff(id)?'':' on'}" data-hs="${id}" aria-label="${t.title}"></button>
     </div></div>`;
   }).join('');
-  box.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{
-    const id = b.dataset.th;
-    state.themeRows = state.themeRows||{};
-    state.themeRows[id] = !themeRowOn(id);
-    LS.set('theme_rows', state.themeRows);
-    b.classList.toggle('on', themeRowOn(id));
-    refreshThemeRows();
+  box.querySelectorAll('[data-hs]').forEach(b=>b.onclick=()=>{
+    const id = b.dataset.hs;
+    setHomeOff(id, !homeOff(id));
+    b.classList.toggle('on', !homeOff(id));
+    renderHomeRows();
   });
-  box.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>moveThemeRow(b.dataset.id, +b.dataset.mv));
+  box.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>moveHomeSec(b.dataset.id, +b.dataset.mv));
 }
-renderThemeRowsBox();
+renderHomeRowsBox();
 paintHw();
 
 /* =================== РАДИО (Radio Record) =================== */
@@ -5655,10 +5696,10 @@ $('#aiBuddy').onclick = ()=>{
 /* =================== BOOT =================== */
 (async function(){
   bootDemo();
-  renderHero(); renderChips(); renderRows(); updateStats();
+  renderHero(); renderChips(); renderHomeRows(); updateStats();
   if(state.tmdbKey){
     const ok = await bootLive();
-    if(ok){ renderHero(); renderRows(); }
+    if(ok){ renderHero(); renderHomeRows(); }
   }
   checkTracked();
 })();
