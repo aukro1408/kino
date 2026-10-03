@@ -5149,18 +5149,25 @@ function radioEnsure(){
   a.addEventListener('playing', ()=>{ radio.playing = true; radio.loading = false; radioUI(); });
   a.addEventListener('pause', ()=>{ radio.playing = false; radioUI(); });
   a.addEventListener('waiting', ()=>{ radio.loading = true; radioUI(); });
-  a.addEventListener('error', ()=>{ radio.loading = false; radio.playing = false; radioUI(); toast('Не удалось запустить поток'); });
+  a.addEventListener('error', ()=>{
+    if(!radio.cur) return;
+    if(radio.attempt === 0 && radio.cur.stream_hls){ radioPlayStation(radio.cur, 1); return; }
+    radio.loading = false; radio.playing = false; radioUI(); toast('Не удалось запустить поток');
+  });
   radio.audio = a;
 }
-function radioPlay(s){
+function radioPlay(s){ radioPlayStation(s, 0); }
+function radioPlayStation(s, attempt){
   radioEnsure();
-  radio.cur = s;
+  radio.cur = s; radio.attempt = attempt || 0;
   if(radio.hls){ try{radio.hls.destroy();}catch(e){} radio.hls = null; }
-  const a = radio.audio, url = radioStream(s);
+  const a = radio.audio;
+  const url = attempt === 1 ? (s.stream_hls || '') : radioStream(s);
   if(!url){ toast('Нет потока у станции'); return; }
   radio.loading = true;
   try{
     if(/\.m3u8($|\?)/.test(url) && !a.canPlayType('application/vnd.apple.mpegurl') && window.Hls && Hls.isSupported()){
+      try{ a.removeAttribute('src'); }catch(e){}
       radio.hls = new Hls();
       radio.hls.loadSource(url); radio.hls.attachMedia(a);
     }else{ a.src = url; }
@@ -5175,9 +5182,10 @@ function radioToggle(){
   else radio.audio.play().catch(()=>{});
 }
 function radioStop(){
+  radio.cur = null; radio.attempt = 0;
   if(radio.hls){ try{radio.hls.destroy();}catch(e){} radio.hls = null; }
   if(radio.audio){ try{radio.audio.pause();}catch(e){} try{radio.audio.removeAttribute('src'); radio.audio.load();}catch(e){} }
-  radio.cur = null; radio.playing = false; radio.loading = false;
+  radio.playing = false; radio.loading = false;
   const m = $('#radioMini'); if(m) m.style.display = 'none';
   document.body.classList.remove('has-mini');
   radioFullHide(); radioUI();
