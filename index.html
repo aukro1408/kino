@@ -5152,14 +5152,21 @@ function radioEnsure(){
   a.addEventListener('error', ()=>{
     if(!radio.cur) return;
     if(radio.attempt === 0 && radio.cur.stream_hls){ radioPlayStation(radio.cur, 1); return; }
-    radio.loading = false; radio.playing = false; radioUI(); toast('Не удалось запустить поток');
+    radioFail();
   });
   radio.audio = a;
 }
 function radioPlay(s){ radioPlayStation(s, 0); }
+function radioFail(){
+  if(radio.failed) return;
+  radio.failed = true;
+  try{ if(radio.hls){ radio.hls.destroy(); } }catch(e){}
+  radio.hls = null;
+  radio.loading = false; radio.playing = false; radioUI(); toast('Не удалось запустить поток');
+}
 function radioPlayStation(s, attempt){
   radioEnsure();
-  radio.cur = s; radio.attempt = attempt || 0;
+  radio.cur = s; radio.attempt = attempt || 0; radio.failed = false;
   if(radio.hls){ try{radio.hls.destroy();}catch(e){} radio.hls = null; }
   const a = radio.audio;
   const url = attempt === 1 ? (s.stream_hls || '') : radioStream(s);
@@ -5169,6 +5176,7 @@ function radioPlayStation(s, attempt){
     if(/\.m3u8($|\?)/.test(url) && !a.canPlayType('application/vnd.apple.mpegurl') && window.Hls && Hls.isSupported()){
       try{ a.removeAttribute('src'); }catch(e){}
       radio.hls = new Hls();
+      radio.hls.on(Hls.Events.ERROR, (ev, data)=>{ if(data && data.fatal) radioFail(); });
       radio.hls.loadSource(url); radio.hls.attachMedia(a);
     }else{ a.src = url; }
     a.play().catch(()=>{});
