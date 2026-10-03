@@ -466,6 +466,8 @@
 .prm-bell{position:absolute; right:6px; top:6px; width:30px; height:30px; border-radius:50%; background:rgba(77,163,255,.94); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(77,163,255,.5); z-index:2}
 .prm-bell svg{width:16px; height:16px; stroke:#fff}
 .prm-sub{font-size:12px; color:#9fb2cc}
+.mv-sec-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px}
+.mv-sec-h h3{margin:0}
 .mv-vote{display:flex; gap:10px; justify-content:center; margin-top:14px}
 .vote-btn{flex:1; max-width:230px; justify-content:center; display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--text); font-size:14px; font-weight:600; cursor:pointer; transition:transform .15s}
 .vote-btn:active{transform:scale(.94)}
@@ -2388,6 +2390,11 @@ function catURL(more, page){
     : more.type==='network' ? `/discover/tv?with_networks=${more.coId}&sort_by=popularity.desc&page=${page}`
     : `/discover/movie?sort_by=popularity.desc&with_genres=${more.genreId}&page=${page}`;
 }
+function similarURL(more, page){
+  const kind = more.media==='tv' ? 'tv' : 'movie';
+  const ep = more._simFb ? 'similar' : 'recommendations';
+  return `/${kind}/${more.movieId}/${ep}?page=${page}`;
+}
 function studioURL(more, page){
   if(more.studioId){
     const st = STUDIOS.find(s=>s.id===more.studioId) || {};
@@ -2421,13 +2428,23 @@ async function catLoadMore(){
       const gotN = (d.results||[]).length;
       if(!gotN || gotN < 20 || catPage >= 60) catDone = true;
     } else {
-      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv' || catMore.type==='network' || (catMore.type==='studio' && catMore.sub==='tv');
-      const d = isCol ? await cubGet(`view/${catMore.colId}?page=${catPage+1}`) : await tmdb(catURL(catMore, catPage+1));
+      const tvMode = catMore.type==='tv_trending' || catMore.type==='genre_tv' || catMore.type==='network' || (catMore.type==='studio' && catMore.sub==='tv') || (catMore.type==='similar' && catMore.media==='tv');
+      let d;
+      if(catMore.type==='similar'){
+        d = await tmdb(similarURL(catMore, catPage+1));
+        if(catPage===0 && !(d.results||[]).length && !catMore._simFb){
+          catMore._simFb = true;
+          d = await tmdb(similarURL(catMore, 1));
+        }
+      } else {
+        d = isCol ? await cubGet(`view/${catMore.colId}?page=${catPage+1}`) : await tmdb(catURL(catMore, catPage+1));
+      }
       const seen = new Set();
       const items = [];
+      const simEx = catMore.type==='similar' ? new Set([catMore.excludeId].concat(catMore.collIds||[])) : null;
       (d.results||[]).forEach(m=>{
         const n = isCol ? cubMovie(m) : norm(m, tvMode?'tv':undefined);
-        if(n && !seen.has(n.id)){ seen.add(n.id); items.push(n); }
+        if(n && !seen.has(n.id) && !(simEx && simEx.has(n.id))){ seen.add(n.id); items.push(n); }
       });
       items.forEach(m=>{ if(!state.pool.find(p=>p.id===m.id)) state.pool.push(m); });
       catItems.push(...items);
@@ -2827,7 +2844,7 @@ function renderMovie(m){
           <b>${c.name}</b><small>${c.character||''}</small>
         </div>`).join('')}</div></div>`:''}
       ${m.collectionParts&&m.collectionParts.length?`<div class="mv-sec"><h3>${m.collection.name}</h3><div class="hrow">${m.collectionParts.map(cardHTML).join('')}</div></div>`:''}
-      ${m.similar&&m.similar.length?`<div class="mv-sec"><h3>Похожие</h3><div class="hrow">${m.similar.map(cardHTML).join('')}</div></div>`:''}
+      ${m.similar&&m.similar.length?`<div class="mv-sec"><div class="mv-sec-h"><h3>Похожие</h3><button class="row-more" id="simMore">Ещё</button></div><div class="hrow">${m.similar.map(cardHTML).join('')}</div></div>`:''}
     </div>`;
   $('#mvBack').onclick = goBack;
   $('#mvFav').onclick = ()=>openFavSheet(m);
@@ -2869,6 +2886,12 @@ function renderMovie(m){
     setLiked(m, on);
     paintVote();
     toast(on ? 'Запомнил — предложу похожее' : 'Убрано из понравившихся');
+  };
+  const smb = $('#simMore');
+  if(smb) smb.onclick = ()=>{
+    const num = String(m.id).replace(/^tv/,'');
+    openCategory({type:'similar', movieId:num, media:m.media, title:'Похожие',
+      excludeId:m.id, collIds:(m.collectionParts||[]).map(x=>x.id)});
   };
   const db = $('#disBtn');
   if(db) db.onclick = ()=>{
