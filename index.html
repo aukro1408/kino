@@ -1180,7 +1180,7 @@
     <div class="set-group" data-cat="radio">
       <button class="set-cat" data-tint="purple"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg></span><span class="n">Радио</span><span class="ch">›</span></button>
       <div class="set-row">
-        <div><div class="t">Прокси Радио</div><div class="d">Обход CORS для radiorecord.ru · список станций</div></div>
+        <div><div class="t">Прокси Радио</div><div class="d">Обход CORS и блокировок · список станций и потоки</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="rdProxy" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
       </div>
     </div>
@@ -5081,6 +5081,7 @@ const IC_RPAUSE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="current
 function radioProxy(){ const v = (state.radioProxy||'').trim().replace(/\/+$/,''); return (v || 'https://torrserver.flyugertdiana.workers.dev') + '/'; }
 function radioImg(u){ return u ? (u.indexOf('http')===0 ? u : RADIO_HOST + u) : ''; }
 function radioStream(s){ return s.stream_320 || s.stream_128 || s.stream_64 || s.stream_hls || ''; }
+function radioStreamURL(u){ return (u && /^https?:\/\//i.test(u)) ? radioProxy() + u : u; }
 async function radioData(){
   const now = Date.now();
   try{
@@ -5169,7 +5170,8 @@ function radioPlayStation(s, attempt){
   radio.cur = s; radio.attempt = attempt || 0; radio.failed = false;
   if(radio.hls){ try{radio.hls.destroy();}catch(e){} radio.hls = null; }
   const a = radio.audio;
-  const url = attempt === 1 ? (s.stream_hls || '') : radioStream(s);
+  const raw = attempt === 1 ? (s.stream_hls || '') : radioStream(s);
+  const url = radioStreamURL(raw);
   if(!url){ toast('Нет потока у станции'); return; }
   radio.loading = true;
   try{
