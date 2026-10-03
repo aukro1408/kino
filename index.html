@@ -467,7 +467,7 @@
 .prm-bell svg{width:16px; height:16px; stroke:#fff}
 .prm-sub{font-size:12px; color:#9fb2cc}
 .mv-vote{display:flex; gap:10px; justify-content:center; margin-top:14px}
-.vote-btn{display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--text); font-size:14px; font-weight:600; cursor:pointer; transition:transform .15s}
+.vote-btn{flex:1; max-width:230px; justify-content:center; display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--text); font-size:14px; font-weight:600; cursor:pointer; transition:transform .15s}
 .vote-btn:active{transform:scale(.94)}
 .vote-btn svg{width:18px; height:18px}
 .vote-btn.like-on{background:rgba(52,199,89,.16); border-color:rgba(52,199,89,.55); color:#4cd964}
@@ -1240,8 +1240,11 @@
     <div class="set-group" data-cat="cats">
       <button class="set-cat" data-tint="gold"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="n">Категории</span><span class="ch">›</span></button>
       <div id="themeRowsBox"></div>
+    </div>
+    <div class="set-group" data-cat="hidden">
+      <button class="set-cat" data-tint="red"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a17.6 17.6 0 0 1-2.16 3.19"/><path d="M6.61 6.61A17.5 17.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg></span><span class="n">Скрытое</span><span class="ch">›</span></button>
       <div class="set-row" id="rowHidden" style="cursor:pointer">
-        <div><div class="t">Скрытое</div><div class="d">Не показывать в рекомендациях</div></div>
+        <div><div class="t">Скрытые фильмы</div><div class="d">Не показывать в рекомендациях</div></div>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="set-val" id="hiddenCount">0</span>
           <button class="mini-btn" id="hiddenClear">Очистить</button>
