@@ -2202,7 +2202,9 @@ async function cubPullBookmarks(){
       let card = null;
       try{ card = typeof it.data==='string' ? JSON.parse(it.data) : it.data; }catch(e){}
       if(!card || (!card.title && !card.name)) continue;
-      const snap = favSnap(norm(card, card.media_type==='tv' ? 'tv' : 'movie'));
+      const nm = norm(card, card.media_type==='tv' ? 'tv' : 'movie');
+      if(!state.pool.some(p=>p.id===nm.id)) state.pool.push(nm); /* чтобы openMovie находил */
+      const snap = favSnap(nm);
       if(t.list==='history'){
         state.history.unshift(snap);
         if(state.history.length>100) state.history.length = 100;
@@ -3011,6 +3013,16 @@ async function openMovie(id){
   const box = $('#scr-movie');
   box.innerHTML = '<div class="mv-load">Загружаю…</div>';
   let m = byId(id);
+  if(!m){
+    /* карточка из избранного/истории, которой нет в пуле (напр. притянута из CUB) */
+    const f = [...state.favs.mark, ...state.favs.later, ...state.favs.like, ...state.history].find(x=>String(x.id)===String(id));
+    if(f){
+      m = {id:f.id, title:f.title, orig:f.orig||f.title, year:f.year||'—', date:'', rating:f.rating||0,
+        votes:0, popularity:0, genres:f.genres||[], desc:'', poster:f.poster, backdrop:null,
+        art:f.art||['#2f6fed','#101a33'], media:f.media||'movie'};
+      state.pool.push(m);
+    }
+  }
   if(!m && state.live){
     // запасной путь: тянем напрямую с TMDB, даже если id нет в пуле
     const tv0 = String(id).startsWith('tv');
