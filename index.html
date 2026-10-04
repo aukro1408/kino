@@ -2842,7 +2842,7 @@ $('#catSort').onclick = ()=>{
     applyCatSort();
   });
 };
-async function openCategory(more){
+async function openCategory(more, isBack){
   const grid = $('#catGrid');
   catSort = null; catItems = [];
   const _csb = $('#catSort'); if(_csb){ _csb.classList.remove('on'); }
@@ -2856,7 +2856,13 @@ async function openCategory(more){
     ct.setAttribute('style','font-size:16px; letter-spacing:3px');
     ct.textContent = more.title.toUpperCase().slice(0,22);
   }
-  saveScrollState();
+  const from = currentScreenId();
+  if(!isBack){
+    saveScrollState();
+    /* запоминаем, откуда пришли: вложенные категории — в свой стек, остальное — в общий */
+    if(from==='scr-cat'){ if(lastCat && lastCat.more) catTrail.push(lastCat); }
+    else navStack.push(from);
+  }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('#scr-cat').classList.add('active');
   const isColList = more.type==='collections';
@@ -2944,6 +2950,7 @@ document.addEventListener('load', e=>{
 
 /* =================== NAV =================== */
 let navStack = [];
+let catTrail = []; /* стек вложенных категорий (снапшоты lastCat) */
 const scrollMem = {};
 let hrowMem = {};
 let lastCat = null;
@@ -5279,12 +5286,16 @@ document.addEventListener('keydown', e=>{
   if(isCard && (tvIsEnter(k) || k===32)){ e.preventDefault(); t.click(); return; }
   if(isBtn && tvIsEnter(k)){ e.preventDefault(); t.click(); }
 });
-$('#catBack').onclick = ()=>goto(catMore && (catMore.type==='fav'||catMore.type==='history') ? 'fav' : 'home');
+$('#catBack').onclick = ()=>{
+  const snap = catTrail.pop();
+  if(snap && snap.more){ lastCat = snap; openCategory(snap.more, true); }
+  else { catTrail = []; goBack(); }
+};
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
 function goto(name){
   stopPlayer();
   navStack = [];
-  showScreen('scr-'+name);
+  catTrail = [];  showScreen('scr-'+name);
   if(name==='fav') renderFav();
   if(name==='home'){
     const sc = $('#scr-home');
