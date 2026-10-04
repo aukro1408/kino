@@ -1799,7 +1799,7 @@ async function bootLive(){
     state.upcoming = ((upc&&upc.results)||[]).map(r=>norm(r)).filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
     refreshPrmDates();
     await loadThemeRows();
-    renderHomeRows();
+    renderHomeRows({animate:false});
     if(fy){
       state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
@@ -1917,7 +1917,7 @@ function moveHomeSec(id, dir){
   [ord[i],ord[j]] = [ord[j],ord[i]];
   LS.set('home_order', ord);
   renderHomeRowsBox();
-  renderHomeRows();
+  renderHomeRows({animate:true});
 }
 
 /* Персональный ряд «Для тебя» — по жанрам из избранного (идея из Lampa Discovery) */
@@ -1958,7 +1958,7 @@ async function refreshForYou(){
     state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
       more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
   }
-  if(currentScreenId()==='scr-home' && state.genre==='all') renderHomeRows();
+  if(currentScreenId()==='scr-home' && state.genre==='all') renderHomeRows({animate:false});
 }
 
 /* =================== КОЛЛЕКЦИИ (CUB) =================== */
@@ -2110,7 +2110,7 @@ function renderChips(){
   const cb = $('#chips');
   cb.innerHTML = GENRE_CHIPS.map(c=>
     `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
-  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderHomeRows(); });
+  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderHomeRows({animate:true}); });
   if(!chipsShown){ chipsShown = true; cb.classList.remove('chips-in'); void cb.offsetWidth; cb.classList.add('chips-in'); }
 }
 /* =================== CUB SYNC: закладки + тайм-коды =================== */
@@ -2349,7 +2349,7 @@ async function cubSync(opt){
     LS.set('cub_stats', {bm: pb.total, tl: tl.total, tlm: tl.matched});
     /* тихий автосинк не трогает экран, если ничего не изменилось */
     const changed = (fq + pb.added + tl.matched) > 0;
-    if(changed || !opt.quiet){ renderFav(); renderHomeRows(); }
+    if(changed || !opt.quiet){ renderFav(); renderHomeRows({animate:false}); }
     cubRenderUI();
     if(!opt.quiet) toast('CUB: синхронизировано ✓');
   }catch(e){
@@ -2435,7 +2435,7 @@ function cubRenderUI(){
   $('#cubOffBtn').onclick = ()=>{
     ['cub','cub_ids','cub_queue','cub_firstdone','cub_last'].forEach(k=>{ try{ localStorage.removeItem('kino.'+k); }catch(e){} });
     state.continueWatch = [];
-    cubRenderUI(); renderHomeRows();
+    cubRenderUI(); renderHomeRows({animate:true});
     toast('CUB отключён');
   };
 }
@@ -2483,7 +2483,7 @@ function newepHTML(){
     <div class="hrow">${items.map(neCardHTML).join('')}</div></div>`;
 }
 async function checkTracked(force){
-  renderHomeRows();
+  renderHomeRows({animate:false});
   if(!state.live) return;
   const t = trackedMap(), ids = Object.keys(t);
   if(!ids.length) return;
@@ -2517,7 +2517,7 @@ async function checkTracked(force){
     }catch(e){}
   }
   if(changed) LS.set('tracked', t);
-  renderHomeRows();
+  renderHomeRows({animate:false});
 }
 
 /* ===== ПРЕМЬЕРЫ: календарь + напоминания ===== */
@@ -2653,7 +2653,14 @@ function sectionCardsHTML(s){
 function rvAnimate(box){
   box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
 }
-async function renderHomeRows(){
+let homeAnimDone = false;
+function armRows(box, animate){
+  if(animate) rvAnimate(box);
+  else box.querySelectorAll('.row-sec').forEach(el=>el.classList.add('rv','in'));
+  homeAnimDone = true;
+}
+async function renderHomeRows(opts){
+  const animate = (opts && opts.animate) || !homeAnimDone;
   const box = $('#homeRows');
   let sections = state.sections;
   if(state.genre!=='all'){
@@ -2682,7 +2689,7 @@ async function renderHomeRows(){
     box.innerHTML = shown.map(s=>sectionCardsHTML(s)).join('');
     bindCards(box);
     box.querySelectorAll('.row-more').forEach(b=>{ const s=shown.find(x=>x.id===b.dataset.sec); if(s&&s.more) b.onclick=()=>openCategory(s.more); });
-    rvAnimate(box);
+    armRows(box, animate);
     return;
   }
   const byId = {};
@@ -2711,7 +2718,7 @@ async function renderHomeRows(){
   });
   box.querySelectorAll('[data-secmore]').forEach(b=>{ b.onclick=()=>openCategory({type:'upcoming', title:'Скоро выйдет'}); });
   box.querySelectorAll('.studio-tile').forEach(t=>{ t.onclick=()=>{ const s=STUDIOS[+t.dataset.si]; openCategory({type:'studio', studioId:s.id, sub:(s.mv?'movie':'tv'), title:s.name}); }; });
-  rvAnimate(box);
+  armRows(box, animate);
   updateNotifBell();
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
@@ -2956,7 +2963,7 @@ function showScreen(id, restore){
   if(restore && id==='scr-home'){
     document.querySelectorAll('#scr-home .hrow').forEach(r=>{ const s=r.closest('.row-sec'); const k=s&&s.dataset.sec; if(k&&hrowMem[k]) r.scrollLeft = hrowMem[k]; });
   }
-  if(id==='scr-home') renderHomeRows();
+  if(id==='scr-home') renderHomeRows({animate:true});
 }
 function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
 function saveScrollState(){
@@ -5633,9 +5640,9 @@ $('#tmdbKey').addEventListener('change', async e=>{
   if(state.tmdbKey){
     toast('Проверяю ключ…');
     const ok = await bootLive();
-    if(ok){ renderHero(); renderHomeRows(); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
+    if(ok){ renderHero(); renderHomeRows({animate:true}); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
     else { toast('Ключ не подошёл'); }
-  } else { state.live=false; bootDemo(); renderHero(); renderHomeRows(); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
+  } else { state.live=false; bootDemo(); renderHero(); renderHomeRows({animate:true}); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
 });
 $('#geminiKey').addEventListener('change', e=>{
   state.geminiKey = e.target.value.trim(); LS.set('gemini_key', state.geminiKey);
@@ -5680,7 +5687,7 @@ $('#geminiCheck').onclick = async ()=>{
 if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
-hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderHomeRows(); };
+hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderHomeRows({animate:true}); };
 const rowTv = $('#rowTvMode');
 if(rowTv) rowTv.onclick = ()=>{
   const cur = TV_MODES.indexOf(LS.get('tv_mode','auto'));
@@ -5713,7 +5720,7 @@ function renderHomeRowsBox(){
     const id = b.dataset.hs;
     setHomeOff(id, !homeOff(id));
     b.classList.toggle('on', !homeOff(id));
-    renderHomeRows();
+    renderHomeRows({animate:true});
   });
   box.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>moveHomeSec(b.dataset.id, +b.dataset.mv));
 }
@@ -6147,7 +6154,7 @@ $('#aiBuddy').onclick = ()=>{
   renderHero(); renderChips(); renderHomeRows(); updateStats();
   if(state.tmdbKey){
     const ok = await bootLive();
-    if(ok){ renderHero(); renderHomeRows(); }
+    if(ok){ renderHero(); renderHomeRows({animate:false}); }
   }
   checkTracked();
   if(cubConnected()) cubSync({quiet:true});
