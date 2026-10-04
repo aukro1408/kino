@@ -970,9 +970,6 @@
     background:rgba(10,16,28,.72); border:1px solid rgba(255,255,255,.18); padding:5px 10px; border-radius:999px;
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
   .ne-badge.new{background:rgba(77,163,255,.9); border-color:transparent}
-  .cw-bar{position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,.22); border-radius:0 0 10px 10px; overflow:hidden}
-  .cw-bar i{display:block; height:100%; background:var(--accent); border-radius:0 4px 4px 0}
-  .cub-tag{font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--muted); border:1px solid rgba(255,255,255,.14); border-radius:6px; padding:2px 7px; margin-left:8px}
   .cub-hint{font-size:12px; color:var(--muted); line-height:1.5; padding:2px 18px 12px}
   .cub-hint a{color:var(--accent)}
   .ne-sub{font-size:12px; color:var(--muted); margin-top:5px; font-weight:600}
@@ -1881,7 +1878,6 @@ const HOME_SECTIONS = [
   {id:'newep', title:'Новые серии'},
   {id:'released', title:'Уже вышло'},
   {id:'upcoming', title:'Скоро выйдет'},
-  {id:'continue', title:'Продолжить просмотр'},
   {id:'foryou', title:'Для тебя'},
   {id:'trend', title:'Сейчас в тренде'},
   {id:'new', title:'Новинки для вас'},
@@ -1891,7 +1887,7 @@ const HOME_SECTIONS = [
   ...THEME_ROWS.map(t=>({id:'th_'+t.id, title:t.title})),
 ];
 function defaultHomeOrder(){
-  const ord = ['studios','upcoming','continue','newep','released','foryou','trend','new','top','tv','cols'];
+  const ord = ['studios','upcoming','newep','released','foryou','trend','new','top','tv','cols'];
   const thIds = THEME_ROWS.map(t=>'th_'+t.id);
   const oldTh = (LS.get('theme_order')||[]).map(id=>'th_'+id).filter(id=>thIds.includes(id));
   oldTh.forEach(id=>{ if(!ord.includes(id)) ord.push(id); });
@@ -2113,7 +2109,7 @@ function renderChips(){
   document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderHomeRows(); });
   if(!chipsShown){ chipsShown = true; cb.classList.remove('chips-in'); void cb.offsetWidth; cb.classList.add('chips-in'); }
 }
-/* =================== CUB SYNC: закладки + тайм-коды =================== */
+/* =================== CUB SYNC: закладки =================== */
 const CUB_HOST = 'https://cub.red';
 const CUB_BM = [
   {type:'book', list:'mark'},
@@ -2127,13 +2123,6 @@ function cubAcc(){ return LS.get('cub', {}); }
 function cubConnected(){ return !!cubAcc().token; }
 function cubNumId(e){ return String(e.id).replace(/^tv/,''); }
 function cubIsTv(e){ return e.media==='tv' || String(e.id).startsWith('tv'); }
-/* хэш тайм-кодов CUB — алгоритм из Lampa (Utils.hash) */
-function cubHash(input){
-  const str = (input||'')+'';
-  let h = 0;
-  for(let i=0;i<str.length;i++){ h = (h<<5) - h + str.charCodeAt(i); h = h & h; }
-  return Math.abs(h)+'';
-}
 async function cubApi(path, opt){
   opt = opt||{};
   const c = cubAcc(), headers = {'content-type':'application/json'};
@@ -2275,64 +2264,6 @@ async function cubPushMissing(){
   }
   LS.set('cub_ids', ids);
 }
-/* --- подтянуть original_title для старых записей (нужно для хэша тайм-кодов) --- */
-async function cubEnrichOrig(){
-  if(!state.live) return;
-  const need = [], seen = {};
-  [...state.favs.mark, ...state.favs.later, ...state.favs.like, ...state.history].forEach(e=>{
-    const n = cubNumId(e);
-    if(!e.orig && !seen[n]){ seen[n] = 1; need.push(e); }
-  });
-  let n = 0;
-  for(const e of need){
-    if(n>=40) break;
-    try{
-      const d = await tmdb((cubIsTv(e)?'/tv/':'/movie/')+cubNumId(e)+'?language=ru-RU');
-      const orig = d.original_title || d.original_name;
-      if(orig){ e.orig = orig; n++; }
-    }catch(err){}
-  }
-  if(n){ LS.set('favs', state.favs); LS.set('history', state.history); }
-}
-/* --- тайм-коды CUB -> «Продолжить просмотр» --- */
-function cubCandHashes(){
-  const map = {};
-  const all = [...state.favs.mark, ...state.favs.later, ...state.favs.like, ...state.history];
-  for(const e of all){
-    const orig = e.orig || e.title;
-    if(!orig) continue;
-    if(cubIsTv(e)){
-      for(let s=1;s<=15;s++) for(let ep=1;ep<=24;ep++){
-        const h = cubHash([s, s>10?':':'', ep, orig].join(''));
-        if(!map[h]) map[h] = {e, s, ep};
-      }
-    } else {
-      const h = cubHash(orig);
-      if(!map[h]) map[h] = {e};
-    }
-  }
-  return map;
-}
-async function cubPullTimeline(){
-  state.continueWatch = [];
-  let d;
-  try{ d = await cubApi('timeline/all?full=1'); }
-  catch(e){ return {matched:0, total:0}; }
-  const tl = d.timelines||{};
-  const keys = Object.keys(tl);
-  if(!keys.length) return {matched:0, total:0};
-  const cand = cubCandHashes(), out = [];
-  for(const h of keys){
-    const c = cand[h];
-    if(!c) continue;
-    const t = tl[h], pct = +t.percent||0;
-    if(pct<2 || pct>97) continue;
-    out.push({id:c.e.id, title:c.e.title, poster:c.e.poster, year:c.e.year, media:c.e.media,
-      time:+t.time||0, dur:+t.duration||0, pct, s:c.s||0, ep:c.ep||0});
-  }
-  state.continueWatch = out;
-  return {matched: out.length, total: keys.length};
-}
 let cubBusy = false;
 async function cubSync(opt){
   opt = opt||{};
@@ -2345,16 +2276,10 @@ async function cubSync(opt){
       await cubPushMissing();
       LS.set('cub_firstdone', true);
     }
-    let tl = await cubPullTimeline();
-    /* original_title для хэша подтягиваем только если в CUB вообще есть тайм-коды */
-    if(tl.total>0){
-      const needEnrich = [...state.favs.mark, ...state.favs.later, ...state.favs.like, ...state.history].some(e=>!e.orig);
-      if(needEnrich){ await cubEnrichOrig(); tl = await cubPullTimeline(); }
-    }
     LS.set('cub_last', Date.now());
-    LS.set('cub_stats', {bm: pb.total, tl: tl.total, tlm: tl.matched});
+    LS.set('cub_stats', {bm: pb.total});
     /* тихий автосинк не трогает экран, если ничего не изменилось */
-    const changed = (fq + pb.added + tl.matched) > 0;
+    const changed = (fq + pb.added) > 0;
     if(changed || !opt.quiet){ renderFav(); renderHomeRows(); }
     cubRenderUI();
     if(!opt.quiet) toast('CUB: синхронизировано ✓');
@@ -2363,24 +2288,6 @@ async function cubSync(opt){
   }
   cubBusy = false;
 }
-function cwLeft(sec){
-  sec = Math.max(0, Math.round(sec));
-  const h = Math.floor(sec/3600), m = Math.round((sec%3600)/60);
-  return 'осталось ' + (h ? h+' ч '+m+' мин' : m+' мин');
-}
-function cwCardHTML(t){
-  const sub = (t.s ? ('S'+t.s+' · E'+t.ep+' · ') : '') + cwLeft(t.dur - t.time);
-  return `<div class="card" data-id="${t.id}" tabindex="0" data-fc>
-    <div class="poster">${t.poster?`<img loading="lazy" src="${IMG}w342${t.poster}" alt="">`:`<div class="demo-art" style="background:linear-gradient(150deg,#2f6fed,#101a33)"><span class="demo-logo"></span></div>`}
-      <div class="cw-bar"><i style="width:${Math.min(100,t.pct)}%"></i></div></div>
-    <div class="card-title">${escTx(t.title)}</div><div class="ne-sub">${sub}</div></div>`;
-}
-function continueHTML(){
-  const items = state.continueWatch||[];
-  if(!items.length) return '';
-  return `<div class="row-sec" data-sec="continue"><div class="row-head"><h2>Продолжить просмотр</h2><span class="cub-tag">CUB</span></div>
-    <div class="hrow">${items.map(cwCardHTML).join('')}</div></div>`;
-}
 /* --- UI секции в Профиле --- */
 function cubRenderUI(){
   const box = $('#cubBox');
@@ -2388,7 +2295,7 @@ function cubRenderUI(){
   const c = cubAcc();
   if(!c.token){
     box.innerHTML = `
-      <div class="cub-hint">Закладки и «Продолжить просмотр» из твоего аккаунта <b>cub.red</b>.<br>Код — на странице <a href="https://cub.red/add" target="_blank">cub.red/add</a> (нужен вход в аккаунт).</div>
+      <div class="cub-hint">Закладки из твоего аккаунта <b>cub.red</b>.<br>Код — на странице <a href="https://cub.red/add" target="_blank">cub.red/add</a> (нужен вход в аккаунт).</div>
       <div class="set-row">
         <div><div class="t">Код доступа</div><div class="d">Цифры со страницы cub.red/add</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="cubCode" placeholder="123456" inputmode="numeric" autocomplete="off" autocapitalize="off" style="width:120px"></div>
@@ -2412,9 +2319,7 @@ function cubRenderUI(){
   const profs = c.profiles||[];
   const last = LS.get('cub_last', 0);
   const st = LS.get('cub_stats', null);
-  const stD = st
-    ? ('Закладки: '+st.bm+' · Тайм-коды: '+st.tl+(st.tl&&!st.tlm?' (не совпали с локальными)':''))
-    : 'ещё не синхронизировано';
+  const stD = st ? ('Закладки: '+st.bm) : 'ещё не синхронизировано';
   box.innerHTML = `
     <div class="set-row">
       <div><div class="t">Аккаунт</div><div class="d">${escTx(c.email||'подключено')}</div></div>
@@ -2424,7 +2329,7 @@ function cubRenderUI(){
       <div><div class="t">Данные CUB</div><div class="d">${stD}</div></div>
     </div>
     ${profs.length>1 ? `<div class="set-row">
-      <div><div class="t">Профиль CUB</div><div class="d">Закладки и тайм-коды профиля</div></div>
+      <div><div class="t">Профиль CUB</div><div class="d">Закладки профиля</div></div>
       <select id="cubProfile" class="key-input" style="max-width:150px">${profs.map(p=>`<option value="${p.id}"${String(p.id)===String(c.profile)?' selected':''}>${escTx(p.name)}</option>`).join('')}</select>
     </div>`:''}
     <div class="set-row">
@@ -2440,7 +2345,6 @@ function cubRenderUI(){
   if(ps) ps.onchange = ()=>{ const a = cubAcc(); a.profile = ps.value; LS.set('cub', a); LS.set('cub_ids', {}); cubSync(); };
   $('#cubOffBtn').onclick = ()=>{
     ['cub','cub_ids','cub_queue','cub_firstdone','cub_last'].forEach(k=>{ try{ localStorage.removeItem('kino.'+k); }catch(e){} });
-    state.continueWatch = [];
     cubRenderUI(); renderHomeRows();
     toast('CUB отключён');
   };
@@ -2700,7 +2604,6 @@ async function renderHomeRows(){
     if(id==='newep'){ const h=newepHTML(); if(h) parts.push(h); continue; }
     if(id==='released'){ const h=releasedHTML(); if(h) parts.push(h); continue; }
     if(id==='upcoming'){ const h=upcomingHTML(); if(h) parts.push(h); continue; }
-    if(id==='continue'){ const h=continueHTML(); if(h) parts.push(h); continue; }
     const s = byId[id];
     if(!s) continue;
     const items = s.kind==='collections' ? s.items : visible(s.items);
