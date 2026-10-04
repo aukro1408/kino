@@ -2185,11 +2185,13 @@ function cubHasLocal(t, num){
 /* --- pull: CUB -> локально (объединение, без потерь) --- */
 async function cubPullBookmarks(){
   const ids = cubIds();
+  let added = 0, total = 0;
   for(const t of CUB_BM){
     let d;
     try{ d = await cubApi('bookmarks/all?type='+t.type+'&full=1'); }
     catch(e){ continue; }
     const items = d.bookmarks||d.list||(Array.isArray(d)?d:[]);
+    total += items.length;
     ids[t.type] = ids[t.type]||{};
     for(const it of items){
       try{
@@ -2207,12 +2209,14 @@ async function cubPullBookmarks(){
       } else {
         state.favs[t.list].unshift(snap);
       }
+      added++;
       }catch(e){ /* битая карточка CUB — пропускаем */ }
     }
   }
   LS.set('cub_ids', ids);
   LS.set('favs', state.favs);
   LS.set('history', state.history);
+  return {added, total};
 }
 /* --- очередь локальных изменений -> CUB --- */
 function cubQueueNote(op, type, num){
@@ -2223,8 +2227,9 @@ function cubQueueNote(op, type, num){
 }
 async function cubFlushQueue(){
   const q = LS.get('cub_queue', []);
-  if(!q.length) return;
+  if(!q.length) return 0;
   const ids = cubIds(), left = [];
+  let done = 0;
   for(const job of q){
     try{
       if(job.op==='add'){
@@ -2236,17 +2241,20 @@ async function cubFlushQueue(){
         const d = await cubApi('bookmarks/add', {method:'POST', body:{data:JSON.stringify(cubCardJSON(e)), type:job.type, card_id:+cubNumId(e)||cubNumId(e)}});
         const rid = d.bookmark && d.bookmark.id;
         if(rid) ids[job.type][job.num] = rid;
+        done++;
       } else if(job.op==='del'){
         const rid = ids[job.type] && ids[job.type][job.num];
         if(rid){
           await cubApi('bookmarks/remove', {method:'POST', body:{id:rid}});
           delete ids[job.type][job.num];
         }
+        done++;
       }
     }catch(e){ left.push(job); }
   }
   LS.set('cub_queue', left);
   LS.set('cub_ids', ids);
+  return done;
 }
 /* --- первый синк: залить локальное, чего нет в CUB --- */
 async function cubPushMissing(){
@@ -2307,10 +2315,10 @@ async function cubPullTimeline(){
   state.continueWatch = [];
   let d;
   try{ d = await cubApi('timeline/all?full=1'); }
-  catch(e){ return; }
+  catch(e){ return {matched:0, total:0}; }
   const tl = d.timelines||{};
   const keys = Object.keys(tl);
-  if(!keys.length) return;
+  if(!keys.length) return {matched:0, total:0};
   const cand = cubCandHashes(), out = [];
   for(const h of keys){
     const c = cand[h];
@@ -2321,6 +2329,7 @@ async function cubPullTimeline(){
       time:+t.time||0, dur:+t.duration||0, pct, s:c.s||0, ep:c.ep||0});
   }
   state.continueWatch = out;
+  return {matched: out.length, total: keys.length};
 }
 let cubBusy = false;
 async function cubSync(opt){
@@ -2329,15 +2338,19 @@ async function cubSync(opt){
   cubBusy = true;
   try{
     await cubEnrichOrig();
-    await cubFlushQueue();
-    await cubPullBookmarks();
+    const fq = await cubFlushQueue();
+    const pb = await cubPullBookmarks();
     if(!LS.get('cub_firstdone', false)){
       await cubPushMissing();
       LS.set('cub_firstdone', true);
     }
-    await cubPullTimeline();
+    const tl = await cubPullTimeline();
     LS.set('cub_last', Date.now());
-    renderFav(); renderHomeRows(); cubRenderUI();
+    LS.set('cub_stats', {bm: pb.total, tl: tl.total, tlm: tl.matched});
+    /* тихий автосинк не трогает экран, если ничего не изменилось */
+    const changed = (fq + pb.added + tl.matched) > 0;
+    if(changed || !opt.quiet){ renderFav(); renderHomeRows(); }
+    cubRenderUI();
     if(!opt.quiet) toast('CUB: синхронизировано ✓');
   }catch(e){
     if(!opt.quiet) toast('CUB: '+e.message);
@@ -2392,10 +2405,17 @@ function cubRenderUI(){
   }
   const profs = c.profiles||[];
   const last = LS.get('cub_last', 0);
+  const st = LS.get('cub_stats', null);
+  const stD = st
+    ? ('Закладки: '+st.bm+' · Тайм-коды: '+st.tl+(st.tl&&!st.tlm?' (не совпали с локальными)':''))
+    : 'ещё не синхронизировано';
   box.innerHTML = `
     <div class="set-row">
       <div><div class="t">Аккаунт</div><div class="d">${escTx(c.email||'подключено')}</div></div>
       <div class="set-val" style="color:#7ee2a8">●</div>
+    </div>
+    <div class="set-row">
+      <div><div class="t">Данные CUB</div><div class="d">${stD}</div></div>
     </div>
     ${profs.length>1 ? `<div class="set-row">
       <div><div class="t">Профиль CUB</div><div class="d">Закладки и тайм-коды профиля</div></div>
