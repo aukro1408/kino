@@ -475,6 +475,13 @@
 .vote-btn.like-on{background:rgba(52,199,89,.16); border-color:rgba(52,199,89,.55); color:#4cd964}
 .vote-btn.like-on svg{fill:#4cd964; stroke:#4cd964}
 .vote-btn.dis-on{background:rgba(255,69,58,.13); border-color:rgba(255,69,58,.5); color:#ff6b62}
+  .mv-reacts{display:flex; gap:8px; margin:12px 2px 2px}
+  .react-pill{flex:1; min-width:0; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 2px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--text); font-size:16px; cursor:pointer; transition:transform .15s, border-color .2s, background .2s; font-family:inherit}
+  .react-pill:active{transform:scale(.92)}
+  .react-pill .rc{font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums}
+  .react-pill.voted{border-color:rgba(77,163,255,.6); background:rgba(77,163,255,.12)}
+  .react-pill.voted .rc{color:var(--accent)}
+  .react-pill.loading .rc{opacity:.35}
 .vote-btn.dis-on svg{fill:#ff6b62; stroke:#ff6b62}
 #ntfVeil .sheet-head{position:relative; justify-content:center}
 #ntfVeil .sheet-x{position:absolute; right:0; top:50%; margin-top:-17px}
@@ -2349,6 +2356,51 @@ function cubRenderUI(){
     toast('CUB отключён');
   };
 }
+/* =================== CUB РЕАКЦИИ (публичные, страницу не тормозят) =================== */
+const CUB_REACTS = [
+  {id:'fire', emoji:'🔥'},
+  {id:'nice', emoji:'❤️'},
+  {id:'think', emoji:'🤔'},
+  {id:'bore', emoji:'😴'},
+  {id:'shit', emoji:'💩'},
+];
+function cubReactKey(m){ return (m.media==='tv'?'tv':'movie')+'_'+String(m.id).replace(/^tv/,''); }
+function cubVotes(){ return LS.get('cub_votes', {}); }
+/* страницу уже отрисовали — цифры подставятся, когда придут; CUB висит — страница всё равно открыта */
+async function loadMovieReacts(m){
+  const box = $('#mvReacts');
+  if(!box) return;
+  const key = cubReactKey(m), voted = cubVotes()[key];
+  const counts = {fire:0,nice:0,think:0,bore:0,shit:0};
+  box.innerHTML = CUB_REACTS.map(r=>
+    `<button class="react-pill loading${voted===r.id?' voted':''}" data-rt="${r.id}"><span>${r.emoji}</span><span class="rc">…</span></button>`
+  ).join('');
+  box._counts = counts;
+  box.querySelectorAll('.react-pill').forEach(b=>{ b.onclick = ()=>cubVoteReact(m, b.dataset.rt); });
+  try{
+    const r = await fetch(CUB_HOST+'/api/reactions/get/'+key);
+    const d = await r.json();
+    ((d&&d.result)||[]).forEach(x=>{ if(counts[x.type]!==undefined) counts[x.type] = +x.counter||0; });
+  }catch(e){}
+  const cur = $('#mvReacts');
+  if(!cur || cur._counts!==counts) return; /* уже другая страница */
+  cur.querySelectorAll('.react-pill').forEach(b=>{
+    b.classList.remove('loading');
+    b.querySelector('.rc').textContent = shortNum(counts[b.dataset.rt]||0);
+  });
+}
+async function cubVoteReact(m, type){
+  const key = cubReactKey(m), v = cubVotes();
+  if(v[key]) return; /* один голос с устройства на карточку */
+  v[key] = type; LS.set('cub_votes', v);
+  const box = $('#mvReacts');
+  if(box && box._counts){
+    box._counts[type] = (box._counts[type]||0)+1;
+    const b = box.querySelector('[data-rt="'+type+'"]');
+    if(b){ b.classList.add('voted'); b.querySelector('.rc').textContent = shortNum(box._counts[type]); }
+  }
+  try{ await fetch(CUB_HOST+'/api/reactions/add/'+key+'/'+type); }catch(e){}
+}
 /* ---------- отслеживание сериалов (вручную) ---------- */
 function trackedMap(){ return LS.get('tracked', {}); }
 function isTracked(id){ return !!trackedMap()[id]; }
@@ -3080,6 +3132,7 @@ function renderMovie(m){
         <button class="vote-btn${isLiked(m.id)?' like-on':''}" id="likeBtn" aria-label="Нравится"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg><span>Нравится</span></button>
         <button class="vote-btn${isHidden(m.id)?' dis-on':''}" id="disBtn" aria-label="Не моё"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg><span>Не моё</span></button>
       </div>
+      <div class="mv-reacts" id="mvReacts"></div>
       <div class="mv-genres">${m.genres.map(g=>`<i data-gid="${g.id||''}" data-genre="${escAttr(g.name||g)}">${g.name||g}</i>`).join('')}${mvInfoChips(m)}</div>
       ${state.kpKey?`<div class="mv-sec"><h3>Рейтинги</h3><div class="rates" id="rateCards">${m.rating>0?tmdbCardHTML(m):''}<span id="kpCardSlot" style="display:contents"></span></div></div>`:''}
       ${m.trailer?`<div class="mv-sec"><h3>Трейлер</h3><div class="mv-trailer" id="mvTrailer">
@@ -3169,6 +3222,7 @@ function renderMovie(m){
   };
   const tr = $('#mvTrailer');
   if(tr) tr.onclick = ()=>{ tr.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.trailer}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; };
+  loadMovieReacts(m); /* реакции CUB — асинхронно, страницу не держит */
   const pf = $('#posterFlip');
   if(pf) pf.onclick = ()=>pf.classList.toggle('flipped');
   const dm = $('#descMore'), dd = $('#mvDesc');
