@@ -1640,7 +1640,7 @@ function norm(m, media){
     id: mt==='tv' && !rid.startsWith('tv') ? 'tv'+rid : m.id,
     title: m.title || m.name || 'Без названия',
     orig: m.original_title || m.original_name || m.title || m.name || '',
-    year: (m.release_date||m.first_air_date||'') .slice(0,4) || m.year || '—',
+    year: String(m.release_date||m.first_air_date||'').slice(0,4) || m.year || '—',
     date: m.release_date||m.first_air_date||'',
     rating: m.vote_average!==undefined ? +m.vote_average.toFixed(1) : m.rating,
     votes: m.vote_count || 0,
@@ -2192,6 +2192,7 @@ async function cubPullBookmarks(){
     const items = d.bookmarks||d.list||(Array.isArray(d)?d:[]);
     ids[t.type] = ids[t.type]||{};
     for(const it of items){
+      try{
       const num = String(it.card_id||'');
       if(!num) continue;
       ids[t.type][num] = it.id;
@@ -2206,6 +2207,7 @@ async function cubPullBookmarks(){
       } else {
         state.favs[t.list].unshift(snap);
       }
+      }catch(e){ /* битая карточка CUB — пропускаем */ }
     }
   }
   LS.set('cub_ids', ids);
