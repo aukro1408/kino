@@ -90,7 +90,7 @@
   .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 12px; padding:2px 16px 10px}
   .card{cursor:pointer; min-width:0}
   .poster{position:relative; width:100%; aspect-ratio:2/3; border-radius:14px; overflow:hidden;
-    background:var(--logo) no-repeat center/56px 56px, radial-gradient(130% 100% at 50% 0%, #263c68 0%, #16223c 55%, #0c1322 100%);
+    background:radial-gradient(130% 100% at 50% 0%, #1d2c4f 0%, #131c31 55%, #0b1120 100%);
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
   .more-card .more-tile{aspect-ratio:2/3; border-radius:14px; background:#1b2740; width:100%;
@@ -117,7 +117,7 @@
   .col-card:active{transform:scale(.97)}
   .col-card{transition:transform .15s}
   .col-cover{position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
-    background:var(--logo) no-repeat center/60px 60px, radial-gradient(130% 120% at 50% 0%, #263c68 0%, #16223c 55%, #0c1322 100%);
+    background:radial-gradient(130% 120% at 50% 0%, #1d2c4f 0%, #131c31 55%, #0b1120 100%);
     box-shadow:0 8px 24px rgba(0,0,0,.35)}
   .col-cover img{width:100%; height:100%; object-fit:cover; display:block}
   .demo-wide{position:absolute; inset:0}
@@ -436,10 +436,10 @@
   .flip{position:absolute; inset:0; transform-style:preserve-3d; transition:transform .85s cubic-bezier(.35,.15,.25,1); cursor:pointer}
   .flip.flipped{transform:rotateY(-180deg)}
   .flip-face{position:absolute; inset:0; border-radius:18px; overflow:hidden;
-    background:#0d1526 var(--logo) no-repeat center/52px 52px;
+    background:radial-gradient(130% 100% at 50% 0%, #1d2c4f 0%, #131c31 55%, #0b1120 100%);
     backface-visibility:hidden; -webkit-backface-visibility:hidden}
   /* скелетон: постер плавно проявляется поверх логотипа */
-  .poster img, .col-cover img, .flip-front img{opacity:0; transition:opacity .5s ease}
+  .poster img, .col-cover img, .flip-front img{opacity:0; transition:opacity .25s ease}
   .poster img.ld, .col-cover img.ld, .flip-front img.ld{opacity:1}
   .flip-back{transform:rotateY(180deg); background:#0a1122}
   .flip-bg{position:absolute; inset:-24px; filter:blur(22px) saturate(1.7); opacity:.8}
