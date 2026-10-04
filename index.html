@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0b1220; --bg2:#0e1626; --card:#141e31; --card2:#182440;
@@ -1074,10 +1075,84 @@
     background:#1c2942; border:1px solid rgba(255,255,255,.1); color:var(--text); font-size:13px; font-weight:700;
     padding:12px 20px; border-radius:999px; opacity:0; transition:.3s; z-index:120; pointer-events:none; white-space:nowrap}
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+/* ===== Экран приветствия ===== */
+#welcome { position:fixed; inset:0; z-index:2000; background:#04060f; overflow:hidden;
+  font-family:'Manrope',-apple-system,'Segoe UI',Roboto,Arial,sans-serif; }
+#welcome #wwall { position:absolute; top:-75%; left:-75%; width:250%; height:250%;
+  display:flex; flex-direction:column; gap:14px; justify-content:center; transform:rotate(-20deg); }
+#welcome .wrow { overflow:hidden; width:100%; }
+#welcome .wtrack { display:flex; gap:10px; width:max-content; animation:wslide 45s linear infinite; }
+#welcome .wrow:nth-child(even) .wtrack { animation-direction:reverse; }
+@keyframes wslide { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+#welcome .wtrack img { width:170px; height:255px; object-fit:cover; border-radius:10px; flex-shrink:0;
+  filter:saturate(1.2) contrast(1.07); box-shadow:0 4px 18px rgba(0,0,0,.45); }
+#welcome #wshade { position:absolute; inset:0;
+  background:radial-gradient(ellipse at center, rgba(8,12,24,.22) 0%, rgba(4,7,16,.72) 100%); }
+#welcome #wcenter { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:0 20px; z-index:2; }
+#welcome #wcat { position:relative; z-index:3; width:min(62vw,270px); flex:0 0 auto;
+  margin-top:3vh; margin-bottom:-42px; filter:drop-shadow(0 16px 34px rgba(0,0,0,.65)); }
+#welcome #wcat img { width:100%; height:auto; display:block; }
+#welcome #wpanel { background:rgba(5,9,20,.68); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(120,160,255,.16); border-radius:26px; padding:38px 26px 32px;
+  display:flex; flex-direction:column; align-items:center; max-width:94vw;
+  box-shadow:0 24px 70px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07); }
+#welcome #wbrand { display:flex; justify-content:center; gap:8px; font-family:'Bebas Neue',sans-serif;
+  font-size:54px; letter-spacing:4px; line-height:1; white-space:nowrap; }
+#welcome #wbrand .wl { display:inline-block; white-space:nowrap; }
+#welcome #wbrand .wl span { display:inline-block; opacity:0; animation:wletterIn .55s cubic-bezier(.2,.9,.3,1.2) forwards; }
+#welcome #wbrand .w1 span { color:#fff; text-shadow:0 2px 20px rgba(0,0,0,.7); }
+#welcome #wbrand .w2 span { background:linear-gradient(180deg,#a8ccff 0%,#2f7bff 75%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 14px rgba(47,123,255,.6)); }
+@keyframes wletterIn { from { opacity:0; transform:translateY(22px) scale(.9); } to { opacity:1; transform:none; } }
+#welcome #wrule { width:72px; height:3px; margin-top:16px; border-radius:2px;
+  background:linear-gradient(90deg,transparent,#2f7bff,transparent); box-shadow:0 0 14px rgba(47,123,255,.9); }
+#welcome #wtagline { color:rgba(150,180,230,.65); font-size:12px; font-weight:600; margin-top:12px; letter-spacing:4px; }
+#welcome #wloader { width:min(280px,64vw); margin-top:34px; }
+#welcome #wphrase { color:rgba(190,210,245,.8); font-size:13px; font-weight:600; height:20px;
+  text-align:center; margin-bottom:14px; transition:opacity .3s; }
+#welcome #wbarwrap { position:relative; height:14px; background:rgba(255,255,255,.09); border-radius:8px;
+  overflow:hidden; box-shadow:inset 0 2px 6px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.06); }
+#welcome #wbar { position:absolute; left:0; top:0; bottom:0; width:0%; border-radius:8px; overflow:hidden;
+  background:linear-gradient(180deg,#9cc4ff 0%,#2f7bff 55%,#1c5bd0 100%);
+  box-shadow:0 0 22px rgba(47,123,255,.85); }
+#welcome #wbar::after { content:''; position:absolute; inset:0;
+  background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.5) 50%,transparent 75%);
+  background-size:220% 100%; animation:wshine 1.3s linear infinite; }
+@keyframes wshine { from { background-position:200% 0; } to { background-position:-120% 0; } }
+#welcome #wpct { color:rgba(150,180,230,.55); font-size:12px; font-weight:700; text-align:right; margin-top:8px; }
+#welcome #wenter { display:none; margin-top:44px; padding:15px 64px; font-size:17px; font-weight:700;
+  letter-spacing:1px; color:#fff; background:linear-gradient(180deg,#4a92ff,#2f7bff); border:none;
+  border-radius:30px; cursor:pointer; box-shadow:0 6px 30px rgba(47,123,255,.5);
+  animation:wpop .45s cubic-bezier(.2,1.4,.4,1); font-family:inherit; }
+@keyframes wpop { from { transform:scale(.6); opacity:0; } to { transform:scale(1); opacity:1; } }
+#welcome.wfadeout { animation:wfadeout .6s forwards; }
+@keyframes wfadeout { to { opacity:0; visibility:hidden; } }
 </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <body>
+<div id="welcome" style="display:none">
+  <div id="wwall"></div>
+  <div id="wshade"></div>
+  <div id="wcenter">
+    <div id="wcat"><img src="cat-welcome.png" alt="BLACK ROOM"></div>
+    <div id="wpanel">
+      <div id="wbrand"><span class="wl w1">BLACK</span><span class="wl w2">ROOM</span></div>
+      <div id="wrule"></div>
+      <div id="wtagline">ОНЛАЙН-КИНОТЕАТР</div>
+      <div id="wloader">
+        <div id="wphrase">Загружаем каталог…</div>
+        <div id="wbarwrap"><div id="wbar"></div></div>
+        <div id="wpct">0%</div>
+      </div>
+      <button id="wenter">Смотреть</button>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <header class="wtop">
     <button class="burger" id="burger" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -1247,6 +1322,10 @@
       <div class="set-row" id="rowTvMode" style="cursor:pointer">
         <div><div class="t">Режим ТВ</div><div class="d" id="tvModeDesc">Авто</div></div>
         <div class="set-val" id="tvModeVal">Авто</div>
+      </div>
+      <div class="set-row">
+        <div><div class="t">Приветствие</div><div class="d">Экран приветствия при запуске приложения</div></div>
+        <button class="switch" id="welcomeSw"></button>
       </div>
       <div class="set-note">Сборка <b id="appVer" style="color:var(--text)"></b></div>
     </div>
@@ -1480,6 +1559,7 @@ const state = {
   torQ: LS.get('tor_qmode','orig_ru_year'),
   watched: LS.get('watched',[]),
   hideWatched: LS.get('hide_watched', false),
+  welcome: LS.get('welcome', true),
   theme: LS.get('theme','classic'),
   genre: 'all',
   live: false,
@@ -5670,6 +5750,9 @@ if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
 hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderHomeRows(); };
+const wSw = $('#welcomeSw');
+function paintWelcomeSw(){ if(wSw) wSw.classList.toggle('on', !!state.welcome); }
+if(wSw){ paintWelcomeSw(); wSw.onclick = ()=>{ state.welcome=!state.welcome; LS.set('welcome',state.welcome); paintWelcomeSw(); toast('Приветствие: ' + (state.welcome?'включено':'выключено')); }; }
 const rowTv = $('#rowTvMode');
 if(rowTv) rowTv.onclick = ()=>{
   const cur = TV_MODES.indexOf(LS.get('tv_mode','auto'));
@@ -6129,6 +6212,68 @@ $('#aiBuddy').onclick = ()=>{
   const moods = ['happy','wink','playful','surprised'];
   aiBotMood(moods[Math.floor(Math.random()*moods.length)], 1600);
 };
+
+
+/* =================== ПРИВЕТСТВИЕ =================== */
+const W_POSTERS = [{"t": "Диггер", "p": "https://image.tmdb.org/t/p/w342/biovC0fjDUUSGJiR4joGaGERUS3.jpg"}, {"t": "Обитель зла", "p": "https://image.tmdb.org/t/p/w342/vLl5tcuabARqGBefccSsYAYXdgA.jpg"}, {"t": "Курьер", "p": "https://image.tmdb.org/t/p/w342/vnrrZCe2sDMdEY7xyGSZMpSsZyG.jpg"}, {"t": "Восставший", "p": "https://image.tmdb.org/t/p/w342/uSDqNYQXOGTbWdMMmzMJkXROJDh.jpg"}, {"t": "Унабомбер", "p": "https://image.tmdb.org/t/p/w342/2cG4kY2k5AWC7y2i3IMb6LsBpat.jpg"}, {"t": "Тайный дневник Верити", "p": "https://image.tmdb.org/t/p/w342/tnpEkM7NmsHStbBJxTd6gqPjkv8.jpg"}, {"t": "Человек-паук: Новый день", "p": "https://image.tmdb.org/t/p/w342/pK8CH9JxrgX2ZIq3WclTwnX0cCL.jpg"}, {"t": "Жить эту жизнь", "p": "https://image.tmdb.org/t/p/w342/5nZVjsCk5tWyyhLGt5U2TxsR85w.jpg"}, {"t": "Обсессия", "p": "https://image.tmdb.org/t/p/w342/cdRHtfzxbpjxD5yOyFrRummb0yO.jpg"}, {"t": "Мстители: Доктор Дум", "p": "https://image.tmdb.org/t/p/w342/itU2A8Yco43cAuDfVcYBXlpJzH.jpg"}, {"t": "Хитрый Койот", "p": "https://image.tmdb.org/t/p/w342/gwCwmTk2EfDccd4RtIPsWEwzd1r.jpg"}, {"t": "Одиссея", "p": "https://image.tmdb.org/t/p/w342/n7NR7SH7CyiiF70yN96r3d1jWr0.jpg"}, {"t": "Сердце зверя", "p": "https://image.tmdb.org/t/p/w342/fOTKUSfg9C5DngN151Sfre9j6v7.jpg"}, {"t": "Прайм-тайм", "p": "https://image.tmdb.org/t/p/w342/rhtD872D5znYiRIEjTLWvd7ZNDz.jpg"}, {"t": "История игрушек 5", "p": "https://image.tmdb.org/t/p/w342/84igQj0DU3TgPrtQ7bHXHCio1sV.jpg"}, {"t": "Моана", "p": "https://image.tmdb.org/t/p/w342/s7o0gbvgpjwb8S0Uc5QaEdwJntb.jpg"}, {"t": "Закулисье реальности", "p": "https://image.tmdb.org/t/p/w342/oBY8IQb9NpzbkCo0xzpz7Q1DCu.jpg"}, {"t": "На краю Оук-стрит", "p": "https://image.tmdb.org/t/p/w342/5jhArZFrQIqEuh4ZNuBaQsnEy7s.jpg"}, {"t": "Женский убойный футбол", "p": "https://image.tmdb.org/t/p/w342/5skHR1T8URubqb30fk14njyPcy4.jpg"}, {"t": "СОУЛМ8ЙТ", "p": "https://image.tmdb.org/t/p/w342/rEZECujbTWvIKAfiSgHSiKYuRAH.jpg"}, {"t": "Колония", "p": "https://image.tmdb.org/t/p/w342/uQIlX1zpvM7FAKRbeyLDJN3zxrX.jpg"}, {"t": "Гипотеза любви", "p": "https://image.tmdb.org/t/p/w342/kz4Rtf6eSc3dEl29Vk1G3QKoND6.jpg"}, {"t": "Уличный боец", "p": "https://image.tmdb.org/t/p/w342/2qGRXNrhyg3N5KNAZuahmUvf15s.jpg"}, {"t": "Клэйфейс", "p": "https://image.tmdb.org/t/p/w342/t6Dso7ojC23ztZSZtf6sje9iTPN.jpg"}, {"t": "Один последний выстрел", "p": "https://image.tmdb.org/t/p/w342/pvZ1RcajNBWFlCj0pWHrRqyMJU8.jpg"}, {"t": "दृश्यम्: आख़िरी हिस्सा", "p": "https://image.tmdb.org/t/p/w342/6cnVYeGJtO4x0rHcTlM5ankxe1e.jpg"}, {"t": "День разоблачения", "p": "https://image.tmdb.org/t/p/w342/rwsWNNJKqLdN0ymCPx1yJagMVi.jpg"}, {"t": "Остров забвения", "p": "https://image.tmdb.org/t/p/w342/uhNMNaaovoZiYeaDYZ9BYX7jTAJ.jpg"}, {"t": "Возможная любовь", "p": "https://image.tmdb.org/t/p/w342/7UAzxqezg5yvZyK3k62wOAzg0Zs.jpg"}, {"t": "Проект «Конец света»", "p": "https://image.tmdb.org/t/p/w342/lGNWODvZnfiocvegYSw1bYnm6pt.jpg"}, {"t": "Социальная расплата", "p": "https://image.tmdb.org/t/p/w342/nZ8cQbjAQHRuSqwxvuYhOfxyhfW.jpg"}, {"t": "Миньоны и монстры", "p": "https://image.tmdb.org/t/p/w342/kuVqoYoUnlL9OLhGfobqMRYxVIT.jpg"}, {"t": "Чёрный шар", "p": "https://image.tmdb.org/t/p/w342/4omaYktw4VYkk5Tkq7rmUsWnQa5.jpg"}, {"t": "Всего одна ночь", "p": "https://image.tmdb.org/t/p/w342/wGqOgu5NV8Y8NPhGHJ5zHPm9DqI.jpg"}, {"t": "Чужая мама", "p": "https://image.tmdb.org/t/p/w342/xM23YJnhlJgf8gOFE34IZBMxUy3.jpg"}, {"t": "Зловещие мертвецы: Пекло", "p": "https://image.tmdb.org/t/p/w342/nbQgIssZPp1WsX1BF1OK7rBKe98.jpg"}, {"t": "劇場版モノノ怪 第三章 蛇神", "p": "https://image.tmdb.org/t/p/w342/93zvlPMHQb3xoX40bNL8bck7O00.jpg"}, {"t": "Придурки", "p": "https://image.tmdb.org/t/p/w342/blXiN8wIQ5ObMSCud0pMVbANEjT.jpg"}, {"t": "Подростковый секс и смерть в лагере «Миазма»", "p": "https://image.tmdb.org/t/p/w342/auJRaXce7WVZFGpaFR54tCFr74J.jpg"}, {"t": "Шумахер 1994: Рождение легенды", "p": "https://image.tmdb.org/t/p/w342/o09Z2TPQLkLg2zE6U9PUF17RmGf.jpg"}, {"t": "Кит: Во тьме глубин", "p": "https://image.tmdb.org/t/p/w342/sqrx5rMkdSSaXTmd19jAbUx5Cpc.jpg"}, {"t": "경주기행", "p": "https://image.tmdb.org/t/p/w342/2dAd2APyFUyJ6qEv9VFHdHQtQI6.jpg"}, {"t": "Бегущая", "p": "https://image.tmdb.org/t/p/w342/aJFbFOT1DhLq97Gp7MtrAmXze1n.jpg"}, {"t": "Вышка 2", "p": "https://image.tmdb.org/t/p/w342/81FLOOicWMgiT67RiqP42pRcTaw.jpg"}, {"t": "Майкл", "p": "https://image.tmdb.org/t/p/w342/AsPFMI3PhgCsraMq7RmMJwFQh2b.jpg"}, {"t": "Смерть Робин Гуда", "p": "https://image.tmdb.org/t/p/w342/bv3ResPWfXVEOeDUwTW7XoC04Yh.jpg"}, {"t": "Давление", "p": "https://image.tmdb.org/t/p/w342/xYLbAshji6VK0vQjtLZg2E9bea.jpg"}, {"t": "Мороженщик", "p": "https://image.tmdb.org/t/p/w342/43DuDvgZO1e34sylK8SRtMJ3tWw.jpg"}, {"t": "Union County", "p": "https://image.tmdb.org/t/p/w342/u1QIAmdHspNtlTFSV3BuTms7Ncw.jpg"}, {"t": "Суперполицейские 3", "p": "https://image.tmdb.org/t/p/w342/a5Rt5BMtGTFStdhxWutdjrHEgnU.jpg"}, {"t": "映画ちいかわ 人魚の島のひみつ", "p": "https://image.tmdb.org/t/p/w342/e8CPLRiIMes9RGxaW5GnGP2XPDg.jpg"}, {"t": "Infirmary", "p": "https://image.tmdb.org/t/p/w342/bHiAp8WWHgfUrJmRnoiw4URYGcq.jpg"}, {"t": "Стрим из ада", "p": "https://image.tmdb.org/t/p/w342/2bKGy1SoXZEUa69HRSy51rVM5KF.jpg"}, {"t": "Дюна: Часть третья", "p": "https://image.tmdb.org/t/p/w342/x50ig6nAMNCP3ihDXKfUjnKM4Ud.jpg"}, {"t": "Приглашение", "p": "https://image.tmdb.org/t/p/w342/7CrrtqCpZmJsosektfOsakY2fMz.jpg"}, {"t": "Де Голль. Часть 1. Сопротивление", "p": "https://image.tmdb.org/t/p/w342/zWuZWFKyga6GF3agrhJn8UtdMSu.jpg"}, {"t": "Грязные деньги", "p": "https://image.tmdb.org/t/p/w342/eX68co76w7wunCRunji7kyglqTG.jpg"}, {"t": "Заместитель", "p": "https://image.tmdb.org/t/p/w342/tgPVH0NIfQGVSUECHOCfZN3LlcQ.jpg"}, {"t": "Настройщик", "p": "https://image.tmdb.org/t/p/w342/7oNxg17JawXBMdkuSo7hpThhTZF.jpg"}, {"t": "Вот это драма!", "p": "https://image.tmdb.org/t/p/w342/mayjUmmXGM1n5E5AJnOfylig10W.jpg"}, {"t": "Очень страшное кино", "p": "https://image.tmdb.org/t/p/w342/w5rqOMj4J85Dee1tA3qNwhPuxKt.jpg"}, {"t": "NAZA", "p": "https://image.tmdb.org/t/p/w342/b4Gyj8VRoJAeU13jfKPuOTMr5GL.jpg"}, {"t": "Мандалорец и Грогу", "p": "https://image.tmdb.org/t/p/w342/tNap97mpnj63cQ5dXnCDYWKdUbi.jpg"}, {"t": "Супермен", "p": "https://image.tmdb.org/t/p/w342/ikbG08TQtkIWUVRVotHhndf72pL.jpg"}, {"t": "Аватар: Пламя и пепел", "p": "https://image.tmdb.org/t/p/w342/kpxYvaCnbRi7btNnpLCJrehy77e.jpg"}, {"t": "Грешники", "p": "https://image.tmdb.org/t/p/w342/ZpqkD0DOd6bpLpcV9oBY8YGcRj.jpg"}, {"t": "给阿嬷的情书", "p": "https://image.tmdb.org/t/p/w342/s0sC3hPPX4OobLNfdl2iSs2vtvI.jpg"}, {"t": "Нормал", "p": "https://image.tmdb.org/t/p/w342/1GXYen1mBGlNeIVes6sJHvgLeLC.jpg"}, {"t": "Ведьмин лес", "p": "https://image.tmdb.org/t/p/w342/pP612hJCCjdUrHF1kQ0LyWDOGZu.jpg"}, {"t": "Семь снайперов", "p": "https://image.tmdb.org/t/p/w342/r5m902K8gIyz0PdOg4FvziRUgFo.jpg"}, {"t": "Прыгуны", "p": "https://image.tmdb.org/t/p/w342/4eqr5LZH122BiU9hboXHZxX8bBl.jpg"}, {"t": "безумно богатые абсолютно нищие", "p": "https://image.tmdb.org/t/p/w342/4nQD7STEWNYW2cKldZQZRrYri90.jpg"}, {"t": "Legend of the White Dragon", "p": "https://image.tmdb.org/t/p/w342/tnIOv603JpFB0b0MkWQSBfJFNlY.jpg"}, {"t": "Годзилла: Минус ноль", "p": "https://image.tmdb.org/t/p/w342/zpcoFlZwyLnBt7bb5wmvGDCdg06.jpg"}, {"t": "仙逆剧场版：弑仙之战", "p": "https://image.tmdb.org/t/p/w342/cpgLuRAT8SW7YiZaBYUGZ43GiLL.jpg"}, {"t": "Хокум", "p": "https://image.tmdb.org/t/p/w342/60egk8TCOvbNTSOoPFODi2lZtGW.jpg"}, {"t": "Надежда", "p": "https://image.tmdb.org/t/p/w342/2h3a7i3mSd1ZhK7sYEzDRgdtvvl.jpg"}];
+function initWelcome(){
+  if(!state.welcome) return;
+  const root = document.getElementById('welcome');
+  if(!root || root.dataset.done) return;
+  root.dataset.done = '1';
+  root.style.display = 'block';
+  root.querySelectorAll('#wbrand .wl').forEach(wl => {
+    const text = wl.textContent; wl.textContent = '';
+    [...text].forEach((ch, i) => {
+      const sp = document.createElement('span');
+      sp.textContent = ch;
+      sp.style.animationDelay = (i * 0.07 + (wl.classList.contains('w2') ? 0.4 : 0)) + 's';
+      wl.appendChild(sp);
+    });
+  });
+  const wall = document.getElementById('wwall');
+  const ROWS = 6, PER_ROW = 12;
+  for (let r = 0; r < ROWS; r++) {
+    const row = document.createElement('div'); row.className = 'wrow';
+    const track = document.createElement('div'); track.className = 'wtrack';
+    track.style.animationDuration = (38 + r * 4) + 's';
+    for (let k = 0; k < 2; k++)
+      for (let i = 0; i < PER_ROW; i++) {
+        const p = W_POSTERS[(r * PER_ROW + i) % W_POSTERS.length];
+        const img = document.createElement('img');
+        img.src = p.p; img.alt = p.t; img.loading = 'lazy';
+        track.appendChild(img);
+      }
+    row.appendChild(track); wall.appendChild(row);
+  }
+  const phrases = ['Загружаем каталог…', 'Настраиваем качество…', 'Готовим подборку для вас…'];
+  const phraseEl = document.getElementById('wphrase');
+  const bar = document.getElementById('wbar');
+  const pct = document.getElementById('wpct');
+  const loader = document.getElementById('wloader');
+  const enter = document.getElementById('wenter');
+  const DURATION = 3200, start = performance.now();
+  let pi = 0;
+  const piTimer = setInterval(() => {
+    pi = (pi + 1) % phrases.length;
+    phraseEl.style.opacity = 0;
+    setTimeout(() => { phraseEl.textContent = phrases[pi]; phraseEl.style.opacity = 1; }, 250);
+  }, 1100);
+  function tick(now) {
+    const t = Math.min((now - start) / DURATION, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const v = Math.round(eased * 100);
+    bar.style.width = v + '%'; pct.textContent = v + '%';
+    if (t < 1) requestAnimationFrame(tick);
+    else { clearInterval(piTimer); loader.style.display = 'none'; enter.style.display = 'block'; }
+  }
+  requestAnimationFrame(tick);
+  enter.addEventListener('click', () => {
+    root.classList.add('wfadeout');
+    setTimeout(() => root.remove(), 650);
+  });
+}
+initWelcome();
 
 /* =================== BOOT =================== */
 (async function(){
