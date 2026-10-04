@@ -1799,7 +1799,6 @@ async function bootLive(){
     state.upcoming = ((upc&&upc.results)||[]).map(r=>norm(r)).filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
     refreshPrmDates();
     await loadThemeRows();
-    renderHomeRows({animate:false});
     if(fy){
       state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
@@ -2654,10 +2653,36 @@ function rvAnimate(box){
   box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
 }
 let homeAnimDone = false;
+let lastHomeGen = []; /* сгенерированный HTML рядов прошлого рендера: [{key, html}] */
 function armRows(box, animate){
   if(animate) rvAnimate(box);
   else box.querySelectorAll('.row-sec').forEach(el=>el.classList.add('rv','in'));
   homeAnimDone = true;
+}
+/* умный ререндер: пересоздаём только ряды, чей HTML изменился.
+   Неизменные узлы (и их <img>) остаются — постеры не мигают */
+function reuseHomeRows(box, parts){
+  const keyOf = h => (h.match(/data-sec="([^"]+)"/)||[])[1]||'';
+  const next = parts.map(h=>({key:keyOf(h), html:h}));
+  const kids = Array.from(box.children);
+  const prevMap = {};
+  lastHomeGen.forEach((p,i)=>{
+    if(kids[i] && kids[i].dataset.sec===p.key) (prevMap[p.key]=prevMap[p.key]||[]).push({node:kids[i], html:p.html});
+  });
+  const tmp = document.createElement('div');
+  tmp.innerHTML = parts.join('');
+  const frag = document.createDocumentFragment();
+  let allReused = lastHomeGen.length===next.length;
+  Array.from(tmp.children).forEach((n,i)=>{
+    const list = prevMap[next[i].key]||[];
+    const idx = list.findIndex(o=>o.html===next[i].html);
+    if(idx>=0) frag.appendChild(list.splice(idx,1)[0].node);
+    else { frag.appendChild(n); allReused = false; }
+  });
+  if(allReused) return;
+  box.innerHTML = '';
+  box.appendChild(frag);
+  lastHomeGen = next;
 }
 async function renderHomeRows(opts){
   const animate = (opts && opts.animate) || !homeAnimDone;
@@ -2687,6 +2712,7 @@ async function renderHomeRows(opts){
       more:{type:'genre_tv', genreId:state.genre, title:gname+' · сериалы'}}];
     const shown = sections.filter(s=>visible(s.items).length);
     box.innerHTML = shown.map(s=>sectionCardsHTML(s)).join('');
+    lastHomeGen = [];
     bindCards(box);
     box.querySelectorAll('.row-more').forEach(b=>{ const s=shown.find(x=>x.id===b.dataset.sec); if(s&&s.more) b.onclick=()=>openCategory(s.more); });
     armRows(box, animate);
@@ -2709,7 +2735,7 @@ async function renderHomeRows(opts){
     parts.push(sectionCardsHTML(s));
   }
   const shown = parts;
-  box.innerHTML = parts.join('');
+  reuseHomeRows(box, parts);
   bindCards(box);
   bindColCards(box);
   box.querySelectorAll('.row-more').forEach(b=>{
