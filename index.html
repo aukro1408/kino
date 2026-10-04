@@ -1799,6 +1799,7 @@ async function bootLive(){
     state.upcoming = ((upc&&upc.results)||[]).map(r=>norm(r)).filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
     refreshPrmDates();
     await loadThemeRows();
+    renderHomeRows();
     if(fy){
       state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
         more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
@@ -1916,7 +1917,7 @@ function moveHomeSec(id, dir){
   [ord[i],ord[j]] = [ord[j],ord[i]];
   LS.set('home_order', ord);
   renderHomeRowsBox();
-  renderHomeRows({animate:true});
+  renderHomeRows();
 }
 
 /* Персональный ряд «Для тебя» — по жанрам из избранного (идея из Lampa Discovery) */
@@ -1957,7 +1958,7 @@ async function refreshForYou(){
     state.sections.unshift({id:'foryou', title:'Для тебя', items: fy.items.slice(0,14),
       more:{type:'foryou', genreIds: fy.genreIds, title:'Для тебя'}});
   }
-  if(currentScreenId()==='scr-home' && state.genre==='all') renderHomeRows({animate:false});
+  if(currentScreenId()==='scr-home' && state.genre==='all') renderHomeRows();
 }
 
 /* =================== КОЛЛЕКЦИИ (CUB) =================== */
@@ -2109,7 +2110,7 @@ function renderChips(){
   const cb = $('#chips');
   cb.innerHTML = GENRE_CHIPS.map(c=>
     `<button class="chip ${state.genre==c.id?'on':''}" data-g="${c.id}">${c.name}</button>`).join('');
-  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderHomeRows({animate:true}); });
+  document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ state.genre=ch.dataset.g; renderChips(); renderHomeRows(); });
   if(!chipsShown){ chipsShown = true; cb.classList.remove('chips-in'); void cb.offsetWidth; cb.classList.add('chips-in'); }
 }
 /* =================== CUB SYNC: закладки + тайм-коды =================== */
@@ -2336,19 +2337,23 @@ async function cubSync(opt){
   if(!cubConnected() || cubBusy) return;
   cubBusy = true;
   try{
-    await cubEnrichOrig();
     const fq = await cubFlushQueue();
     const pb = await cubPullBookmarks();
     if(!LS.get('cub_firstdone', false)){
       await cubPushMissing();
       LS.set('cub_firstdone', true);
     }
-    const tl = await cubPullTimeline();
+    let tl = await cubPullTimeline();
+    /* original_title для хэша подтягиваем только если в CUB вообще есть тайм-коды */
+    if(tl.total>0){
+      const needEnrich = [...state.favs.mark, ...state.favs.later, ...state.favs.like, ...state.history].some(e=>!e.orig);
+      if(needEnrich){ await cubEnrichOrig(); tl = await cubPullTimeline(); }
+    }
     LS.set('cub_last', Date.now());
     LS.set('cub_stats', {bm: pb.total, tl: tl.total, tlm: tl.matched});
     /* тихий автосинк не трогает экран, если ничего не изменилось */
     const changed = (fq + pb.added + tl.matched) > 0;
-    if(changed || !opt.quiet){ renderFav(); renderHomeRows({animate:false}); }
+    if(changed || !opt.quiet){ renderFav(); renderHomeRows(); }
     cubRenderUI();
     if(!opt.quiet) toast('CUB: синхронизировано ✓');
   }catch(e){
@@ -2434,7 +2439,7 @@ function cubRenderUI(){
   $('#cubOffBtn').onclick = ()=>{
     ['cub','cub_ids','cub_queue','cub_firstdone','cub_last'].forEach(k=>{ try{ localStorage.removeItem('kino.'+k); }catch(e){} });
     state.continueWatch = [];
-    cubRenderUI(); renderHomeRows({animate:true});
+    cubRenderUI(); renderHomeRows();
     toast('CUB отключён');
   };
 }
@@ -2482,7 +2487,7 @@ function newepHTML(){
     <div class="hrow">${items.map(neCardHTML).join('')}</div></div>`;
 }
 async function checkTracked(force){
-  renderHomeRows({animate:false});
+  renderHomeRows();
   if(!state.live) return;
   const t = trackedMap(), ids = Object.keys(t);
   if(!ids.length) return;
@@ -2516,7 +2521,7 @@ async function checkTracked(force){
     }catch(e){}
   }
   if(changed) LS.set('tracked', t);
-  renderHomeRows({animate:false});
+  renderHomeRows();
 }
 
 /* ===== ПРЕМЬЕРЫ: календарь + напоминания ===== */
@@ -2652,40 +2657,7 @@ function sectionCardsHTML(s){
 function rvAnimate(box){
   box.querySelectorAll('.row-sec').forEach((el,i)=>{ el.classList.add('rv'); el.style.transitionDelay = (i%3*60)+'ms'; rvObs.observe(el); });
 }
-let homeAnimDone = false;
-let lastHomeGen = []; /* сгенерированный HTML рядов прошлого рендера: [{key, html}] */
-function armRows(box, animate){
-  if(animate) rvAnimate(box);
-  else box.querySelectorAll('.row-sec').forEach(el=>el.classList.add('rv','in'));
-  homeAnimDone = true;
-}
-/* умный ререндер: пересоздаём только ряды, чей HTML изменился.
-   Неизменные узлы (и их <img>) остаются — постеры не мигают */
-function reuseHomeRows(box, parts){
-  const keyOf = h => (h.match(/data-sec="([^"]+)"/)||[])[1]||'';
-  const next = parts.map(h=>({key:keyOf(h), html:h}));
-  const kids = Array.from(box.children);
-  const prevMap = {};
-  lastHomeGen.forEach((p,i)=>{
-    if(kids[i] && kids[i].dataset.sec===p.key) (prevMap[p.key]=prevMap[p.key]||[]).push({node:kids[i], html:p.html});
-  });
-  const tmp = document.createElement('div');
-  tmp.innerHTML = parts.join('');
-  const frag = document.createDocumentFragment();
-  let allReused = lastHomeGen.length===next.length;
-  Array.from(tmp.children).forEach((n,i)=>{
-    const list = prevMap[next[i].key]||[];
-    const idx = list.findIndex(o=>o.html===next[i].html);
-    if(idx>=0) frag.appendChild(list.splice(idx,1)[0].node);
-    else { frag.appendChild(n); allReused = false; }
-  });
-  if(allReused) return;
-  box.innerHTML = '';
-  box.appendChild(frag);
-  lastHomeGen = next;
-}
-async function renderHomeRows(opts){
-  const animate = (opts && opts.animate) || !homeAnimDone;
+async function renderHomeRows(){
   const box = $('#homeRows');
   let sections = state.sections;
   if(state.genre!=='all'){
@@ -2712,10 +2684,9 @@ async function renderHomeRows(opts){
       more:{type:'genre_tv', genreId:state.genre, title:gname+' · сериалы'}}];
     const shown = sections.filter(s=>visible(s.items).length);
     box.innerHTML = shown.map(s=>sectionCardsHTML(s)).join('');
-    lastHomeGen = [];
     bindCards(box);
     box.querySelectorAll('.row-more').forEach(b=>{ const s=shown.find(x=>x.id===b.dataset.sec); if(s&&s.more) b.onclick=()=>openCategory(s.more); });
-    armRows(box, animate);
+    rvAnimate(box);
     return;
   }
   const byId = {};
@@ -2735,7 +2706,7 @@ async function renderHomeRows(opts){
     parts.push(sectionCardsHTML(s));
   }
   const shown = parts;
-  reuseHomeRows(box, parts);
+  box.innerHTML = parts.join('');
   bindCards(box);
   bindColCards(box);
   box.querySelectorAll('.row-more').forEach(b=>{
@@ -2744,7 +2715,7 @@ async function renderHomeRows(opts){
   });
   box.querySelectorAll('[data-secmore]').forEach(b=>{ b.onclick=()=>openCategory({type:'upcoming', title:'Скоро выйдет'}); });
   box.querySelectorAll('.studio-tile').forEach(t=>{ t.onclick=()=>{ const s=STUDIOS[+t.dataset.si]; openCategory({type:'studio', studioId:s.id, sub:(s.mv?'movie':'tv'), title:s.name}); }; });
-  armRows(box, animate);
+  rvAnimate(box);
   updateNotifBell();
 }
 let catObs = null, catLoading = false, catDone = false, catPage = 0, catMore = null;
@@ -2989,7 +2960,7 @@ function showScreen(id, restore){
   if(restore && id==='scr-home'){
     document.querySelectorAll('#scr-home .hrow').forEach(r=>{ const s=r.closest('.row-sec'); const k=s&&s.dataset.sec; if(k&&hrowMem[k]) r.scrollLeft = hrowMem[k]; });
   }
-  if(id==='scr-home') renderHomeRows({animate:true});
+  if(id==='scr-home') renderHomeRows();
 }
 function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
 function saveScrollState(){
@@ -5666,9 +5637,9 @@ $('#tmdbKey').addEventListener('change', async e=>{
   if(state.tmdbKey){
     toast('Проверяю ключ…');
     const ok = await bootLive();
-    if(ok){ renderHero(); renderHomeRows({animate:true}); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
+    if(ok){ renderHero(); renderHomeRows(); checkTracked(); toast('TMDB подключён 🎬'); $('#profileSub').textContent='онлайн · TMDB подключён'; }
     else { toast('Ключ не подошёл'); }
-  } else { state.live=false; bootDemo(); renderHero(); renderHomeRows({animate:true}); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
+  } else { state.live=false; bootDemo(); renderHero(); renderHomeRows(); $('#profileSub').textContent='демо-режим · вставь ключ TMDB'; }
 });
 $('#geminiKey').addEventListener('change', e=>{
   state.geminiKey = e.target.value.trim(); LS.set('gemini_key', state.geminiKey);
@@ -5713,7 +5684,7 @@ $('#geminiCheck').onclick = async ()=>{
 if(state.geminiKey) $('#stAi').textContent = '✓';
 const hw = $('#hideWatched');
 function paintHw(){ hw.classList.toggle('on', state.hideWatched); }
-hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderHomeRows({animate:true}); };
+hw.onclick = ()=>{ state.hideWatched=!state.hideWatched; LS.set('hide_watched',state.hideWatched); paintHw(); renderHomeRows(); };
 const rowTv = $('#rowTvMode');
 if(rowTv) rowTv.onclick = ()=>{
   const cur = TV_MODES.indexOf(LS.get('tv_mode','auto'));
@@ -5746,7 +5717,7 @@ function renderHomeRowsBox(){
     const id = b.dataset.hs;
     setHomeOff(id, !homeOff(id));
     b.classList.toggle('on', !homeOff(id));
-    renderHomeRows({animate:true});
+    renderHomeRows();
   });
   box.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>moveHomeSec(b.dataset.id, +b.dataset.mv));
 }
@@ -6180,7 +6151,7 @@ $('#aiBuddy').onclick = ()=>{
   renderHero(); renderChips(); renderHomeRows(); updateStats();
   if(state.tmdbKey){
     const ok = await bootLive();
-    if(ok){ renderHero(); renderHomeRows({animate:false}); }
+    if(ok){ renderHero(); renderHomeRows(); }
   }
   checkTracked();
   if(cubConnected()) cubSync({quiet:true});
