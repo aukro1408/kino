@@ -6232,11 +6232,11 @@ function initWelcome(){
     });
   });
   const wall = document.getElementById('wwall');
-  const ROWS = 6, PER_ROW = 12;
+  const ROWS = 6, PER_ROW = 17;
   for (let r = 0; r < ROWS; r++) {
     const row = document.createElement('div'); row.className = 'wrow';
     const track = document.createElement('div'); track.className = 'wtrack';
-    track.style.animationDuration = (38 + r * 4) + 's';
+    track.style.animationDuration = ((38 + r * 4) * PER_ROW / 12) + 's';
     for (let k = 0; k < 2; k++)
       for (let i = 0; i < PER_ROW; i++) {
         const p = W_POSTERS[(r * PER_ROW + i) % W_POSTERS.length];
