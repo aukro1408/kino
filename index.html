@@ -1003,8 +1003,8 @@
   .pl-flash.right{left:75%}
   .pl-flash.show{animation:plflash .55s ease-out}
   @keyframes plflash{0%{opacity:0; transform:scale(.55)}22%{opacity:1; transform:scale(1)}100%{opacity:0; transform:scale(1.12)}}
-  .pl-ui{position:absolute; inset:0; z-index:4; pointer-events:none; opacity:1; transition:opacity .25s}
-  .pl-ui.hide{opacity:0}
+  .pl-ui{position:absolute; inset:0; z-index:4; pointer-events:none; opacity:1; visibility:visible; transition:opacity .25s, visibility 0s}
+  .pl-ui.hide{opacity:0; visibility:hidden; transition:opacity .25s, visibility 0s .3s}
   .pl-ui>*{pointer-events:auto}
   .pl-topbar{position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:10px; padding:14px 14px 28px; background:linear-gradient(180deg, rgba(0,0,0,.55), transparent)}
   .pl-title{flex:1; font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 8px rgba(0,0,0,.8)}
