@@ -38,6 +38,8 @@
   .header{display:flex; align-items:center; justify-content:space-between; padding:18px 20px 8px;}
   .logo{font-weight:800; font-size:22px; letter-spacing:6px;}
   .hicons{display:flex; gap:10px; align-items:center}
+  .logo-wrap{display:flex; align-items:center; gap:8px; min-width:0}
+  .logo-paw{width:36px; height:36px; object-fit:contain; flex-shrink:0}
   .logo.brand{font-family:'Manrope','Inter',system-ui,sans-serif; font-size:30px; font-weight:800; letter-spacing:-1px; white-space:nowrap;
     background:linear-gradient(110deg,#ffffff 30%,#93c5fd 45%,#ffffff 60%); background-size:200% auto;
     color:transparent; -webkit-background-clip:text; background-clip:text; animation:logo-shine 5s linear infinite;}
@@ -45,10 +47,12 @@
   @keyframes logo-shine{to{background-position:200% center}}
   @keyframes dot-pulse{0%{text-shadow:0 0 5px rgba(59,130,246,.5)}100%{text-shadow:0 0 12px rgba(59,130,246,.9),0 0 22px rgba(59,130,246,.6)}}
   @media (max-width:480px){
-    .header{padding:14px 14px 8px}
-    .hicons{gap:8px}
-    .hicons .icon-btn{width:38px; height:38px}
-    .logo.brand{font-size:24px}
+    .header{padding:14px 12px 8px}
+    .hicons{gap:6px}
+    .hicons .icon-btn{width:36px; height:36px}
+    .logo.brand{font-size:23px}
+    .logo-wrap{gap:7px}
+    .logo-paw{width:30px; height:30px}
   }
 
   .logo span{color:var(--accent)}
@@ -1167,7 +1171,7 @@
   <!-- ============ HOME ============ -->
   <div class="screen active" id="scr-home">
     <div class="header">
-      <div class="logo brand">Пацюк Кино<span class="dot">.</span></div>
+      <div class="logo-wrap"><img class="logo-paw" src="paw.png" alt=""><div class="logo brand">Пацюк Кино<span class="dot">.</span></div></div>
       <div class="hicons">
       <button class="icon-btn" id="aiBtn" aria-label="AI-подборка">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.9 3.1L23 19l-3.1.9L19 23l-.9-3.1L15 19l3.1-.9z"/></svg>
