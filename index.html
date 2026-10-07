@@ -981,7 +981,9 @@
   .ditem.on{background:rgba(77,163,255,.15)}
   .ditem.on svg{color:var(--accent)}
   body.wide button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-  body.wide #scr-home .header .logo{display:none}
+  body.wide #scr-home .header{display:none}
+  body.wide .wtop .hicons{margin-left:auto}
+  body.wide .wtop .logo-paw{width:30px; height:30px;}
   body.wide #scr-home .header{justify-content:flex-end}
   /* пульт: видимый фокус на карточках — белая рамка как в Lampa */
   body.wide [data-fc]{border-radius:14px}
@@ -1170,7 +1172,7 @@
 <div id="app">
   <header class="wtop">
     <button class="burger" id="burger" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <div class="logo">Пацюк Кино<span>.</span></div>
+    <div class="logo-wrap"><img class="logo-paw" src="paw.png?v=2" alt=""><div class="logo">Пацюк Кино<span>.</span></div></div>
   </header>
 
   <!-- ============ HOME ============ -->
@@ -2204,6 +2206,7 @@ function heroFx(){
 function pokeHero(){
   clearInterval(heroTimer);
   heroTimer = setInterval(()=>{
+    try{ if(typeof TV !== 'undefined' && TV.cur && TV.cur.closest && TV.cur.closest('.hero')) return; }catch(_){}
     const n = state.hero.length;
     if(n) heroGo((heroCur+1) % n);
   }, 6000);
@@ -5309,9 +5312,22 @@ function closeDrawer(){
 function applyWide(){
   const was = document.body.classList.contains('wide');
   document.body.classList.toggle('wide', tvActive());
+  tvPlaceIcons();
   closeDrawer();
   syncTvRow();
   if(tvActive() && !was) tvOnScreen(currentScreenId(), true);
+}
+/* в ТВ-режиме одна верхняя панель: иконки главной переезжают в wtop */
+function tvPlaceIcons(){
+  const hicons = document.querySelector('#scr-home .hicons');
+  if(!hicons) return;
+  if(document.body.classList.contains('wide')){
+    const wtop = document.querySelector('.wtop');
+    if(wtop && hicons.parentElement !== wtop) wtop.appendChild(hicons);
+  }else{
+    const hdr = document.querySelector('#scr-home .header');
+    if(hdr && hicons.parentElement !== hdr) hdr.appendChild(hicons);
+  }
 }
 const THEMES = ['classic','modern'], THEME_T = {classic:'Классика', modern:'Модерн'};
 function applyTheme(){
@@ -5384,7 +5400,31 @@ function tvVisible(el){
   const r = el.getBoundingClientRect();
   if(r.width < 4 || r.height < 4) return false;
   const cs = getComputedStyle(el);
-  return cs.display !== 'none' && cs.visibility !== 'hidden';
+  if(cs.display === 'none' || cs.visibility === 'hidden') return false;
+  /* слайд hero-карусели — только если виден большей частью (не гоняем карусель пультом) */
+  if(el.classList && el.classList.contains('hero-slide')){
+    const hero = el.closest('.hero');
+    if(hero){
+      const hr = hero.getBoundingClientRect();
+      const vis = Math.min(r.right, hr.right) - Math.max(r.left, hr.left);
+      if(vis < r.width * 0.6) return false;
+    }
+  }
+  /* по горизонтали за экраном — только если есть куда проскроллить (ряды, чипы) */
+  else{
+    const vw = window.innerWidth || 0;
+    if(r.right <= 0 || r.left >= vw) return !!tvHScroll(el);
+  }
+  return true;
+}
+/* ближайший горизонтальный скролл-контейнер */
+function tvHScroll(el){
+  let n = el.parentElement;
+  while(n && n !== document.body){
+    if(n.scrollWidth > n.clientWidth + 4) return n;
+    n = n.parentElement;
+  }
+  return null;
 }
 function tvTopLayer(){
   if(!tvActive()) return null;
@@ -5399,7 +5439,16 @@ function tvTopLayer(){
 function tvCollect(root){
   root = root || tvTopLayer();
   if(!root) return [];
-  return [...new Set([...root.querySelectorAll(TV_SEL)].filter(tvVisible))];
+  const roots = [];
+  /* в ТВ-режиме верхняя панель — часть навигации (бургер слева), она визуально первая */
+  if(root.classList && root.classList.contains('screen') && document.body.classList.contains('wide')){
+    const wtop = document.querySelector('.wtop');
+    if(wtop && wtop.getBoundingClientRect().width > 4) roots.push(wtop);
+  }
+  roots.push(root);
+  const els = [];
+  roots.forEach(r=>els.push(...r.querySelectorAll(TV_SEL)));
+  return [...new Set(els)].filter(tvVisible);
 }
 /* --- пространственный поиск: ближайший в направлении --- */
 function tvR(el){
@@ -5496,16 +5545,16 @@ function tvFocus(el, noscroll){
   return true;
 }
 function tvEnsureVisible(el){
-  const row = el.closest('.hrow');
-  const anchor = row || el;
-  if(row){
-    const rr = row.getBoundingClientRect(), er = el.getBoundingClientRect();
+  const hs = tvHScroll(el);
+  const anchor = hs || el;
+  if(hs){
+    const rr = hs.getBoundingClientRect(), er = el.getBoundingClientRect();
     const dx = (er.left + er.width/2) - (rr.left + rr.width/2);
-    if(Math.abs(dx) > 4) row.scrollTo({left: row.scrollLeft + dx, behavior:'smooth'});
+    if(Math.abs(dx) > 4) hs.scrollTo({left: hs.scrollLeft + dx, behavior:'auto'});
   }
   const ar = anchor.getBoundingClientRect(), vh = window.innerHeight || 0;
   if(ar.top < 0 || ar.bottom > vh){
-    try{ anchor.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
+    try{ anchor.scrollIntoView({block:'nearest', behavior:'auto'}); }catch(_){}
   }
 }
 function tvMove(dir){
