@@ -1715,7 +1715,8 @@ function starsHTML(r){
 }
 function posterHTML(m, big){
   if(m.poster) return `<img src="${IMG}w500${m.poster}" alt="" loading="lazy">`;
-  return `<div class="demo-art" style="background:linear-gradient(150deg,${m.art[0]},${m.art[1]})"><span class="demo-logo"></span><b>${m.title}</b><small>${m.year}</small></div>`;
+  const art = m.art || ['#2f6fed','#101a33'];
+  return `<div class="demo-art" style="background:linear-gradient(150deg,${art[0]},${art[1]})"><span class="demo-logo"></span><b>${m.title}</b><small>${m.year}</small></div>`;
 }
 function backdropHTML(m){
   if(m.backdrop) return `<img src="${IMG}w780${m.backdrop}" alt="">`;
@@ -2672,6 +2673,7 @@ function studiosStripHTML(){
 
 /* ===== УВЕДОМЛЕНИЯ: колокольчик в шапке + шторка ===== */
 function notifItems(){
+  premiereCheck(); /* вышедшие премьеры помечаем при каждом обращении к уведомлениям — не зависит от ряда «Уже вышло» */
   const series = Object.values(trackedMap()).filter(x=>x.hasNew && x.lastEp);
   const now = todayStr();
   const premieres = Object.values(prmMap()).filter(x=>x.notified && !x.seen && x.date && x.date<=now);
