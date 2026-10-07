@@ -3950,7 +3950,7 @@ function vwAskPlayer(url, title, subs, mv, info){
     {t:'Встроенный плеер', s:'синий плеер blackroom'},
     {t:'VLC', s:'внешнее приложение'}
   ], -1, i=>{
-    if(i===1) openExternal(url);
+    if(i===1) openExternal(url, ()=>{ toast('VLC не открылся · включаю встроенный плеер'); openPlayer(url, title, subs, mv, info); });
     else openPlayer(url, title, subs, mv, info);
   });
 }
@@ -4866,11 +4866,29 @@ function vlcIntent(u){
       '#Intent;scheme=' + p.protocol.replace(':','') + ';package=org.videolan.vlc;type=video/*;end';
   }catch(e){ return null; }
 }
-function openExternal(url){
+function openExternal(url, fallback){
   const iu = vlcIntent(url);
   if(!iu){ toast('Не получилось открыть ссылку'); return; }
   toast('Открываю в VLC…');
-  setTimeout(()=>{ window.location.href = iu; }, 350);
+  /* intent дёргаем через скрытый iframe — страница приложения остаётся на месте,
+     иначе браузер телика уходит на «Не удалось открыть веб-страницу» */
+  let gone = false;
+  const onHide = ()=>{ gone = true; };
+  document.addEventListener('visibilitychange', onHide);
+  window.addEventListener('blur', onHide);
+  const f = document.createElement('iframe');
+  f.style.cssText = 'display:none;width:0;height:0;border:0;';
+  document.body.appendChild(f);
+  f.src = iu;
+  setTimeout(()=>{
+    document.removeEventListener('visibilitychange', onHide);
+    window.removeEventListener('blur', onHide);
+    f.remove();
+    if(!gone){
+      if(fallback) fallback();
+      else toast('VLC не открылся');
+    }
+  }, 2000);
 }
 
 async function playTorrent(t, m){
