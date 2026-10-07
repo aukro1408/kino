@@ -998,6 +998,11 @@
   .ne-sub b{color:var(--accent2); font-weight:800}
   body.wide .ditem:focus{background:#fff; color:#0b1220}
   body.wide .ditem:focus svg{color:#0b1220}
+  /* TV-пульт: фокус в духе Lampa — рамка + лёгкий зум */
+  body.wide .tv-focus{outline:3px solid #fff !important; outline-offset:4px; position:relative; z-index:6;}
+  body.wide [data-fc].tv-focus{transform:scale(1.07);}
+  body.wide button.tv-focus{transform:scale(1.1);}
+  body.wide [data-fc], body.wide button{transition:transform .16s ease;}
   body.wide button:focus-visible{outline:3px solid #fff; outline-offset:2px}
   .pl-stage{position:relative; width:100%; height:100dvh; background:#000; overflow:hidden; display:flex; align-items:center; justify-content:center}
   #plVideo{width:100%; max-height:100%; background:#000; outline:none}
@@ -2701,7 +2706,7 @@ function ntfItemHTML(it){
   const art = ['#2f6fed','#101a33'];
   if(it.kind==='series'){
     const le = it.lastEp||{};
-    return `<div class="ntf-item" data-kind="series" data-id="${it.id}">
+    return `<div class="ntf-item" data-kind="series" data-id="${it.id}" tabindex="0" data-fc>
       <div class="ntf-poster">${posterHTML({poster:it.poster, art})}</div>
       <div class="ntf-body"><div class="ntf-title">${it.title}</div>
         <div class="ntf-sub">Новая серия</div>
@@ -2709,7 +2714,7 @@ function ntfItemHTML(it){
       <div class="ntf-date">${le.air?fmtPrmDate(le.air):''}</div>
     </div>`;
   }
-  return `<div class="ntf-item" data-kind="premiere" data-id="${it.id}">
+  return `<div class="ntf-item" data-kind="premiere" data-id="${it.id}" tabindex="0" data-fc>
     <div class="ntf-poster">${posterHTML({poster:it.poster, art})}</div>
     <div class="ntf-body"><div class="ntf-title">Премьера: ${it.title}</div>
       <div class="ntf-sub">Фильм уже вышел</div></div>
@@ -3047,6 +3052,7 @@ function showScreen(id, restore){
     document.querySelectorAll('#scr-home .hrow').forEach(r=>{ const s=r.closest('.row-sec'); const k=s&&s.dataset.sec; if(k&&hrowMem[k]) r.scrollLeft = hrowMem[k]; });
   }
   if(id==='scr-home') renderHomeRows();
+  tvOnScreen(id, restore);
 }
 function currentScreenId(){ const a=document.querySelector('.screen.active'); return a?a.id:'scr-home'; }
 function saveScrollState(){
@@ -5301,9 +5307,11 @@ function closeDrawer(){
   if(v) v.classList.remove('open');
 }
 function applyWide(){
+  const was = document.body.classList.contains('wide');
   document.body.classList.toggle('wide', tvActive());
   closeDrawer();
   syncTvRow();
+  if(tvActive() && !was) tvOnScreen(currentScreenId(), true);
 }
 const THEMES = ['classic','modern'], THEME_T = {classic:'Классика', modern:'Модерн'};
 function applyTheme(){
@@ -5355,26 +5363,239 @@ if(burgerBtn) burgerBtn.onclick = ()=>{
 const drawerVeil = $('#drawerVeil');
 if(drawerVeil) drawerVeil.onclick = closeDrawer;
 document.querySelectorAll('.ditem').forEach(b=>b.onclick=()=>{ goto(b.dataset.tab); closeDrawer(); });
-/* пульт: OK/Enter как у Lampa — по keyCode, не полагаемся на нативные кнопки */
+/* ============ TV-пульт: D-pad навигация в духе Lampa ============
+   Пространственный алгоритм — из SpatialNavigator (lampa-apk/navigator.js):
+   кандидаты делятся на 9 зон относительно фокуса, ранжируются по близости
+   к отвесу/горизонту через центр. */
 function tvKeyCode(e){
   if(e.keyCode) return e.keyCode;
   if(e.which) return e.which;
   return 0;
 }
 function tvIsEnter(k){ return k===13 || k===23 || k===29443 || k===117 || k===65385; }
+const TVK_BACK = [4, 8, 461, 10009]; /* назад: Android, Backspace, LG, Samsung */
+const TV_DIR = {37:'left', 38:'up', 39:'right', 40:'down'};
+const TV_REV = {left:'right', right:'left', up:'down', down:'up'};
+const TV_SEL = 'button, [data-fc], input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';
+const TV = { cur:null, prev:null, mem:{}, memKey:{}, sheetReturn:null };
+
+function tvVisible(el){
+  if(!el || el.disabled) return false;
+  const r = el.getBoundingClientRect();
+  if(r.width < 4 || r.height < 4) return false;
+  const cs = getComputedStyle(el);
+  return cs.display !== 'none' && cs.visibility !== 'hidden';
+}
+function tvTopLayer(){
+  if(!tvActive()) return null;
+  const w = document.getElementById('welcome');
+  if(w && w.getBoundingClientRect().width > 4) return w;
+  const veils = [...document.querySelectorAll('.sheet-veil.show')];
+  if(veils.length) return veils[veils.length - 1];
+  const dr = document.getElementById('drawer');
+  if(dr && dr.classList.contains('open')) return dr;
+  return document.querySelector('.screen.active') || document.body;
+}
+function tvCollect(root){
+  root = root || tvTopLayer();
+  if(!root) return [];
+  return [...new Set([...root.querySelectorAll(TV_SEL)].filter(tvVisible))];
+}
+/* --- пространственный поиск: ближайший в направлении --- */
+function tvR(el){
+  const r = el.getBoundingClientRect();
+  return {el, l:r.left, t:r.top, r:r.right, b:r.bottom, w:r.width, h:r.height,
+          cx:r.left + r.width/2, cy:r.top + r.height/2};
+}
+function tvSpatial(from, dir, els){
+  const T = tvR(from), TH = 0.5;
+  const list = [];
+  els.forEach(e=>{ if(e !== from){ const rc = tvR(e); if(rc.w > 0 && rc.h > 0) list.push(rc); } });
+  if(!list.length) return null;
+  const g = [[],[],[],[],[],[],[],[],[]];
+  list.forEach(rc=>{
+    const x = rc.cx < T.l ? 0 : (rc.cx <= T.r ? 1 : 2);
+    const y = rc.cy < T.t ? 0 : (rc.cy <= T.b ? 1 : 2);
+    const gid = y*3 + x;
+    g[gid].push(rc);
+    if(gid===0 || gid===2 || gid===6 || gid===8){
+      if(rc.l <= T.r - T.w*TH){ if(gid===2) g[1].push(rc); else if(gid===8) g[7].push(rc); }
+      if(rc.r >= T.l + T.w*TH){ if(gid===0) g[1].push(rc); else if(gid===6) g[7].push(rc); }
+      if(rc.t <= T.b - T.h*TH){ if(gid===6) g[3].push(rc); else if(gid===8) g[5].push(rc); }
+      if(rc.b >= T.t + T.h*TH){ if(gid===0) g[3].push(rc); else if(gid===2) g[5].push(rc); }
+    }
+  });
+  const D = {
+    plumb: rc => { const d = rc.cx < T.cx ? T.cx - rc.r : rc.l - T.cx; return d < 0 ? 0 : d; },
+    horiz: rc => { const d = rc.cy < T.cy ? T.cy - rc.b : rc.t - T.cy; return d < 0 ? 0 : d; },
+    left:  rc => rc.l, right: rc => -rc.r, top: rc => rc.t, bot: rc => -rc.b,
+    tLeft: rc => { const d = rc.cx < T.cx ? T.l - rc.r : rc.l - T.l; return d < 0 ? 0 : d; },
+    tTop:  rc => { const d = rc.cy < T.cy ? T.t - rc.b : rc.t - T.t; return d < 0 ? 0 : d; }
+  };
+  const ig = [[],[],[],[],[],[],[],[],[]];
+  g[4].forEach(rc=>{
+    const x = rc.cx < T.cx ? 0 : (rc.cx > T.cx ? 2 : 1);
+    const y = rc.cy < T.cy ? 0 : (rc.cy > T.cy ? 2 : 1);
+    ig[y*3 + x].push(rc);
+  });
+  let pr = null;
+  if(dir === 'left') pr = [
+    [ig[0].concat(ig[3], ig[6]), [D.plumb, D.top]],
+    [g[3], [D.plumb, D.top]],
+    [g[0].concat(g[6]), [D.horiz, D.right, D.tTop]]];
+  else if(dir === 'right') pr = [
+    [ig[2].concat(ig[5], ig[8]), [D.plumb, D.top]],
+    [g[5], [D.plumb, D.top]],
+    [g[2].concat(g[8]), [D.horiz, D.left, D.tTop]]];
+  else if(dir === 'up') pr = [
+    [ig[0].concat(ig[1], ig[2]), [D.horiz, D.left]],
+    [g[1], [D.horiz, D.left]],
+    [g[0].concat(g[2]), [D.plumb, D.bot, D.tLeft]]];
+  else if(dir === 'down') pr = [
+    [ig[6].concat(ig[7], ig[8]), [D.horiz, D.left]],
+    [g[7], [D.horiz, D.left]],
+    [g[6].concat(g[8]), [D.plumb, D.top, D.tLeft]]];
+  else return null;
+  pr.pop(); /* straightOnly: диагонали не берём */
+  for(const grpFns of pr){
+    const grp = grpFns[0], fns = grpFns[1];
+    if(!grp.length) continue;
+    if(TV.prev && TV.prev.dst === from && TV.prev.rev === dir){
+      const back = grp.find(rc => rc.el === TV.prev.src);
+      if(back) return back.el;
+    }
+    grp.sort((a, b)=>{ for(const f of fns){ const v = f(a) - f(b); if(v) return v; } return 0; });
+    return grp[0].el;
+  }
+  return null;
+}
+/* --- фокус --- */
+function tvKey(el){
+  const cls = (typeof el.className === 'string' ? el.className : '').split(' ')[0] || '';
+  const id = (el.dataset && el.dataset.id) ? 'id:' + el.dataset.id
+    : (el.id ? '#' + el.id : 'tx:' + el.textContent.trim().slice(0, 14));
+  return el.tagName + '.' + cls + '|' + id;
+}
+function tvRecall(id, els){
+  const k = TV.memKey[id];
+  if(k){ const f = els.find(e=>tvKey(e) === k); if(f) return f; }
+  const mem = TV.mem[id];
+  if(mem && els.indexOf(mem) >= 0) return mem;
+  return null;
+}
+function tvFocus(el, noscroll){
+  if(!el || !tvVisible(el)) return false;
+  if(TV.cur === el) return true;
+  if(TV.cur) TV.cur.classList.remove('tv-focus');
+  TV.cur = el;
+  el.classList.add('tv-focus');
+  try{ el.focus({preventScroll:true}); }catch(_){ try{ el.focus(); }catch(__){} }
+  const sid = currentScreenId();
+  if(sid){ TV.mem[sid] = el; TV.memKey[sid] = tvKey(el); }
+  if(!noscroll) tvEnsureVisible(el);
+  return true;
+}
+function tvEnsureVisible(el){
+  const row = el.closest('.hrow');
+  const anchor = row || el;
+  if(row){
+    const rr = row.getBoundingClientRect(), er = el.getBoundingClientRect();
+    const dx = (er.left + er.width/2) - (rr.left + rr.width/2);
+    if(Math.abs(dx) > 4) row.scrollTo({left: row.scrollLeft + dx, behavior:'smooth'});
+  }
+  const ar = anchor.getBoundingClientRect(), vh = window.innerHeight || 0;
+  if(ar.top < 0 || ar.bottom > vh){
+    try{ anchor.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
+  }
+}
+function tvMove(dir){
+  if(!tvActive()) return;
+  const els = tvCollect();
+  if(!els.length) return;
+  let from = TV.cur;
+  if(!from || !document.contains(from) || els.indexOf(from) < 0){
+    TV.prev = null;
+    tvFocus(tvRecall(currentScreenId(), els) || els[0]);
+    return;
+  }
+  const next = tvSpatial(from, dir, els);
+  if(next){
+    TV.prev = {src: from, dst: next, rev: TV_REV[dir]};
+    tvFocus(next);
+  }
+}
+/* фокус при показе экрана: назад — запомненный, вперёд — первый */
+function tvOnScreen(id, restore){
+  if(!tvActive()) return;
+  requestAnimationFrame(()=>{
+    if(!tvActive()) return;
+    const root = tvTopLayer();
+    if(!root) return;
+    const els = tvCollect(root);
+    if(!els.length) return;
+    const el = restore ? tvRecall(id, els) : null;
+    tvFocus(el || els[0]);
+  });
+}
+function tvCloseTop(){
+  const veils = [...document.querySelectorAll('.sheet-veil.show')];
+  if(veils.length){ veils[veils.length - 1].classList.remove('show'); return true; }
+  return false;
+}
+/* шторки: открытие — фокус внутрь (мимо крестика), закрытие — возврат */
+const tvVeilObs = new MutationObserver(muts=>{
+  if(!tvActive()) return;
+  muts.forEach(m=>{
+    const v = m.target;
+    if(!(v.classList && v.classList.contains('sheet-veil'))) return;
+    if(v.classList.contains('show')){
+      TV.sheetReturn = TV.cur;
+      const els = tvCollect(v);
+      const first = els.find(e=>!e.matches('.sheet-x')) || els[0];
+      if(first) tvFocus(first);
+    }else if(TV.sheetReturn){
+      const ret = TV.sheetReturn;
+      TV.sheetReturn = null;
+      if(document.contains(ret) && tvVisible(ret)) tvFocus(ret, true);
+    }
+  });
+});
+document.querySelectorAll('.sheet-veil').forEach(v=>tvVeilObs.observe(v, {attributes:true, attributeFilter:['class']}));
+/* клик/тап мышью тоже двигает виртуальный фокус */
+document.addEventListener('focusin', e=>{
+  if(!tvActive()) return;
+  const el = e.target;
+  if(el && el.matches && el.matches(TV_SEL) && tvVisible(el) && TV.cur !== el){
+    if(TV.cur) TV.cur.classList.remove('tv-focus');
+    TV.cur = el;
+    el.classList.add('tv-focus');
+    const sid = currentScreenId();
+    if(sid) TV.mem[sid] = el;
+  }
+});
 document.addEventListener('keydown', e=>{
   const k = tvKeyCode(e), t = e.target;
-  if(e.key==='Escape' || k===27){ closeDrawer(); return; }
-  if(k===4){ /* назад на пульте */
+  const tag = t && t.tagName;
+  const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable);
+  const isBack = (e.key === 'Escape' || k === 27 || TVK_BACK.indexOf(k) >= 0);
+  if(isBack && !(inField && k === 8)){
+    /* назад: сначала верхняя шторка, потом drawer, потом назад по экранам */
     e.preventDefault();
+    if(tvCloseTop()) return;
     const d = $('#drawer');
-    if(d && d.classList.contains('open')) closeDrawer();
-    else goBack();
+    if(d && d.classList.contains('open')){ closeDrawer(); return; }
+    goBack();
     return;
   }
   if(!t || !t.matches) return;
+  if(tvActive() && !inField && TV_DIR[k]){
+    /* стрелки пульта — пространственная навигация */
+    e.preventDefault();
+    tvMove(TV_DIR[k]);
+    return;
+  }
   const isCard = t.matches('[data-fc]'), isBtn = t.matches('button');
-  if(isCard && (tvIsEnter(k) || k===32)){ e.preventDefault(); t.click(); return; }
+  if(isCard && (tvIsEnter(k) || k === 32)){ e.preventDefault(); t.click(); return; }
   if(isBtn && tvIsEnter(k)){ e.preventDefault(); t.click(); }
 });
 $('#catBack').onclick = ()=>{
@@ -6307,7 +6528,7 @@ function initWelcome(){
   requestAnimationFrame(tick);
   enter.addEventListener('click', () => {
     root.classList.add('wfadeout');
-    setTimeout(() => root.remove(), 650);
+    setTimeout(() => { root.remove(); tvOnScreen(currentScreenId(), false); }, 650);
   });
 }
 initWelcome();
@@ -6322,6 +6543,7 @@ initWelcome();
   }
   checkTracked();
   if(cubConnected()) cubSync({quiet:true});
+  tvOnScreen(currentScreenId(), false);
 })();
 </script>
 </body>
