@@ -2263,6 +2263,15 @@ function cubLocalList(t){
 function cubHasLocal(t, num){
   return cubLocalList(t).some(e=>cubNumId(e)===String(num));
 }
+/* CUB-карточки из чужих источников могут не иметь media_type — определяем сериал по признакам */
+function cubGuessTv(card){
+  if(!card) return false;
+  if(card.first_air_date || card.number_of_seasons || card.episode_run_time) return true;
+  if(card.type==='tv' || card.type==='serial') return true;
+  if(!card.title && !card.original_title && (card.name || card.original_name)) return true;
+  if(card.media_type==='tv' || card.media==='tv') return true;
+  return false;
+}
 /* --- pull: CUB -> локально (объединение, без потерь) --- */
 async function cubPullBookmarks(){
   const ids = cubIds();
@@ -2279,11 +2288,28 @@ async function cubPullBookmarks(){
       const num = String(it.card_id||'');
       if(!num) continue;
       ids[t.type][num] = it.id;
-      if(cubHasLocal(t, num)) continue;
       let card = null;
       try{ card = typeof it.data==='string' ? JSON.parse(it.data) : it.data; }catch(e){}
       if(!card || (!card.title && !card.name)) continue;
-      const nm = norm(card, card.media_type==='tv' ? 'tv' : 'movie');
+      const nm = norm(card, cubGuessTv(card) ? 'tv' : 'movie');
+      const list = t.list==='history' ? state.history : state.favs[t.list];
+      const matches = list.filter(e=>cubNumId(e)===num);
+      if(matches.length){
+        /* чиним записи, испорченные раньше (сериал, сохранённый как фильм): тот же тайтл, неверные id/media */
+        let fixed = false;
+        for(const e of matches){
+          if(e.title && nm.title && e.title.trim()===nm.title.trim() && (e.id!==nm.id || e.media!==nm.media)){
+            e.id = nm.id; e.media = nm.media; fixed = true;
+          }
+        }
+        if(fixed){
+          const pi = state.pool.findIndex(p=>cubNumId(p)===num && p.title && p.title.trim()===nm.title.trim()
+            && (p.id!==nm.id || p.media!==nm.media));
+          if(pi>=0) state.pool[pi] = nm;
+          added++;
+        }
+        continue;
+      }
       if(!state.pool.some(p=>p.id===nm.id)) state.pool.push(nm); /* чтобы openMovie находил */
       const snap = favSnap(nm);
       if(t.list==='history'){
