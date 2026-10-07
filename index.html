@@ -6,14 +6,14 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>blackroom — рекомендации фильмов</title>
+<title>Пацюк Кино — рекомендации фильмов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0b1220; --bg2:#0e1626; --card:#141e31; --card2:#182440;
@@ -37,12 +37,19 @@
   /* ---------- header ---------- */
   .header{display:flex; align-items:center; justify-content:space-between; padding:18px 20px 8px;}
   .logo{font-weight:800; font-size:22px; letter-spacing:6px;}
-  .logo.brand{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif; font-size:30px; font-weight:800; letter-spacing:-1px;
+  .hicons{display:flex; gap:10px; align-items:center}
+  .logo.brand{font-family:'Manrope','Inter',system-ui,sans-serif; font-size:30px; font-weight:800; letter-spacing:-1px; white-space:nowrap;
     background:linear-gradient(110deg,#ffffff 30%,#93c5fd 45%,#ffffff 60%); background-size:200% auto;
     color:transparent; -webkit-background-clip:text; background-clip:text; animation:logo-shine 5s linear infinite;}
   .logo.brand .dot{color:#3b82f6; -webkit-text-fill-color:#3b82f6; display:inline-block; animation:dot-pulse 2s ease-in-out infinite alternate;}
   @keyframes logo-shine{to{background-position:200% center}}
   @keyframes dot-pulse{0%{text-shadow:0 0 5px rgba(59,130,246,.5)}100%{text-shadow:0 0 12px rgba(59,130,246,.9),0 0 22px rgba(59,130,246,.6)}}
+  @media (max-width:480px){
+    .header{padding:14px 14px 8px}
+    .hicons{gap:8px}
+    .hicons .icon-btn{width:38px; height:38px}
+    .logo.brand{font-size:24px}
+  }
   @media (prefers-reduced-motion: reduce){ .logo.brand, .logo.brand .dot{animation:none;} }
   .logo span{color:var(--accent)}
   .icon-btn{width:42px;height:42px;border-radius:50%;background:transparent;border:none;color:var(--text);
@@ -1098,8 +1105,8 @@
   border:1px solid rgba(120,160,255,.16); border-radius:26px; padding:38px 26px 32px;
   display:flex; flex-direction:column; align-items:center; max-width:94vw;
   box-shadow:0 24px 70px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07); }
-#welcome #wbrand { display:flex; justify-content:center; gap:8px; font-family:'Bebas Neue',sans-serif;
-  font-size:54px; letter-spacing:4px; line-height:1; white-space:nowrap; }
+#welcome #wbrand { display:flex; justify-content:center; gap:8px; font-family:'Oswald',sans-serif; font-weight:600;
+  font-size:clamp(38px,13vw,54px); letter-spacing:4px; line-height:1; white-space:nowrap; }
 #welcome #wbrand .wl { display:inline-block; white-space:nowrap; }
 #welcome #wbrand .wl span { display:inline-block; opacity:0; animation:wletterIn .55s cubic-bezier(.2,.9,.3,1.2) forwards; }
 #welcome #wbrand .w1 span { color:#fff; text-shadow:0 2px 20px rgba(0,0,0,.7); }
@@ -1140,7 +1147,7 @@
   <div id="wcenter">
     <div id="wcat"><img src="cat-welcome.png" alt="BLACK ROOM"></div>
     <div id="wpanel">
-      <div id="wbrand"><span class="wl w1">BLACK</span><span class="wl w2">ROOM</span></div>
+      <div id="wbrand"><span class="wl w1">ПАЦЮК</span><span class="wl w2">КИНО</span></div>
       <div id="wrule"></div>
       <div id="wtagline">ОНЛАЙН-КИНОТЕАТР</div>
       <div id="wloader">
@@ -1156,14 +1163,14 @@
 <div id="app">
   <header class="wtop">
     <button class="burger" id="burger" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <div class="logo">blackroom<span>.</span></div>
+    <div class="logo">Пацюк Кино<span>.</span></div>
   </header>
 
   <!-- ============ HOME ============ -->
   <div class="screen active" id="scr-home">
     <div class="header">
-      <div class="logo brand">blackroom<span class="dot">.</span></div>
-      <div style="display:flex; gap:10px">
+      <div class="logo brand">Пацюк Кино<span class="dot">.</span></div>
+      <div class="hicons">
       <button class="icon-btn" id="aiBtn" aria-label="AI-подборка">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.9 3.1L23 19l-3.1.9L19 23l-.9-3.1L15 19l3.1-.9z"/></svg>
       </button>
@@ -1480,7 +1487,7 @@
   </nav>
   <div class="drawer-veil" id="drawerVeil"></div>
   <aside class="drawer" id="drawer" aria-label="Меню">
-    <div class="logo drawer-logo">blackroom<span>.</span></div>
+    <div class="logo drawer-logo">Пацюк Кино<span>.</span></div>
     <button class="ditem on" data-tab="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
       <span>Главная</span></button>
