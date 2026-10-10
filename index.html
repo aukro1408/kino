@@ -1314,6 +1314,10 @@
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxToken" placeholder="вставь токен" autocomplete="off" autocapitalize="off"></div>
       </div>
       <div class="set-row">
+        <div><div class="t">ID устройства</div><div class="d">user_dev_id · для воркера Reelo-источника</div></div>
+        <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxUid" readonly autocomplete="off" autocapitalize="off" style="opacity:.85"></div>
+      </div>
+      <div class="set-row">
         <div><div class="t">Прокси Filmix</div><div class="d">Обход CORS для filmixapp.vip</div></div>
         <div style="display:flex; gap:8px; align-items:center"><input class="key-input" id="fxProxy" placeholder="https://…" autocomplete="off" autocapitalize="off"></div>
       </div>
@@ -5931,6 +5935,7 @@ $('#rzProxy').value = state.rzProxy;
 $('#rzCookie').value = state.rzCookie;
 $('#fxToken').value = state.fxToken;
 $('#fxProxy').value = state.fxProxy;
+$('#fxUid').value = (typeof fxUid === 'function' ? fxUid() : '');
 $('#rdProxy').value = state.radioProxy;
 cubRenderUI();
 function tsRefreshUI(){
